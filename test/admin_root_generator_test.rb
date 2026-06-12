@@ -11,6 +11,10 @@ class AdminRootGeneratorTest < Minitest::Test
 
     assert_includes template, "class Admin::BaseController < ApplicationController"
     assert_includes template, 'layout "admin"'
+    assert_includes template, "before_action :authenticate_admin_user!"
+    assert_includes template, "before_action :authorize_admin_user!"
+    assert_includes template, "head :unauthorized"
+    assert_includes template, "head :forbidden"
   end
 
   def test_generated_admin_root_includes_accessible_children

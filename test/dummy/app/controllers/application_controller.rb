@@ -21,4 +21,8 @@ class ApplicationController < ActionController::Base
   def set_current_actor
     Current.actor = current_user
   end
+
+  def authorize_recording_studio_admin!
+    current_user.present?
+  end
 end

@@ -8,6 +8,7 @@ class ConfigurationTest < Minitest::Test
 
     assert_equal "/admin", config.default_mount_path
     assert_equal :authenticate_user!, config.authentication_method
+    assert_equal :authorize_recording_studio_admin!, config.authorization_method
     assert_equal :current_user, config.current_actor_method
     assert_equal 1_000, config.max_page
   end

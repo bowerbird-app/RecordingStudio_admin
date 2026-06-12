@@ -1,3 +1,3 @@
 <%= render FlatPack::PageTitle::Component.new(title: "Admin", subtitle: "Manage and monitor your application") %>
 
-<%= render FlatPack::Button::Component.new(text: "Open admin screens", href: "/admin", style: :primary) %>
+<%= render FlatPack::Button::Component.new(text: "Open admin screens", href: RecordingStudioAdmin.configuration.default_mount_path, style: :primary) %>

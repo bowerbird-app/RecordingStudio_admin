@@ -26,14 +26,20 @@ module RecordingStudioAdmin
       return routes.screen_path(key) if routes.respond_to?(:screen_path)
       return routes.recording_studio_admin.screen_path(key) if routes.respond_to?(:recording_studio_admin)
 
-      "/admin/screens/#{key}"
+      "#{default_mount_path}/screens/#{key}"
     end
 
     def admin_section_path(key)
       return routes.section_path(key) if routes.respond_to?(:section_path)
       return routes.recording_studio_admin.section_path(key) if routes.respond_to?(:recording_studio_admin)
 
-      "/admin/sections/#{key}"
+      "#{default_mount_path}/sections/#{key}"
+    end
+
+    private
+
+    def default_mount_path
+      RecordingStudioAdmin.configuration.default_mount_path.to_s.chomp("/")
     end
   end
 end

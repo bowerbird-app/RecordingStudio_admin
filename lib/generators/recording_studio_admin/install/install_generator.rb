@@ -12,8 +12,8 @@ module RecordingStudioAdmin
       class_option :mount_path, type: :string, default: "/admin", desc: "Route prefix used when mounting the engine"
 
       def mount_engine
-        route %(mount RecordingStudioAccessible::Engine, at: "#{options[:mount_path]}/access")
-        route %(mount RecordingStudioAdmin::Engine, at: "#{options[:mount_path]}")
+        route %(mount RecordingStudioAccessible::Engine, at: "#{mount_path}/access")
+        route %(mount RecordingStudioAdmin::Engine, at: #{mount_path.inspect})
       end
 
       def copy_initializer
@@ -46,6 +46,15 @@ module RecordingStudioAdmin
       end
 
       private
+
+      def mount_path
+        value = options[:mount_path].to_s.chomp("/")
+        unless value.match?(%r{\A/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*\z})
+          raise ArgumentError, "mount_path must be an absolute route path using letters, numbers, underscores, dashes, and slashes"
+        end
+
+        value
+      end
 
       def show_missing_tailwind_notice
         say "Tailwind CSS not detected. Skipping Tailwind configuration.", :yellow

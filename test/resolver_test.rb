@@ -41,6 +41,7 @@ class ResolverTest < Minitest::Test
     table do
       column :name
       column :status
+      action :unsafe, text: "Unsafe", url: ->(_row, _context) { "javascript:alert(1)" }
       paginate per_page: 1
     end
 
@@ -93,6 +94,19 @@ class ResolverTest < Minitest::Test
     assert_equal "name", result.table.result.sort
     assert_equal :day, context.filter_value(:group_by)
     assert_equal 2, result.widgets.first.value
+    assert_equal "#", result.table.actions.first.resolve(result.table.rows.first, context).url
+  end
+
+  def test_context_fallback_paths_use_configured_default_mount_path
+    original_mount_path = RecordingStudioAdmin.configuration.default_mount_path
+    RecordingStudioAdmin.configuration.default_mount_path = "/backoffice"
+
+    context = RecordingStudioAdmin::Context.new
+
+    assert_equal "/backoffice/screens/requests", context.admin_screen_path("requests")
+    assert_equal "/backoffice/sections/root", context.admin_section_path("root")
+  ensure
+    RecordingStudioAdmin.configuration.default_mount_path = original_mount_path
   end
 
   def test_missing_screen_raises_specific_error

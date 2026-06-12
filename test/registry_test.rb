@@ -20,6 +20,10 @@ class RegistryTest < Minitest::Test
     widget "example.widgets.summary"
   end
 
+  class DuplicateSection < RecordingStudioAdmin::Section
+    key "root"
+  end
+
   def setup
     @registry = RecordingStudioAdmin::Registry.new
   end
@@ -45,5 +49,35 @@ class RegistryTest < Minitest::Test
     @registry.register_section(RootSection)
 
     assert_equal RootSection, @registry.section_for(:root)
+  end
+
+  def test_register_section_conflict_raises
+    @registry.register_section(RootSection)
+
+    assert_raises(RecordingStudioAdmin::RegistryConflict) do
+      @registry.register_section(DuplicateSection)
+    end
+  end
+
+  def test_register_widget_conflict_raises_registry_conflict
+    first = RecordingStudioAdmin::Widget.new("system_health") { title "System health" }
+    second = RecordingStudioAdmin::Widget.new("system_health") { title "Other health" }
+    @registry.register_widget(first)
+
+    error = assert_raises(RecordingStudioAdmin::RegistryConflict) do
+      @registry.register_widget(second)
+    end
+    assert_includes error.message, "widgets.system_health"
+  end
+
+  def test_clear_resets_all_registries
+    @registry.register_screen(ExampleScreen)
+    @registry.register_section(RootSection)
+
+    @registry.clear!
+
+    assert_empty @registry.screens
+    assert_empty @registry.sections
+    assert_empty @registry.widgets
   end
 end

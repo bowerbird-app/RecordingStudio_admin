@@ -119,7 +119,8 @@ module RecordingStudioAdmin
     def resolve(row, context)
       return if visible_if && !visible_if.call(row, context)
 
-      Results::ResolvedRowAction.new(name: name, text: text, url: url.call(row, context))
+      Results::ResolvedRowAction.new(name: name, text: text,
+                                     url: RecordingStudioAdmin::UrlSafety.safe_href(url.call(row, context)))
     end
   end
 end

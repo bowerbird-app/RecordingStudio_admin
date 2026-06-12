@@ -23,11 +23,13 @@ The engine protects mounted screens through a configurable host-app authenticati
 ```ruby
 RecordingStudioAdmin.configure do |config|
   config.authentication_method = :authenticate_user!
+  config.authorization_method = :authorize_recording_studio_admin!
   config.current_actor_method = :current_user
 end
 ```
 
 If the configured authentication method is unavailable, the engine returns `401 Unauthorized` instead of rendering admin data.
+If the configured authorization method is unavailable or returns `false`, the engine returns `403 Forbidden`.
 
 ## Routing
 

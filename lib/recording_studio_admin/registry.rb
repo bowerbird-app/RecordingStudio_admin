@@ -54,10 +54,16 @@ module RecordingStudioAdmin
 
       if existing
         raise RegistryConflict,
-              "#{normalized_key.inspect} is already registered for #{existing.name || existing.class.name}"
+              "#{normalized_key.inspect} is already registered for #{definition_name(existing)}"
       end
 
       store[normalized_key] = value
+    end
+
+    def definition_name(definition)
+      return definition.name if definition.respond_to?(:name) && definition.name
+
+      definition.class.name
     end
   end
 end

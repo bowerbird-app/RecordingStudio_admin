@@ -18,15 +18,33 @@ class InstallGeneratorTest < Minitest::Test
   end
 
   def test_mount_engine_uses_configured_mount_path_and_accessible_engine
-    generator = build_generator("/tmp", mount_path: "/admin")
+    generator = build_generator("/tmp", mount_path: "/backoffice")
     routes = []
 
     generator.stub(:route, ->(value) { routes << value }) { generator.mount_engine }
 
     assert_equal [
-      'mount RecordingStudioAccessible::Engine, at: "/admin/access"',
-      'mount RecordingStudioAdmin::Engine, at: "/admin"'
+      'mount RecordingStudioAccessible::Engine, at: "/backoffice/access"',
+      'mount RecordingStudioAdmin::Engine, at: "/backoffice"'
     ], routes
+  end
+
+  def test_mount_engine_rejects_unsafe_mount_path
+    generator = build_generator("/tmp", mount_path: %(/admin"; system("open"); #))
+
+    assert_raises(ArgumentError) { generator.mount_engine }
+  end
+
+  def test_copy_initializer_uses_configured_mount_path_and_authorization_hook
+    with_temp_app do |dir|
+      generator = build_generator(dir, mount_path: "/backoffice")
+
+      generator.copy_initializer
+
+      initializer = File.read(File.join(dir, "config/initializers/recording_studio_admin.rb"))
+      assert_includes initializer, 'config.default_mount_path = "/backoffice"'
+      assert_includes initializer, "config.authorization_method = :authorize_recording_studio_admin!"
+    end
   end
 
   def test_add_tailwind_source_injects_engine_and_flatpack_sources
@@ -51,5 +69,6 @@ class InstallGeneratorTest < Minitest::Test
     assert_includes install_guide, "recording_studio_admin:admin_root"
     assert_includes install_guide, "Register class-based sections and screens"
     assert_includes install_guide, "authentication_method"
+    assert_includes install_guide, "authorize_recording_studio_admin!"
   end
 end
