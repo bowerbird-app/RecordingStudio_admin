@@ -16,10 +16,10 @@ class RenameVerificationTest < Minitest::Test
   def test_no_old_template_public_code_references
     leftovers = searchable_files.select do |path|
       content = File.read(path)
-      content.include?("GemTemplate") || content.include?("gem_template") || content.include?("Admin2") || content.include?("admin_2")
+      %w[GemTemplate gem_template Admin2 admin_2].any? { |term| content.include?(term) }
     end
 
-    assert_empty leftovers.map { |path| path.sub("#{ROOT}/", "") }
+    assert_empty(leftovers.map { |path| path.sub("#{ROOT}/", "") })
   end
 
   def test_version_file_loads
@@ -35,7 +35,8 @@ class RenameVerificationTest < Minitest::Test
     patterns = %w[*.rb *.md *.erb *.rake *.yml *.yaml *.gemspec Gemfile Rakefile]
     patterns.flat_map { |pattern| Dir.glob(File.join(ROOT, "**", pattern)) }.uniq.reject do |path|
       relative = path.sub("#{ROOT}/", "")
-      relative.start_with?(".git/", "coverage/", "docs/gem_template/", ".github/agents/") || relative == "test/rename_verification_test.rb"
+      relative.start_with?(".git/", "coverage/", "docs/gem_template/",
+                           ".github/agents/") || relative == "test/rename_verification_test.rb"
     end
   end
 end

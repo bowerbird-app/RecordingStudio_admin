@@ -35,8 +35,8 @@ module RecordingStudioAdmin
           @visible_if_value
         end
 
-        def evaluate(value, context, *args)
-          value.respond_to?(:call) ? value.call(*args, context) : value
+        def evaluate(value, context, *)
+          value.respond_to?(:call) ? value.call(*, context) : value
         rescue ArgumentError
           value.call(context)
         end
@@ -53,7 +53,12 @@ module RecordingStudioAdmin
       def resolve(context)
         return unless visible?(context)
 
-        Results::ResolvedButton.new(name: name, text: resolve_value(text, context), url: resolve_value(url, context), style: style)
+        Results::ResolvedButton.new(
+          name: name,
+          text: resolve_value(text, context),
+          url: RecordingStudioAdmin::UrlSafety.safe_href(resolve_value(url, context)),
+          style: style
+        )
       end
 
       private

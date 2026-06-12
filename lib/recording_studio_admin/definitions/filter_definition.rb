@@ -2,7 +2,7 @@
 
 module RecordingStudioAdmin
   module Definitions
-    FilterDefinition = Data.define(:key, :type, :options) do
+    FilterDefinition = Struct.new(:key, :type, :options) do
       def param_key
         (options[:param] || key).to_sym
       end

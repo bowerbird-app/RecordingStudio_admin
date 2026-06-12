@@ -8,10 +8,11 @@ module RecordingStudioAdmin
     isolate_namespace RecordingStudioAdmin
 
     initializer "recording_studio_admin.load_config" do |app|
-      yaml = app.config_for(:recording_studio_admin) if app.respond_to?(:config_for)
+      next unless app.respond_to?(:config_for)
+      next unless app.root.join("config/recording_studio_admin.yml").exist?
+
+      yaml = app.config_for(:recording_studio_admin)
       RecordingStudioAdmin.configuration.merge!(yaml) if yaml.respond_to?(:each)
-    rescue StandardError
-      nil
     end
   end
 end

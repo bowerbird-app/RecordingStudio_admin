@@ -50,6 +50,12 @@ class ResolverTest < Minitest::Test
     end
   end
 
+  class HiddenScreen < RecordingStudioAdmin::Screen
+    key "hidden"
+    visible_if ->(_context) { false }
+    query { |_context| ArrayRelation.new([]) }
+  end
+
   class RootSection < RecordingStudioAdmin::Section
     key "root"
     title "Root"
@@ -57,11 +63,19 @@ class ResolverTest < Minitest::Test
     widget "requests.widgets.total"
   end
 
+  class HiddenSection < RecordingStudioAdmin::Section
+    key "hidden"
+    visible_if ->(_context) { false }
+    title "Hidden"
+  end
+
   def setup
     @original_registry = RecordingStudioAdmin.instance_variable_get(:@registry)
     RecordingStudioAdmin.instance_variable_set(:@registry, RecordingStudioAdmin::Registry.new)
     RecordingStudioAdmin.register_screen(RequestsScreen)
+    RecordingStudioAdmin.register_screen(HiddenScreen)
     RecordingStudioAdmin.register_section(RootSection)
+    RecordingStudioAdmin.register_section(HiddenSection)
   end
 
   def teardown
@@ -85,6 +99,24 @@ class ResolverTest < Minitest::Test
     assert_raises(RecordingStudioAdmin::DefinitionNotFound) do
       RecordingStudioAdmin.resolve_screen(key: "missing", context: RecordingStudioAdmin::Context.new)
     end
+  end
+
+  def test_hidden_screen_and_section_raise_not_found
+    assert_raises(RecordingStudioAdmin::DefinitionNotFound) do
+      RecordingStudioAdmin.resolve_screen(key: "hidden", context: RecordingStudioAdmin::Context.new)
+    end
+
+    assert_raises(RecordingStudioAdmin::DefinitionNotFound) do
+      RecordingStudioAdmin.resolve_section(key: "hidden", context: RecordingStudioAdmin::Context.new)
+    end
+  end
+
+  def test_pagination_page_is_capped
+    context = RecordingStudioAdmin::Context.new(params: { page: "999999" })
+
+    result = RecordingStudioAdmin.resolve_screen(key: "requests", context: context)
+
+    assert_equal 1_000, result.table.result.current_page
   end
 
   def test_resolve_section_links_widgets_and_missing_widget

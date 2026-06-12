@@ -3,7 +3,13 @@
 require "test_helper"
 
 class QueryResultTest < Minitest::Test
-  Relation = Struct.new(:count)
+  class Relation
+    attr_reader :count
+
+    def initialize(count)
+      @count = count
+    end
+  end
 
   def test_percent_change_with_previous_count
     result = RecordingStudioAdmin::Results::QueryResult.new(relation: Relation.new(345), previous_count: 257)

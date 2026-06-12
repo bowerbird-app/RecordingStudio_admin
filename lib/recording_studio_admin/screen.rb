@@ -31,8 +31,8 @@ module RecordingStudioAdmin
         @table_value
       end
 
-      def widget(name, &block)
-        definition = Widget.new(name, screen_key: key, &block)
+      def widget(name, &)
+        definition = Widget.new(name, screen_key: key, &)
         @widgets_value[definition.key] = definition
       end
 
@@ -87,7 +87,8 @@ module RecordingStudioAdmin
     end
 
     def column(name, title: nil, sortable: true, tooltip: nil, header_tooltip: nil, value: nil)
-      @columns << ColumnDefinition.new(name.to_sym, title || name.to_s.humanize, sortable, tooltip, header_tooltip, value)
+      @columns << ColumnDefinition.new(name.to_sym, title || name.to_s.humanize, sortable, tooltip, header_tooltip,
+                                       value)
     end
 
     def action(name, text:, url:, visible_if: nil)

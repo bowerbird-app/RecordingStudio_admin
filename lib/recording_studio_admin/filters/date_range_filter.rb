@@ -22,8 +22,10 @@ module RecordingStudioAdmin
       def apply(relation, value, _context)
         field = @definition.options.fetch(:field, :created_at)
         scoped = relation
-        scoped = scoped.where(field => value.start_date.beginning_of_day..) if value.start_date && value.start_date.respond_to?(:beginning_of_day)
-        scoped = scoped.where(field => ..value.end_date.end_of_day) if value.end_date && value.end_date.respond_to?(:end_of_day)
+        if value.start_date.respond_to?(:beginning_of_day)
+          scoped = scoped.where(field => value.start_date.beginning_of_day..)
+        end
+        scoped = scoped.where(field => ..value.end_date.end_of_day) if value.end_date.respond_to?(:end_of_day)
         scoped
       end
 

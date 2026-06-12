@@ -18,6 +18,17 @@ The old admin gem is not an implementation guide for this replacement.
 
 `RecordingStudioAccessible` is required. The generated admin root includes `RecordingStudioAccessible::AllowsAccessibleChildren` by default.
 
+The engine protects mounted screens through a configurable host-app authentication hook. By default it calls `authenticate_user!` and reads the actor from `current_user`, matching Devise-based host apps:
+
+```ruby
+RecordingStudioAdmin.configure do |config|
+  config.authentication_method = :authenticate_user!
+  config.current_actor_method = :current_user
+end
+```
+
+If the configured authentication method is unavailable, the engine returns `401 Unauthorized` instead of rendering admin data.
+
 ## Routing
 
 Mount the screen engine wherever you need admin or reporting screens:

@@ -27,7 +27,7 @@ module RecordingStudioAdmin
         subtitle: evaluate(@subtitle, context),
         value: evaluate(@value, context),
         change: evaluate(@change, context),
-        link_to: evaluate(@link_to, context),
+        link_to: RecordingStudioAdmin::UrlSafety.safe_href(evaluate(@link_to, context)),
         series: evaluate(@series, context),
         items: evaluate(@items, context),
         rows: evaluate(@rows, context),

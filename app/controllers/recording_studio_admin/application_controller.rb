@@ -6,9 +6,25 @@ module RecordingStudioAdmin
 
     rescue_from RecordingStudioAdmin::DefinitionNotFound, with: :render_not_found
 
+    before_action :authenticate_recording_studio_admin!
+    before_action :set_recording_studio_admin_current_actor
+
     helper_method :recording_studio_admin_context
 
     private
+
+    def authenticate_recording_studio_admin!
+      method_name = RecordingStudioAdmin.configuration.authentication_method
+      return public_send(method_name) if method_name && respond_to?(method_name, true)
+
+      head :unauthorized
+    end
+
+    def set_recording_studio_admin_current_actor
+      return unless defined?(Current)
+
+      Current.actor = configured_current_actor
+    end
 
     def recording_studio_admin_context
       @recording_studio_admin_context ||= RecordingStudioAdmin::Context.new(
@@ -21,7 +37,14 @@ module RecordingStudioAdmin
     end
 
     def current_actor
-      Current.actor if defined?(Current)
+      return Current.actor if defined?(Current) && Current.respond_to?(:actor)
+
+      configured_current_actor
+    end
+
+    def configured_current_actor
+      method_name = RecordingStudioAdmin.configuration.current_actor_method
+      public_send(method_name) if method_name && respond_to?(method_name, true)
     end
 
     def render_not_found

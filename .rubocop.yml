@@ -20,17 +20,21 @@ Layout/LineLength:
 Metrics/ClassLength:
   Exclude:
     - 'test/**/*'
-    - 'lib/recording_studio_admin/hooks.rb'
+    - 'lib/recording_studio_admin/resolvers/**/*'
 
 Metrics/MethodLength:
   Exclude:
     - 'test/**/*'
     - 'lib/generators/**/*'
+    - 'lib/recording_studio_admin/resolvers/**/*'
+    - 'lib/recording_studio_admin/widget.rb'
 
 Metrics/AbcSize:
   Exclude:
     - 'test/**/*'
     - 'lib/generators/**/*'
+    - 'lib/recording_studio_admin/filters/date_range_filter.rb'
+    - 'lib/recording_studio_admin/resolvers/**/*'
 
 # Allow empty blocks in tests (common for stubs/mocks)
 Lint/EmptyBlock:
@@ -47,8 +51,19 @@ Naming/VariableNumber:
   Exclude:
     - 'test/**/*'
 
-# Don't require super in service initialize methods
-Lint/MissingSuper:
+Metrics/CyclomaticComplexity:
   Exclude:
-    - 'lib/recording_studio_admin/services/**/*'
-    - 'test/services/**/*'
+    - 'lib/recording_studio_admin/filters/date_range_filter.rb'
+    - 'lib/recording_studio_admin/resolvers/**/*'
+
+Metrics/PerceivedComplexity:
+  Exclude:
+    - 'lib/recording_studio_admin/resolvers/**/*'
+
+Metrics/ParameterLists:
+  Exclude:
+    - 'lib/recording_studio_admin/screen.rb'
+
+Style/ClassAndModuleChildren:
+  Exclude:
+    - 'lib/generators/recording_studio_admin/admin_root/templates/app/controllers/admin/*.rb'

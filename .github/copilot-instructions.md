@@ -2,10 +2,10 @@
 
 ## Architecture
 
-- This repository is a Rails mountable engine template for building Recording Studio addons.
+- This repository is the canonical RecordingStudioAdmin Rails mountable engine for Recording Studio admin/reporting screens.
 - Preserve engine namespace isolation under `RecordingStudioAdmin` unless the task is explicitly about renaming the gem.
-- Treat `docs/recording_studio_admin/` as architectural reference material. For current addon workflow, prefer the top-level README and the dummy app.
-- Keep changes small and scoped. Do not rewrite template surfaces unless the request requires it.
+- Treat the top-level README and dummy app as the source of truth for the current admin workflow.
+- Keep changes small and scoped. Keep changes small and scoped unless the request requires broad engine behavior changes.
 
 ## UI Conventions
 
@@ -23,10 +23,10 @@
 
 - The standard root validation command is `bundle exec rake test` from the repository root.
 - If a change affects dummy app boot, assets, or migrations, also validate the dummy app setup the same way CI does.
-- Add focused regression tests for engine hooks, generators, Recording Studio integration points, and template UX changes.
+- Add focused regression tests for registries, resolvers, generators, Recording Studio integration points, and admin screen UX changes.
 
 ## Repo Conventions
 
 - Keep internal dependency assumptions intact unless the request explicitly asks to change private gem infrastructure.
 - Update docs when template behavior or setup steps change.
-- Prefer existing generator, service, and hook patterns over introducing a parallel abstraction.
+- Prefer existing generator, registry, definition, and resolver patterns over introducing a parallel abstraction.

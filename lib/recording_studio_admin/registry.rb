@@ -53,7 +53,8 @@ module RecordingStudioAdmin
       return value if existing == value
 
       if existing
-        raise RegistryConflict, "#{normalized_key.inspect} is already registered for #{existing.name || existing.class.name}"
+        raise RegistryConflict,
+              "#{normalized_key.inspect} is already registered for #{existing.name || existing.class.name}"
       end
 
       store[normalized_key] = value

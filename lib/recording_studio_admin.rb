@@ -3,6 +3,8 @@
 require "recording_studio_admin/version"
 require "recording_studio_admin/errors"
 require "recording_studio_admin/configuration"
+require "recording_studio_admin/url_safety"
+require "recording_studio_admin/recording_studio_accessible_compatibility"
 require "recording_studio_admin/registry"
 require "recording_studio_admin/results/query_result"
 require "recording_studio_admin/results/table_result"
@@ -20,6 +22,8 @@ require "recording_studio_admin/resolvers/section_resolver"
 require "recording_studio_admin/resolvers/screen_resolver"
 require "recording_studio_admin/resolvers/widget_resolver"
 require "recording_studio_admin/engine" if defined?(Rails)
+
+RecordingStudioAdmin::RecordingStudioAccessibleCompatibility.install!
 
 module RecordingStudioAdmin
   class << self

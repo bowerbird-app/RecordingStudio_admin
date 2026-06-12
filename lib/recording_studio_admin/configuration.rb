@@ -2,10 +2,13 @@
 
 module RecordingStudioAdmin
   class Configuration
-    attr_accessor :default_mount_path
+    attr_accessor :authentication_method, :current_actor_method, :default_mount_path, :max_page
 
     def initialize
       @default_mount_path = "/admin"
+      @authentication_method = :authenticate_user!
+      @current_actor_method = :current_user
+      @max_page = 1_000
     end
 
     def merge!(hash)

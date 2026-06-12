@@ -8,7 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors     = ["Bowerbird"]
   spec.homepage    = "https://github.com/bowerbird-app/RecordingStudioAdmin"
   spec.summary     = "RecordingStudioAdmin screens and admin scaffolding for Recording Studio"
-  spec.description = "A Rails engine for code-defined Recording Studio admin and reporting screens rendered with FlatPack."
+  spec.description = "A Rails engine for code-defined Recording Studio admin and reporting screens " \
+                     "rendered with FlatPack."
   spec.license     = "MIT"
   spec.required_ruby_version = ">= 3.3.0"
 
@@ -21,6 +22,7 @@ Gem::Specification.new do |spec|
     Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
   end
 
+  spec.add_dependency "flat_pack", "~> 0.1.84"
   spec.add_dependency "rails", "~> 8.1.0"
   spec.add_dependency "recording_studio_accessible", "~> 0.3"
 end

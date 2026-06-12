@@ -16,7 +16,7 @@ class DummyAppAdminTest < Minitest::Test
     initializer = File.read(File.join(ROOT, "test/dummy/config/initializers/recording_studio_admin.rb"))
 
     assert_includes initializer, 'key "root"'
-    assert_equal 4, initializer.scan(/RecordingStudioAdmin\.register_screen/).size
+    assert_equal 4, initializer.scan("RecordingStudioAdmin.register_screen").size
     assert_includes initializer, 'widget "api_requests.widgets.activity_last_24_hours"'
     assert_includes initializer, 'widget "background_jobs.widgets.job_throughput"'
   end

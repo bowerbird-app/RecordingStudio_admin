@@ -13,7 +13,8 @@ module RecordingStudioAdmin
 
         allowed = @definition.allowed_values
         return value if allowed.empty?
-        return value if allowed.include?(value.to_s)
+
+        value if allowed.include?(value.to_s)
       end
 
       def apply(relation, value, context)

@@ -9,10 +9,10 @@
 <%= form_with url: request.path, method: :get, local: true, class: "flex flex-wrap gap-3 my-4" do |form| %>
   <% @screen.filters.each do |filter| %>
     <% if filter.type == :date_range %>
-      <%= form.date_field :start_date, value: filter.value&.start_date, class: "rounded border px-3 py-2" %>
-      <%= form.date_field :end_date, value: filter.value&.end_date, class: "rounded border px-3 py-2" %>
+      <%= form.date_field filter.start_param, value: filter.value&.start_date, class: "rounded border px-3 py-2" %>
+      <%= form.date_field filter.end_param, value: filter.value&.end_date, class: "rounded border px-3 py-2" %>
     <% else %>
-      <%= form.select filter.key, Array(filter.options[:values] || filter.options[:options]).map { |value| [value.to_s.humanize, value] }, { include_blank: true, selected: filter.value }, class: "rounded border px-3 py-2" %>
+      <%= form.select filter.param_key, Array(filter.options[:values] || filter.options[:options]).map { |value| [value.to_s.humanize, value] }, { include_blank: true, selected: filter.value }, class: "rounded border px-3 py-2" %>
     <% end %>
   <% end %>
   <%= render FlatPack::Button::Component.new(text: "Apply", type: :submit, style: :primary) %>
@@ -29,6 +29,15 @@
 <% end %>
 
 <% if @screen.table %>
+  <% if @screen.table.filters.any? %>
+    <%= form_with url: request.path, method: :get, local: true, class: "flex flex-wrap gap-3 my-4" do |form| %>
+      <% @screen.table.filters.each do |filter| %>
+        <%= form.search_field filter.param_key, value: filter.value, placeholder: filter.key.to_s.humanize, class: "rounded border px-3 py-2" %>
+      <% end %>
+      <%= render FlatPack::Button::Component.new(text: "Search", type: :submit, style: :secondary) %>
+    <% end %>
+  <% end %>
+
   <%= render FlatPack::Table::Component.new(data: @screen.table.rows) do |table| %>
     <% @screen.table.columns.each do |column| %>
       <% table.with_column(column.title) { |row| column.cell(row, recording_studio_admin_context) } %>

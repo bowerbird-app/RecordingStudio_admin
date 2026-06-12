@@ -23,8 +23,10 @@ class InstallGeneratorTest < Minitest::Test
 
     generator.stub(:route, ->(value) { routes << value }) { generator.mount_engine }
 
-    assert_includes routes, 'mount RecordingStudioAdmin::Engine, at: "/admin"'
-    assert_includes routes, 'mount RecordingStudioAccessible::Engine, at: "/admin/access"'
+    assert_equal [
+      'mount RecordingStudioAccessible::Engine, at: "/admin/access"',
+      'mount RecordingStudioAdmin::Engine, at: "/admin"'
+    ], routes
   end
 
   def test_add_tailwind_source_injects_engine_and_flatpack_sources
@@ -48,5 +50,6 @@ class InstallGeneratorTest < Minitest::Test
 
     assert_includes install_guide, "recording_studio_admin:admin_root"
     assert_includes install_guide, "Register class-based sections and screens"
+    assert_includes install_guide, "authentication_method"
   end
 end

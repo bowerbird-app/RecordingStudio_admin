@@ -12,8 +12,8 @@ module RecordingStudioAdmin
       class_option :mount_path, type: :string, default: "/admin", desc: "Route prefix used when mounting the engine"
 
       def mount_engine
-        route %(mount RecordingStudioAdmin::Engine, at: "#{options[:mount_path]}")
         route %(mount RecordingStudioAccessible::Engine, at: "#{options[:mount_path]}/access")
+        route %(mount RecordingStudioAdmin::Engine, at: "#{options[:mount_path]}")
       end
 
       def copy_initializer
@@ -26,7 +26,10 @@ module RecordingStudioAdmin
 
         content = File.read(tailwind_css_path)
         missing_lines = tailwind_source_lines.reject { |line| content.include?(line) }
-        return say("Tailwind already includes RecordingStudioAdmin and FlatPack sources.", :green) if missing_lines.empty?
+        if missing_lines.empty?
+          return say("Tailwind already includes RecordingStudioAdmin and FlatPack sources.",
+                     :green)
+        end
 
         if content.include?('@import "tailwindcss"')
           inject_into_file tailwind_css_path, after: "@import \"tailwindcss\";\n" do

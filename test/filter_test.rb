@@ -4,7 +4,8 @@ require "test_helper"
 
 class FilterTest < Minitest::Test
   def test_group_by_allows_only_known_values
-    definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(:group_by, :group_by, values: %i[hour day], default: :day)
+    definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(:group_by, :group_by, values: %i[hour day],
+                                                                                               default: :day)
 
     assert_equal :hour, definition.normalize(group_by: "hour")
     assert_equal :day, definition.normalize(group_by: "quarter")
