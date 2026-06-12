@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "action_controller"
 require "action_dispatch/testing/test_response"
 require File.expand_path("../app/controllers/recording_studio_admin/application_controller", __dir__)
 
@@ -63,13 +64,9 @@ class ApplicationControllerSecurityTest < Minitest::Test
 
   def test_false_authorization_hook_fails_closed
     controller = build_controller do
-      private
-
-      def deny_admin!
-        false
-      end
+      define_method(:reject_admin_access!) { false }
     end
-    RecordingStudioAdmin.configuration.authorization_method = :deny_admin!
+    RecordingStudioAdmin.configuration.authorization_method = :reject_admin_access!
 
     controller.send(:authorize_recording_studio_admin!)
 
@@ -78,18 +75,20 @@ class ApplicationControllerSecurityTest < Minitest::Test
 
   def test_current_without_actor_writer_does_not_crash
     controller = build_controller
-    current = Class.new
-    Object.const_set(:Current, current) unless Object.const_defined?(:Current)
+    original_current = Current if Object.const_defined?(:Current)
+    Object.send(:remove_const, :Current) if Object.const_defined?(:Current)
+    Object.const_set(:Current, Class.new)
 
     assert_silent { controller.send(:set_recording_studio_admin_current_actor) }
   ensure
-    Object.send(:remove_const, :Current) if defined?(current) && Object.const_defined?(:Current) && Current.equal?(current)
+    Object.send(:remove_const, :Current) if Object.const_defined?(:Current)
+    Object.const_set(:Current, original_current) if defined?(original_current)
   end
 
   private
 
-  def build_controller(&block)
-    klass = Class.new(RecordingStudioAdmin::ApplicationController, &block)
+  def build_controller(&)
+    klass = Class.new(RecordingStudioAdmin::ApplicationController, &)
     klass.new.tap do |controller|
       controller.set_request! ActionDispatch::TestRequest.create
       controller.set_response! ActionDispatch::TestResponse.new

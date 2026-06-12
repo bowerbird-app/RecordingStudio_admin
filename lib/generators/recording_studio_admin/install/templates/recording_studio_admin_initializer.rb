@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RecordingStudioAdmin.configure do |config|
-  config.default_mount_path = <%= mount_path.inspect %>
+  config.default_mount_path = "__MOUNT_PATH__"
   config.authentication_method = :authenticate_user!
   config.authorization_method = :authorize_recording_studio_admin!
   config.current_actor_method = :current_user

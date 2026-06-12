@@ -31,6 +31,7 @@ class ResolverTest < Minitest::Test
     subtitle "Traffic"
     query { |_context| ArrayRelation.new([Row.new(Time.now, 200, "b"), Row.new(Time.now, 500, "a")]) }
     filter :group_by, default: :day
+    filter :state, options: -> { %w[open closed] }
 
     chart do
       title "Traffic"
@@ -95,6 +96,12 @@ class ResolverTest < Minitest::Test
     assert_equal :day, context.filter_value(:group_by)
     assert_equal 2, result.widgets.first.value
     assert_equal "#", result.table.actions.first.resolve(result.table.rows.first, context).url
+  end
+
+  def test_proc_backed_filter_options_are_resolved
+    result = RecordingStudioAdmin.resolve_screen(key: "requests", context: RecordingStudioAdmin::Context.new)
+
+    assert_equal %w[open closed], result.filters.find { |filter| filter.key == :state }.options[:values]
   end
 
   def test_context_fallback_paths_use_configured_default_mount_path

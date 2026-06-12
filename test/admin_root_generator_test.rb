@@ -24,6 +24,19 @@ class AdminRootGeneratorTest < Minitest::Test
     assert_includes template, "recording_studio_accessible_children :access"
   end
 
+  def test_admin_root_route_does_not_conflict_with_default_engine_mount
+    source = File.read(File.join(ROOT, "lib/generators/recording_studio_admin/admin_root/admin_root_generator.rb"))
+
+    assert_includes source, 'get "root", to: "root#show"'
+    refute_includes source, 'root "root#show"'
+  end
+
+  def test_admin_root_view_links_to_configured_engine_mount_path
+    template = File.read(generator_template_path("app/views/admin/root/show.html.erb"))
+
+    assert_includes template, "RecordingStudioAdmin.configuration.default_mount_path"
+  end
+
   private
 
   def generator_template_path(path)

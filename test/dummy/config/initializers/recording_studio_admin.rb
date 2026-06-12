@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+RecordingStudioAdmin.configure do |config|
+  config.authorization_method = :current_user
+end
+
 module AdminScreens
   class Base < RecordingStudioAdmin::Screen
     class << self

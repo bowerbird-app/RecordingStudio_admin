@@ -53,7 +53,7 @@ module RecordingStudioAdmin
           definition.key,
           definition.type,
           entry[:value],
-          definition.options,
+          definition.options.merge(values: definition.allowed_values),
           definition.param_key,
           definition.options.fetch(:start_param, :start_date).to_sym,
           definition.options.fetch(:end_param, :end_date).to_sym

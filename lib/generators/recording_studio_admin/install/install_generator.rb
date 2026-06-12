@@ -18,6 +18,7 @@ module RecordingStudioAdmin
 
       def copy_initializer
         template "recording_studio_admin_initializer.rb", "config/initializers/recording_studio_admin.rb"
+        gsub_file "config/initializers/recording_studio_admin.rb", "__MOUNT_PATH__", mount_path
       end
 
       def add_tailwind_source
@@ -50,7 +51,8 @@ module RecordingStudioAdmin
       def mount_path
         value = options[:mount_path].to_s.chomp("/")
         unless value.match?(%r{\A/[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*\z})
-          raise ArgumentError, "mount_path must be an absolute route path using letters, numbers, underscores, dashes, and slashes"
+          raise ArgumentError,
+                "mount_path must be an absolute route path using letters, numbers, underscores, dashes, and slashes"
         end
 
         value

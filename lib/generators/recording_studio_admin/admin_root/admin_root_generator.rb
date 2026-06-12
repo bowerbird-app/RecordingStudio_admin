@@ -33,7 +33,7 @@ module RecordingStudioAdmin
       end
 
       def add_route
-        route %(namespace :admin do\n    root "root#show"\n  end)
+        route %(namespace :admin do\n    get "root", to: "root#show"\n  end)
       end
     end
   end
