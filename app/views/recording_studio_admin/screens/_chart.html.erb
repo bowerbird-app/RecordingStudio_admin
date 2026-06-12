@@ -1,0 +1,141 @@
+<%= turbo_frame_tag "screen-chart" do %>
+  <% if screen.chart %>
+    <%= render FlatPack::Card::Component.new(style: :outlined, class: "mb-6") do |card| %>
+      <% card.body do %>
+        <% if screen.chart.title.present? || screen.chart.subtitle.present? %>
+          <div class="mb-4">
+            <% if screen.chart.title.present? %>
+              <h3 class="text-lg font-semibold text-(--surface-content-color)"><%= screen.chart.title %></h3>
+            <% end %>
+
+            <% if screen.chart.subtitle.present? %>
+              <p class="mt-1 text-sm text-(--surface-muted-content-color)"><%= screen.chart.subtitle %></p>
+            <% end %>
+          </div>
+        <% end %>
+
+        <%= render FlatPack::Chart::Component.new(
+          type: screen.chart.type,
+          series: screen.chart.series,
+          options: screen.chart.options,
+          card: false
+        ) %>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% if screen.table %>
+    <% table_result = screen.table.result %>
+    <% current_sort = table_result&.sort.to_s %>
+    <% current_direction = table_result&.direction.to_s.presence || "desc" %>
+    <% base_query = request.query_parameters.symbolize_keys.except(:page) %>
+    <% table_filter_param_keys = screen.table.filters.map(&:param_key).map(&:to_sym) %>
+    <% hidden_query = base_query.except(*table_filter_param_keys) %>
+    <% has_more_rows = table_result && table_result.current_page < table_result.total_pages %>
+    <% next_page_url = if has_more_rows
+         query = base_query.merge(page: table_result.current_page + 1)
+         query.any? ? "#{request.path}?#{query.to_query}" : request.path
+       end %>
+    <% cell_content = lambda do |column, row|
+         RecordingStudioAdmin::TableCellRenderer.call(
+           column: column,
+           row: row,
+           context: recording_studio_admin_context,
+           view_context: self
+         )
+       end %>
+
+    <div>
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-lg font-semibold text-(--surface-content-color)">Table data</h3>
+          <% if table_result %>
+            <p class="mt-1 text-sm text-(--surface-muted-content-color)"><%= pluralize(table_result.total_count, "row") %></p>
+          <% end %>
+        </div>
+      </div>
+
+      <% if screen.table.filters.any? %>
+        <%= form_with url: request.path, method: :get, class: "mb-4", data: {
+          controller: "flat-pack--auto-submit",
+          turbo_frame: "screen-chart",
+          action: "change->flat-pack--auto-submit#queueSubmit input->flat-pack--auto-submit#queueSubmit"
+        } do %>
+          <% hidden_query.each do |key, value| %>
+            <% if value.is_a?(Array) %>
+              <% value.each do |entry| %>
+                <%= hidden_field_tag "#{key}[]", entry %>
+              <% end %>
+            <% else %>
+              <%= hidden_field_tag key, value %>
+            <% end %>
+          <% end %>
+
+          <%= render FlatPack::Grid::Component.new(cols: :auto, gap: :md) do %>
+            <% screen.table.filters.each do |filter| %>
+              <% filter_options = Array(filter.options[:values] || filter.options[:options]) %>
+              <% if filter_options.any? %>
+                <% select_options = filter_options.map { |value| { label: value.to_s.humanize, value: value } } %>
+                <%= render FlatPack::Select::Component.new(
+                  name: filter.param_key,
+                  options: select_options,
+                  value: filter.value,
+                  placeholder: filter.key.to_s.humanize
+                ) %>
+              <% else %>
+                <%= render FlatPack::SearchInput::Component.new(
+                  name: filter.param_key,
+                  value: filter.value,
+                  placeholder: filter.key.to_s.humanize
+                ) %>
+              <% end %>
+            <% end %>
+          <% end %>
+        <% end %>
+      <% end %>
+
+      <%= render FlatPack::Table::Component.new(
+        data: screen.table.rows,
+        class: "text-sm",
+        tbody_data: ({ pagination_content: true } if table_result&.mode.to_sym == :infinite)
+      ) do |table| %>
+        <% screen.table.columns.each do |column| %>
+          <% next_direction = current_sort == column.key.to_s && current_direction == "asc" ? "desc" : "asc" %>
+          <% sort_query = base_query.merge(sort: column.key, direction: next_direction) %>
+          <% sort_url = sort_query.any? ? "#{request.path}?#{sort_query.to_query}" : request.path %>
+          <% sort_indicator = if current_sort == column.key.to_s
+               current_direction == "asc" ? " ↑" : " ↓"
+             else
+               ""
+             end %>
+          <% title = if column.sortable
+               link_to("#{column.title}#{sort_indicator}", sort_url,
+                       data: { turbo_frame: "screen-chart" },
+                       class: "inline-flex items-center gap-1 hover:text-[var(--table-sort-link-hover-color)] transition-colors")
+             else
+               column.title
+             end %>
+          <% table.column(title: title, html: ->(row) do
+               content = cell_content.call(column, row)
+               tooltip = column.tooltip_for(row, recording_studio_admin_context)
+
+               if tooltip.present?
+                 tag.span(content, title: tooltip, class: "inline-flex")
+               else
+                 content
+               end
+             end) %>
+        <% end %>
+      <% end %>
+
+      <% if table_result&.mode.to_sym == :infinite %>
+        <%= render FlatPack::Pagination::Component.new(
+          mode: :infinite,
+          infinite_url: next_page_url,
+          has_more: has_more_rows,
+          loading_variant: :table
+        ) %>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

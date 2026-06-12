@@ -17,12 +17,18 @@ module RecordingStudioAdmin
         raise DefinitionNotFound, "Section #{@key.inspect} is not registered" unless definition
         raise DefinitionNotFound, "Section #{@key.inspect} is not visible" unless visible?(definition)
 
+        section_recording = RecordingStudioAdmin::SectionRecordingResolver.call(section: definition, context: @context)
+
         Results::ResolvedSection.new(
           key: definition.key,
           title: definition.evaluate(definition.title, @context),
           subtitle: definition.evaluate(definition.subtitle, @context),
           links: definition.links.filter_map { |link| link.resolve(@context) },
-          widgets: definition.widget_keys.map { |key| RecordingStudioAdmin.resolve_widget(key: key, context: @context) }
+          widgets: definition.widget_keys.map do |key|
+            RecordingStudioAdmin.resolve_widget(key: key, context: @context)
+          end,
+          recordable: section_recording&.recordable,
+          recording: section_recording&.recording
         )
       end
 

@@ -5,6 +5,7 @@ require "devise/test/integration_helpers"
 
 class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  include DummyAccessTestHelpers
 
   test "home page renders the root switch dropdown trigger" do
     user = User.find_or_create_by!(email: "root-switch-test@example.com") do |record|
@@ -15,11 +16,18 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     sign_in user
 
     workspace = Workspace.create!(name: "Dropdown Workspace")
-    RecordingStudio.root_recording_for(workspace)
+    root_recording = RecordingStudio.root_recording_for(workspace)
+    grant_admin_access_for_test!(recording: root_recording, actor: user)
 
     get root_path
 
     assert_response :success
+    assert_includes response.body, "Template Demo"
+    assert_includes response.body, "This dummy app is the browser-facing demo surface for the template."
+    assert_includes response.body, ">Admin<"
+    assert_includes response.body, 'href="http://www.example.com/admin?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    refute_includes response.body, "What's working"
+    refute_includes response.body, "Next steps"
     assert_includes response.body, workspace.name
   end
 
@@ -32,7 +40,8 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     sign_in user
 
     workspace = Workspace.create!(name: "Switch Page Workspace")
-    RecordingStudio.root_recording_for(workspace)
+    root_recording = RecordingStudio.root_recording_for(workspace)
+    grant_admin_access_for_test!(recording: root_recording, actor: user)
 
     get "/recording_studio_root_switchable/v1/root_switch?scope=all_workspaces"
 
@@ -51,7 +60,9 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     source_workspace = Workspace.create!(name: "Source Workspace")
     target_workspace = Workspace.create!(name: "Target Workspace")
     target_root_recording = RecordingStudio.root_recording_for(target_workspace)
-    RecordingStudio.root_recording_for(source_workspace)
+    source_root_recording = RecordingStudio.root_recording_for(source_workspace)
+    grant_admin_access_for_test!(recording: source_root_recording, actor: user)
+    grant_admin_access_for_test!(recording: target_root_recording, actor: user)
 
     patch "/recording_studio_root_switchable/v1/root_switch", params: {
       scope: "all_workspaces",
@@ -75,7 +86,9 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     source_workspace = Workspace.create!(name: "Fallback Source Workspace")
     target_workspace = Workspace.create!(name: "Fallback Target Workspace")
     target_root_recording = RecordingStudio.root_recording_for(target_workspace)
-    RecordingStudio.root_recording_for(source_workspace)
+    source_root_recording = RecordingStudio.root_recording_for(source_workspace)
+    grant_admin_access_for_test!(recording: source_root_recording, actor: user)
+    grant_admin_access_for_test!(recording: target_root_recording, actor: user)
 
     patch "/recording_studio_root_switchable/v1/root_switch", params: {
       scope: "all_workspaces",

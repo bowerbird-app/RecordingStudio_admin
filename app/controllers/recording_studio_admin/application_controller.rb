@@ -10,7 +10,7 @@ module RecordingStudioAdmin
     before_action :authorize_recording_studio_admin!
     before_action :set_recording_studio_admin_current_actor
 
-    helper_method :recording_studio_admin_context
+    helper_method :recording_studio_admin_context, :page_nav_anchor_url, :preserve_anchor_url
 
     private
 
@@ -45,6 +45,27 @@ module RecordingStudioAdmin
         routes: self,
         view_context: view_context
       )
+    end
+
+    def page_nav_anchor_url(default: nil)
+      safe_url = RecordingStudioAdmin::UrlSafety.safe_href(params[:anchor_url])
+      return default if safe_url.blank? || safe_url == "#"
+
+      safe_url
+    end
+
+    def preserve_anchor_url(url)
+      safe_url = RecordingStudioAdmin::UrlSafety.safe_href(url)
+      anchor_url = page_nav_anchor_url
+
+      return safe_url if safe_url.blank? || anchor_url.blank? || anchor_url == "#"
+      return safe_url unless safe_url.start_with?("/")
+
+      uri = URI.parse(safe_url)
+      uri.query = Rack::Utils.parse_nested_query(uri.query).reverse_merge("anchor_url" => anchor_url).to_query.presence
+      uri.to_s
+    rescue URI::InvalidURIError
+      safe_url
     end
 
     def current_actor

@@ -82,6 +82,37 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
     assert_equal "Page cannot be recorded under Page", error.message
   end
 
+  test "backed admin section resolves a reusable child recording" do
+    section_key = "backed_#{SecureRandom.hex(4)}"
+    workspace_name = unique_name("Section Parent Workspace")
+    folder_name = unique_name("Section Folder")
+    original_registry = RecordingStudioAdmin.instance_variable_get(:@registry)
+
+    section_class = Class.new(RecordingStudioAdmin::Section) do
+      key section_key
+      title "Backed section"
+      recordable "Folder",
+                 find_or_create_by: -> { { name: folder_name } },
+                 parent: -> { Workspace.find_or_create_by!(name: workspace_name) }
+    end
+
+    RecordingStudioAdmin.instance_variable_set(:@registry, RecordingStudioAdmin::Registry.new)
+    RecordingStudioAdmin.register_section(section_class)
+
+    first_result = RecordingStudioAdmin.resolve_section(key: section_key, context: RecordingStudioAdmin::Context.new)
+    second_result = RecordingStudioAdmin.resolve_section(key: section_key, context: RecordingStudioAdmin::Context.new)
+
+    parent_recording = RecordingStudio.root_recording_for(Workspace.find_by!(name: workspace_name))
+
+    assert_equal folder_name, first_result.recordable.name
+    assert_equal first_result.recording, second_result.recording
+    assert_equal parent_recording, first_result.recording.root_recording
+    assert_equal parent_recording, first_result.recording.parent_recording
+    assert_equal 1, RecordingStudio::Recording.where(recordable: first_result.recordable, trashed_at: nil).count
+  ensure
+    RecordingStudioAdmin.instance_variable_set(:@registry, original_registry)
+  end
+
   private
 
   def record_child(recordable, root_recording, parent_recording)

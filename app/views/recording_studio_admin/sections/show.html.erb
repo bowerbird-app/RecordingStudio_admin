@@ -1,13 +1,19 @@
+<%= render FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url(default: RecordingStudioAdmin.configuration.default_mount_path), class: "mb-4") %>
+
 <%= render FlatPack::PageTitle::Component.new(title: @section.title, subtitle: @section.subtitle) %>
 
-<div class="flex flex-wrap gap-2 my-4">
-  <% @section.links.each do |link| %>
-    <%= render FlatPack::Button::Component.new(text: link.text, href: link.url, style: link.style) %>
+<% if @section.links.any? %>
+  <%= render FlatPack::ButtonGroup::Component.new(class: "my-6 flex-wrap") do |group| %>
+    <% @section.links.each do |link| %>
+      <% group.button(render(FlatPack::Button::Component.new(text: link.text, url: preserve_anchor_url(link.url), style: link.style))) %>
+    <% end %>
   <% end %>
-</div>
+<% end %>
 
-<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-  <% @section.widgets.each do |widget| %>
-    <%= render partial: "recording_studio_admin/shared/widget", locals: { widget: widget } %>
+<% if @section.widgets.any? %>
+  <%= render FlatPack::Grid::Component.new(cols: :auto, gap: :md, class: "my-8") do %>
+    <% @section.widgets.each do |widget| %>
+      <%= render partial: "recording_studio_admin/shared/widget", locals: { widget: widget } %>
+    <% end %>
   <% end %>
-</div>
+<% end %>

@@ -86,9 +86,10 @@ module RecordingStudioAdmin
       @filters << Definitions::FilterDefinition.new(name.to_sym, :select, options)
     end
 
-    def column(name, title: nil, sortable: true, tooltip: nil, header_tooltip: nil, value: nil)
+    def column(name, title: nil, sortable: true, tooltip: nil, header_tooltip: nil, value: nil, display: nil,
+               display_options: nil)
       @columns << ColumnDefinition.new(name.to_sym, title || name.to_s.humanize, sortable, tooltip, header_tooltip,
-                                       value)
+                                       value, display, display_options)
     end
 
     def action(name, text:, url:, visible_if: nil)
@@ -105,13 +106,26 @@ module RecordingStudioAdmin
     end
   end
 
-  ColumnDefinition = Data.define(:key, :title, :sortable, :tooltip, :header_tooltip, :value) do
+  ColumnDefinition = Data.define(:key, :title, :sortable, :tooltip, :header_tooltip, :value, :display,
+                                 :display_options) do
     def cell(row, context)
       value.respond_to?(:call) ? value.call(row, context) : row.public_send(key)
     end
 
     def tooltip_for(row, context)
       tooltip.respond_to?(:call) ? tooltip.call(row, context) : tooltip
+    end
+
+    def display_options_for(row, context, cell_value)
+      return {} unless display_options
+      return display_options unless display_options.respond_to?(:call)
+
+      case display_options.arity
+      when 0 then display_options.call
+      when 1 then display_options.call(row)
+      when 2 then display_options.call(row, context)
+      else display_options.call(row, context, cell_value)
+      end
     end
   end
 

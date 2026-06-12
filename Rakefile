@@ -34,6 +34,10 @@ def run_command!(env, *command)
   raise "Command failed (#{Process.last_status.exitstatus}): #{command.join(' ')}"
 end
 
+def bundle_satisfied?(env)
+  Bundler.with_unbundled_env { system(env, "bundle", "check", out: File::NULL, err: File::NULL) }
+end
+
 def dummy_bundle_env
   dummy_bundle_base_env.merge(DUMMY_BUNDLE_CLEARED_ENV)
 end
@@ -67,6 +71,7 @@ namespace :test do
     Dir.chdir(DUMMY_APP_ROOT) do
       env = dummy_bundle_env
 
+      run_command!(env, "bundle", "install") unless bundle_satisfied?(env)
       run_command!(env, "bundle", "exec", "bin/rails", "db:prepare")
       run_command!(env, "bundle", "exec", "bin/rails", "test")
       DUMMY_TEST_FILES.each do |test_file|

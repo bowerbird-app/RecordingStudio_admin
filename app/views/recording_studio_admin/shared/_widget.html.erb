@@ -1,19 +1,19 @@
 <%= render FlatPack::Card::Component.new(style: :outlined) do |card| %>
-  <% card.with_body do %>
-    <div class="space-y-2">
-      <p class="text-sm text-[var(--surface-muted-content-color)]"><%= widget.subtitle %></p>
-      <h3 class="text-base font-semibold"><%= widget.title %></h3>
-      <% if widget.value.present? %>
-        <p class="text-3xl font-bold"><%= widget.value %></p>
+  <% card.body do %>
+    <div class="space-y-4">
+      <% if widget.subtitle.present? || widget.title.present? %>
+        <div class="space-y-2">
+          <% if widget.subtitle.present? %>
+            <p class="text-sm text-(--surface-muted-content-color)"><%= widget.subtitle %></p>
+          <% end %>
+          <% if widget.title.present? %>
+            <h3 class="text-base font-semibold"><%= widget.title %></h3>
+          <% end %>
+        </div>
       <% end %>
-      <% if widget.change.present? %>
-        <p class="text-sm"><%= widget.change %></p>
-      <% end %>
-      <% if widget.items.present? %>
-        <ul class="list-disc pl-5 text-sm">
-          <% widget.items.each do |item| %><li><%= item %></li><% end %>
-        </ul>
-      <% end %>
+
+      <%= render partial: "recording_studio_admin/shared/widgets/#{widget.type}", locals: { widget: widget } %>
+
       <% if widget.link_to.present? %>
         <%= render FlatPack::Button::Component.new(text: "View details", href: widget.link_to, style: :secondary) %>
       <% end %>

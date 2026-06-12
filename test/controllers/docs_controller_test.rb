@@ -9,6 +9,7 @@ require "rails/test_help"
 
 class DocsControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  include DummyAccessTestHelpers
 
   TEST_PASSWORD = "DocsTestPassword!2026"
 
@@ -17,6 +18,10 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
       user.password = TEST_PASSWORD
       user.password_confirmation = TEST_PASSWORD
     end
+
+    workspace = Workspace.find_or_create_by!(name: "Docs Test Workspace")
+    root_recording = RecordingStudio.root_recording_for(workspace)
+    grant_admin_access_for_test!(recording: root_recording, actor: @user)
 
     sign_in @user
   end
@@ -87,7 +92,7 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Folder: Reference"
     assert_includes response.body, "Page: API"
     refute_includes response.body, "Access boundary"
-    refute_includes response.body, "Access: Admin"
+    assert_includes response.body, "Access: Admin"
     assert_select "div[role='tree']", count: 1
     assert_select "[role='treeitem']", minimum: 3
     refute_includes response.body, "Current structure"
@@ -157,9 +162,9 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
     }
   end
 
-  def recordable_type_summary(recording_count, recordable_count, recording_label, recordable_label)
-    "#{recording_count} #{recording_label} point to this type " \
-      "• #{recordable_count} #{recordable_label} in the database"
+  def recordable_type_summary(recording_count, recordable_count, _recording_label, _recordable_label)
+    "#{recording_count} #{'recording'.pluralize(recording_count)} point to this type " \
+      "• #{recordable_count} #{'recordable'.pluralize(recordable_count)} in the database"
   end
 
   def record_child(recordable, root_recording, parent_recording)

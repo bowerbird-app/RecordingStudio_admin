@@ -1,49 +1,48 @@
-<%= render FlatPack::PageTitle::Component.new(title: @screen.title, subtitle: @screen.subtitle) %>
+<%= render FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url(default: RecordingStudioAdmin.configuration.default_mount_path), class: "mb-4") %>
 
-<div class="flex flex-wrap gap-2 my-4">
-  <% @screen.buttons.each do |button| %>
-    <%= render FlatPack::Button::Component.new(text: button.text, href: button.url, style: button.style) %>
-  <% end %>
-</div>
-
-<%= form_with url: request.path, method: :get, local: true, class: "flex flex-wrap gap-3 my-4" do |form| %>
-  <% @screen.filters.each do |filter| %>
-    <% if filter.type == :date_range %>
-      <%= form.date_field filter.start_param, value: filter.value&.start_date, class: "rounded border px-3 py-2" %>
-      <%= form.date_field filter.end_param, value: filter.value&.end_date, class: "rounded border px-3 py-2" %>
-    <% else %>
-      <%= form.select filter.param_key, Array(filter.options[:values] || filter.options[:options]).map { |value| [value.to_s.humanize, value] }, { include_blank: true, selected: filter.value }, class: "rounded border px-3 py-2" %>
-    <% end %>
-  <% end %>
-  <%= render FlatPack::Button::Component.new(text: "Apply", type: :submit, style: :primary) %>
-<% end %>
-
-<% if @screen.chart %>
-  <%= render FlatPack::Card::Component.new(style: :outlined, class: "my-4") do |card| %>
-    <% card.with_body do %>
-      <h2 class="text-lg font-semibold"><%= @screen.chart.title %></h2>
-      <p class="text-sm text-[var(--surface-muted-content-color)]"><%= @screen.chart.subtitle %></p>
-      <%= render FlatPack::Chart::Component.new(type: @screen.chart.type, series: @screen.chart.series, options: @screen.chart.options) %>
-    <% end %>
-  <% end %>
-<% end %>
-
-<% if @screen.table %>
-  <% if @screen.table.filters.any? %>
-    <%= form_with url: request.path, method: :get, local: true, class: "flex flex-wrap gap-3 my-4" do |form| %>
-      <% @screen.table.filters.each do |filter| %>
-        <%= form.search_field filter.param_key, value: filter.value, placeholder: filter.key.to_s.humanize, class: "rounded border px-3 py-2" %>
+<%= render FlatPack::PageTitle::Component.new(title: @screen.title, subtitle: @screen.subtitle) do |page_title| %>
+  <% if @screen.buttons.any? %>
+    <% page_title.slot do %>
+      <%= render FlatPack::ButtonGroup::Component.new do |group| %>
+        <% @screen.buttons.each do |button| %>
+          <% group.button(render(FlatPack::Button::Component.new(text: button.text, href: button.url, style: button.style))) %>
+        <% end %>
       <% end %>
-      <%= render FlatPack::Button::Component.new(text: "Search", type: :submit, style: :secondary) %>
     <% end %>
   <% end %>
-
-  <%= render FlatPack::Table::Component.new(data: @screen.table.rows) do |table| %>
-    <% @screen.table.columns.each do |column| %>
-      <% table.with_column(column.title) { |row| column.cell(row, recording_studio_admin_context) } %>
-    <% end %>
-  <% end %>
-  <div class="mt-4">
-    <%= render FlatPack::Pagination::Component.new(current_page: @screen.table.result.current_page, total_pages: @screen.table.result.total_pages) %>
-  </div>
 <% end %>
+
+<% if @screen.filters.any? %>
+  <%= form_with url: request.path, method: :get, id: "screen-filters-form", data: {
+    controller: "flat-pack--auto-submit",
+    turbo_frame: "screen-chart",
+    action: "change->flat-pack--auto-submit#queueSubmit"
+  } do %>
+    <% if page_nav_anchor_url.present? %>
+      <%= hidden_field_tag :anchor_url, page_nav_anchor_url %>
+    <% end %>
+    <%= render FlatPack::Grid::Component.new(cols: 4, gap: :md, class: "mb-6") do %>
+      <% @screen.filters.each do |filter| %>
+        <% if filter.type == :date_range %>
+          <%= render FlatPack::DateRangeInput::Component.new(
+            start_name: filter.start_param,
+            end_name: filter.end_param,
+            start_value: filter.value&.start_date,
+            end_value: filter.value&.end_date
+          ) %>
+        <% else %>
+          <% select_options = Array(filter.options[:values] || filter.options[:options]).map { |value| { label: value.to_s.humanize, value: value } } %>
+          <%= render FlatPack::Select::Component.new(
+            name: filter.param_key,
+            options: select_options,
+            value: filter.value,
+            placeholder: "All"
+          ) %>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<%= render "chart", screen: @screen %>
+

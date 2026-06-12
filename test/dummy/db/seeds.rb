@@ -16,6 +16,19 @@ find_or_record_child = lambda do |recordable, root_recording, parent_recording|
   ).recording
 end
 
+grant_admin_access = lambda do |recording, actor|
+  next if RecordingStudioAccessible.role_for(actor: actor, recording: recording) == :admin
+
+  result = RecordingStudioAccessible.grant_access(
+    recording: recording,
+    actor: actor,
+    role: :admin,
+    manager_actor: actor
+  )
+
+  raise "Failed to grant access: #{result.error}" if result.failure?
+end
+
 # Create the admin user
 user = User.find_or_create_by!(email: "admin@admin.com") do |u|
   u.password = "Password"
@@ -31,6 +44,8 @@ page = Page.find_or_create_by!(title: "Getting Started")
 
 previous_actor = Current.actor
 Current.actor = user
+previous_access_authorizer = RecordingStudioAccessible.configuration.access_management_authorizer
+RecordingStudioAccessible.configuration.access_management_authorizer = ->(recording:, **) { recording.present? }
 
 begin
   # Create the root recording
@@ -41,7 +56,12 @@ begin
   folder_recording = find_or_record_child.call(folder, root_recording, root_recording)
 
   find_or_record_child.call(page, root_recording, folder_recording)
+
+  [ root_recording, accessible_root_recording, private_root_recording ].each do |recording|
+    grant_admin_access.call(recording, user)
+  end
 ensure
+  RecordingStudioAccessible.configuration.access_management_authorizer = previous_access_authorizer
   Current.actor = previous_actor
 end
 
@@ -54,15 +74,24 @@ puts "Seeded: Folder '#{folder.name}' and page '#{page.title}'"
 admin_root = AdminRoot.find_or_create_by!(name: "Admin")
 previous_actor = Current.actor
 Current.actor = user
+previous_access_authorizer = RecordingStudioAccessible.configuration.access_management_authorizer
+RecordingStudioAccessible.configuration.access_management_authorizer = ->(recording:, **) { recording.present? }
 begin
-  RecordingStudio.root_recording_for(admin_root)
+  admin_root_recording = RecordingStudio.root_recording_for(admin_root)
+  grant_admin_access.call(admin_root_recording, user)
+
+  admin_summary_section = AdminSummarySection.find_or_create_by!(key: "root") do |record|
+    record.name = "Admin summary"
+  end
+  find_or_record_child.call(admin_summary_section, admin_root_recording, admin_root_recording)
 ensure
+  RecordingStudioAccessible.configuration.access_management_authorizer = previous_access_authorizer
   Current.actor = previous_actor
 end
 
-paths = ["/api/projects", "/api/uploads", "/api/search", "/api/reports"]
+paths = [ "/api/projects", "/api/uploads", "/api/search", "/api/reports" ]
 methods = %w[GET POST PATCH DELETE]
-statuses = [200, 200, 201, 204, 400, 404, 422, 500]
+statuses = [ 200, 200, 201, 204, 400, 404, 422, 500 ]
 120.times do |index|
   ApiRequest.find_or_create_by!(path: paths[index % paths.size], method: methods[index % methods.size], created_at: index.hours.ago) do |record|
     record.status = statuses[index % statuses.size]
@@ -76,7 +105,7 @@ error_classes = %w[TimeoutError ValidationError NotFoundError IntegrationError]
   ApiError.find_or_create_by!(message: "Example failure #{index}", created_at: index.hours.ago) do |record|
     record.error_class = error_classes[index % error_classes.size]
     record.path = paths[index % paths.size]
-    record.status = [400, 404, 422, 500][index % 4]
+    record.status = [ 400, 404, 422, 500 ][index % 4]
     record.updated_at = record.created_at
   end
 end
@@ -98,4 +127,4 @@ queues = %w[default mailers imports critical]
   end
 end
 
-puts "Seeded RecordingStudioAdmin demo data and admin root"
+puts "Seeded RecordingStudioAdmin demo data and admin root with admin access grants"
