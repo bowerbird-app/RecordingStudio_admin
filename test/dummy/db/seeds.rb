@@ -50,3 +50,52 @@ puts "Seeded: Workspace '#{workspace.name}' with root recording ##{root_recordin
 puts "Seeded: Workspace '#{accessible_workspace.name}' with root recording ##{accessible_root_recording.id}"
 puts "Seeded: Workspace '#{private_workspace.name}' with root recording ##{private_root_recording.id}"
 puts "Seeded: Folder '#{folder.name}' and page '#{page.title}'"
+
+admin_root = AdminRoot.find_or_create_by!(name: "Admin")
+previous_actor = Current.actor
+Current.actor = user
+begin
+  RecordingStudio.root_recording_for(admin_root)
+ensure
+  Current.actor = previous_actor
+end
+
+paths = ["/api/projects", "/api/uploads", "/api/search", "/api/reports"]
+methods = %w[GET POST PATCH DELETE]
+statuses = [200, 200, 201, 204, 400, 404, 422, 500]
+120.times do |index|
+  ApiRequest.find_or_create_by!(path: paths[index % paths.size], method: methods[index % methods.size], created_at: index.hours.ago) do |record|
+    record.status = statuses[index % statuses.size]
+    record.latency_ms = 40 + (index * 17) % 900
+    record.updated_at = record.created_at
+  end
+end
+
+error_classes = %w[TimeoutError ValidationError NotFoundError IntegrationError]
+40.times do |index|
+  ApiError.find_or_create_by!(message: "Example failure #{index}", created_at: index.hours.ago) do |record|
+    record.error_class = error_classes[index % error_classes.size]
+    record.path = paths[index % paths.size]
+    record.status = [400, 404, 422, 500][index % 4]
+    record.updated_at = record.created_at
+  end
+end
+
+actions = %w[signed_in exported_report updated_settings invited_user]
+80.times do |index|
+  UserActivity.find_or_create_by!(email: "user#{index % 12}@example.com", action: actions[index % actions.size], created_at: index.hours.ago) do |record|
+    record.status = index.even? ? "success" : "review"
+    record.updated_at = record.created_at
+  end
+end
+
+queues = %w[default mailers imports critical]
+70.times do |index|
+  BackgroundJobRun.find_or_create_by!(job_class: "AdminJob#{index % 8}", queue: queues[index % queues.size], created_at: index.hours.ago) do |record|
+    record.status = index % 9 == 0 ? "failed" : "completed"
+    record.duration_ms = 100 + (index * 23) % 2_000
+    record.updated_at = record.created_at
+  end
+end
+
+puts "Seeded RecordingStudioAdmin demo data and admin root"

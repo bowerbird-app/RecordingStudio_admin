@@ -1,0 +1,13 @@
+<%= render FlatPack::PageTitle::Component.new(title: @section.title, subtitle: @section.subtitle) %>
+
+<div class="flex flex-wrap gap-2 my-4">
+  <% @section.links.each do |link| %>
+    <%= render FlatPack::Button::Component.new(text: link.text, href: link.url, style: link.style) %>
+  <% end %>
+</div>
+
+<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+  <% @section.widgets.each do |widget| %>
+    <%= render partial: "recording_studio_admin/shared/widget", locals: { widget: widget } %>
+  <% end %>
+</div>

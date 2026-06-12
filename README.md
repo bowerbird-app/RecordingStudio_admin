@@ -1,139 +1,126 @@
-# GemTemplate
+# RecordingStudioAdmin
 
-Internal template for building Rails engine addons on top of RecordingStudio.
+`RecordingStudioAdmin` is the canonical Rails engine for reusable Recording Studio admin and reporting screens.
 
-## What's Included
+It provides two separate capabilities:
 
-- **RecordingStudio** gem installed and configured
-- **Devise** authentication with a pre-seeded admin user
-- **Workspace**, **Folder**, and **Page** recordables seeded into the dummy host app
-- **FlatPack** UI component library for all views
-- **Dummy app** (`test/dummy/`) with a FlatPack-based sign-in screen, a simple home page, mounted RecordingStudio routes, and FlatPack's built-in rounded theme enabled by default
+- **Admin root scaffolding**: optional, generated host-app files for an editable sitewide admin root recordable.
+- **Reusable admin screen engine**: code-defined sections, screens, widgets, filters, charts, tables, and resolvers that can be mounted anywhere.
 
-The dummy app ships with a starter sidebar documentation shell for authenticated pages. The menu entries in `test/dummy/app/views/layouts/flat_pack/_sidebar.html.erb` and the linked docs pages are intended to be rewritten to suit the addon you are building; the template provides the structure and styling, not final product copy. By default, that starter shell uses FlatPack's built-in rounded theme via the root layout attribute rather than custom Tailwind theme recreation.
+The old admin gem is not an implementation guide for this replacement.
 
-## Quick Start
+## Requirements
 
-### GitHub Codespaces (Recommended)
+- Rails 8.1+
+- RecordingStudio
+- RecordingStudioAccessible
+- FlatPack
 
-1. Click **Code** → **Codespaces** → **Create codespace**
-2. Wait for setup to complete
-3. Run:
-   ```bash
-   cd test/dummy
-   bin/rails db:setup
-   bin/dev
-   ```
-4. Open port 3000 — you'll land on the dummy app home page and can sign in at `/users/sign_in`
+`RecordingStudioAccessible` is required. The generated admin root includes `RecordingStudioAccessible::AllowsAccessibleChildren` by default.
 
-The dummy app is intended as a host-app validation surface for authentication, FlatPack rendering, Tailwind source scanning, and RecordingStudio route wiring.
+## Routing
 
-### Login Credentials
-
-| Field    | Value             |
-|----------|-------------------|
-| Email    | admin@admin.com   |
-| Password | Password          |
-
-The login form is prefilled with these credentials for fast access.
-
-### Useful Routes
-
-- `/` — dummy app home page
-- `/users/sign_in` — Devise sign-in page
-- `/recording_studio` — redirect to `/` while the mounted RecordingStudio engine remains data/API-focused
-- `/docs/install` — install guide rendered inside the dummy app
-- `/docs/config`, `/docs/recordable_types`, `/docs/recordings_tree`, `/docs/gem_views`, `/docs/methods` — starter sidebar pages to customize for your gem
-
-The home page in `test/dummy/app/views/home/index.html.erb` is also a deliberate starting point. Keep it focused on a minimal demo of the gem's primary behavior; use the sidebar pages for deeper explanations and supporting reference material.
-
-## Architecture
-
-### Root Recording Pattern
-
-This template follows RecordingStudio's root recording pattern:
-
-- **Workspace** is the top-level recordable
-- **Folder** and **Page** demonstrate nested recordables under the workspace root
-- Each configured recordable declares `recording_studio_recordable(...)`; strict declaration validation stays enabled
-- A root `RecordingStudio::Recording` wraps the Workspace
-- `Current.actor` is set from `current_user` (Devise) in `ApplicationController`
-
-### Extending RecordingStudio
-
-To add new recordable types:
-
-1. Create your model (e.g., `Page`, `Comment`)
-2. Register it in `config/initializers/recording_studio.rb`:
-   ```ruby
-   RecordingStudio.configure do |config|
-     config.recordable_types = ["Workspace", "YourNewType"]
-   end
-   ```
-3. Declare whether the model can be a root and which parents may contain it:
-   ```ruby
-   class YourNewType < ApplicationRecord
-     recording_studio_recordable label: "Your new type",
-                                 root: false,
-                                 allowed_parent_types: ["Workspace", "Folder"]
-   end
-   ```
-4. Validate declarations and create recordings under the root:
-   ```ruby
-   RecordingStudio.validate_recordable_declarations!
-   root_recording = RecordingStudio.root_recording_for(workspace)
-   root_recording.record(YourNewType) do |record|
-     record.title = "Example"
-   end
-   ```
-
-### RecordingStudio v3 Declarations
-
-RecordingStudio v3 expects every configured ActiveRecord recordable type to declare its hierarchy rules:
-
-- `Workspace` declares `root: true`
-- `Folder` and `Page` declare `root: false, allowed_parent_types: ["Workspace", "Folder"]`
-- `config.require_recordable_declarations = true` remains enabled in the dummy app initializer
-
-Useful console checks:
+Mount the screen engine wherever you need admin or reporting screens:
 
 ```ruby
-RecordingStudio.validate_recordable_declarations!
-RecordingStudio.root_recordable_types
-RecordingStudio.allowed_parent_types_for("Page")
+mount RecordingStudioAdmin::Engine, at: "/admin"
 ```
 
-### FlatPack UI Components
+The engine exposes explicit routes only:
 
-All views use FlatPack ViewComponents. Available components include:
+```text
+/admin
+/admin/sections/:key
+/admin/screens/:key
+```
 
-- `FlatPack::Button::Component` — Buttons (`:primary`, `:secondary`, `:ghost`)
-- `FlatPack::Card::Component` — Cards (`:default`, `:elevated`, `:outlined`)
-- `FlatPack::Alert::Component` — Alerts (`:success`, `:error`, `:warning`, `:info`)
-- `FlatPack::Badge::Component` — Status badges
-- `FlatPack::Table::Component` — Data tables
-- `FlatPack::TextInput::Component`, `EmailInput`, `PasswordInput` — Form inputs
-- `FlatPack::Breadcrumb::Component` — Navigation breadcrumbs
-- `FlatPack::Navbar::Component` — Navigation sidebar
+There are no catch-all routes.
 
-Use the live FlatPack demo app at [flatpack-c6p8f.ondigitalocean.app](https://flatpack-c6p8f.ondigitalocean.app/) as the approved UI reference for current shared patterns. Its component table is the fastest way to discover available FlatPack components before introducing new custom UI, and user-provided FlatPack demo URLs should be treated as task context.
+## Definitions and resolvers
 
-In GitHub Codespaces or other restricted environments, you may need to enable access to that URL before the agent can inspect the app. If access is unavailable, provide sanitized screenshots, copied markup, or component details so the agent can stay aligned with the shared UI.
+Sections, screens, widgets, filters, charts, and tables are code-defined. Controllers and views consume structured resolver results; they do not own query or rendering logic.
 
-See the [FlatPack README](https://github.com/bowerbird-app/flatpack) for full documentation.
+```ruby
+RecordingStudioAdmin.register_screen(ApiRequestsScreen)
+RecordingStudioAdmin.register_section(AdminRootSection)
 
-## Tech Stack
+RecordingStudioAdmin.resolve_screen(key: "api_requests", context: context)
+RecordingStudioAdmin.resolve_section(key: "root", context: context)
+RecordingStudioAdmin.resolve_widget(key: "api_requests.widgets.activity_last_24_hours", context: context)
+```
 
-| Component       | Version |
-|-----------------|---------|
-| Ruby            | 3.3+    |
-| Rails           | 8.1+    |
-| PostgreSQL      | 16      |
-| TailwindCSS     | 4       |
-| RecordingStudio | v3.0.0 (pinned to `recording_studio/v3.0.0` in `test/dummy/Gemfile`) |
-| FlatPack        | v0.1.84 (pinned in `test/dummy/Gemfile`) |
-| Devise          | latest  |
+Registries are idempotent for the same key/class pair and raise conflicts for different definitions with the same key.
 
-## Documentation
+## Sections, screens, and widgets
 
-The original gem template documentation is preserved in `docs/gem_template/` as architectural reference material. Use it as background on the engine conventions; the README and dummy app are the source of truth for the Recording Studio addon workflow.
+Sections are summary pages that define titles, subtitles, FlatPack button links, and widgets. They do not own screens directly.
+
+Screens define detailed pages with main filters, charts, table filters, sortable/paginated tables, and widgets exposed to sections.
+
+Screen-provided widget keys always include `.widgets.`:
+
+```text
+api_requests.widgets.activity_last_24_hours
+api_errors.widgets.recent_failures
+```
+
+Standalone widgets use:
+
+```text
+widgets.system_health
+```
+
+## Filters and table safety
+
+Main filters apply to chart and table queries. Table filters apply only to table results.
+
+Built-in filters include:
+
+- date range
+- group by (`hour`, `day`, `week`, `month`, `year`)
+
+Table sorting is restricted to declared sortable columns and directions are limited to `asc` or `desc`.
+
+## Query and table metadata
+
+Resolver results expose structured metadata for future non-HTML consumers:
+
+- `context.query_result`: main-filtered relation count and percent-change fields
+- `context.table_result`: rows, total count, page, per-page, total pages, sort, and direction
+
+Formatting belongs in FlatPack views/components, not in definition objects.
+
+## FlatPack UI
+
+All shipped rendering uses FlatPack components. Wrapper views may compose FlatPack, but this gem does not provide a separate UI system.
+
+## Generators
+
+Install the engine:
+
+```bash
+bin/rails generate recording_studio_admin:install
+```
+
+Generate optional host-app admin root scaffolding:
+
+```bash
+bin/rails generate recording_studio_admin:admin_root
+```
+
+The admin root generator creates editable app-owned files including `Admin::BaseController`, `AdminRoot`, admin views, layout, and an `admin_roots` migration.
+
+## Dummy app
+
+The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a root summary section, and demonstrates four screens:
+
+- API Requests
+- API Errors
+- Users
+- Background Jobs
+
+Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
+
+## Future API readiness
+
+`RecordingStudioApi` integration is intentionally not implemented in v1. Resolver APIs return structured objects so a future API layer can call `RecordingStudioAdmin.resolve_screen`, `resolve_section`, and `resolve_widget` without rendering HTML.

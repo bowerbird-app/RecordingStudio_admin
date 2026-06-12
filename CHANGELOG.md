@@ -1,30 +1,8 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## 1.0.0
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-## [0.1.1] - 2026-04-28
-
-### Changed
-- Bumped the dummy app FlatPack dependency from `0.1.2` to `0.1.33` and pinned it by tag in `test/dummy/Gemfile`
-
-## [0.1.0] - 2025-12-04
-
-### Added
-- Initial release
-- Rails mountable engine structure
-- PostgreSQL with UUID primary keys support
-- TailwindCSS v4 integration
-- GitHub Codespaces devcontainer configuration
-- Docker Compose setup with PostgreSQL and Redis
-- Install generator for host applications
-- Comprehensive README and documentation
-- Basic test suite with Minitest
-
-[Unreleased]: https://github.com/bowerbird-app/gem_template/compare/v0.1.1...HEAD
-[0.1.1]: https://github.com/bowerbird-app/gem_template/releases/tag/v0.1.1
-[0.1.0]: https://github.com/bowerbird-app/gem_template/releases/tag/v0.1.0
+- Introduce `RecordingStudioAdmin` as the canonical Recording Studio admin/reporting screen engine.
+- Add code-defined sections, screens, widgets, filters, query/table result metadata, and resolver APIs.
+- Add optional access-enabled admin root scaffolding generator.
+- Add dummy app admin summary and four example screens backed by seed data.
