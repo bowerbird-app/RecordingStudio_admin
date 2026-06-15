@@ -1,11 +1,39 @@
 <%= turbo_frame_tag "screen-chart" do %>
   <% if screen.chart %>
+    <% total_metric = screen.metrics.find { |metric| metric.key == :total_count } %>
+    <% metric_count = total_metric&.value || screen.query_result.count %>
+    <% metric_change = total_metric&.change %>
+    <% metric_period_label = total_metric&.period_label || recording_studio_admin_context.period_label %>
+    <% change_tone = RecordingStudioAdmin::WidgetChangeSemantics.tone(
+      change: metric_change,
+      good_when: total_metric&.change_good_when || :up
+    ) %>
+    <% change_text_class = case change_tone
+                           when :success
+                             "text-[var(--color-success-background-color)]"
+                           when :danger
+                             "text-[var(--color-danger-background-color)]"
+                           else
+                             "text-[var(--surface-muted-content-color)]"
+                           end %>
+
     <%= render FlatPack::Card::Component.new(style: :outlined, class: "mb-6") do |card| %>
       <% card.body do %>
         <% if screen.chart.title.present? || screen.chart.subtitle.present? %>
           <div class="mb-4">
             <% if screen.chart.title.present? %>
               <h3 class="text-lg font-semibold text-(--surface-content-color)"><%= screen.chart.title %></h3>
+              <p class="mt-2 text-5xl font-bold leading-none text-(--surface-content-color)"><%= metric_count %></p>
+              <% if metric_change.present? || metric_period_label.present? %>
+                <p class="mt-2 flex items-center gap-2">
+                  <% if metric_change.present? %>
+                    <span class="text-sm font-semibold <%= change_text_class %>"><%= metric_change %></span>
+                  <% end %>
+                  <% if metric_period_label.present? %>
+                    <span class="text-sm font-semibold text-(--surface-muted-content-color)"><%= metric_period_label %></span>
+                  <% end %>
+                </p>
+              <% end %>
             <% end %>
 
             <% if screen.chart.subtitle.present? %>
@@ -29,8 +57,6 @@
     <% current_sort = table_result&.sort.to_s %>
     <% current_direction = table_result&.direction.to_s.presence || "desc" %>
     <% base_query = request.query_parameters.symbolize_keys.except(:page) %>
-    <% table_filter_param_keys = screen.table.filters.map(&:param_key).map(&:to_sym) %>
-    <% hidden_query = base_query.except(*table_filter_param_keys) %>
     <% has_more_rows = table_result && table_result.current_page < table_result.total_pages %>
     <% next_page_url = if has_more_rows
          query = base_query.merge(page: table_result.current_page + 1)
@@ -54,45 +80,6 @@
           <% end %>
         </div>
       </div>
-
-      <% if screen.table.filters.any? %>
-        <%= form_with url: request.path, method: :get, class: "mb-4", data: {
-          controller: "flat-pack--auto-submit",
-          turbo_frame: "screen-chart",
-          action: "change->flat-pack--auto-submit#queueSubmit input->flat-pack--auto-submit#queueSubmit"
-        } do %>
-          <% hidden_query.each do |key, value| %>
-            <% if value.is_a?(Array) %>
-              <% value.each do |entry| %>
-                <%= hidden_field_tag "#{key}[]", entry %>
-              <% end %>
-            <% else %>
-              <%= hidden_field_tag key, value %>
-            <% end %>
-          <% end %>
-
-          <%= render FlatPack::Grid::Component.new(cols: :auto, gap: :md) do %>
-            <% screen.table.filters.each do |filter| %>
-              <% filter_options = Array(filter.options[:values] || filter.options[:options]) %>
-              <% if filter_options.any? %>
-                <% select_options = filter_options.map { |value| { label: value.to_s.humanize, value: value } } %>
-                <%= render FlatPack::Select::Component.new(
-                  name: filter.param_key,
-                  options: select_options,
-                  value: filter.value,
-                  placeholder: filter.key.to_s.humanize
-                ) %>
-              <% else %>
-                <%= render FlatPack::SearchInput::Component.new(
-                  name: filter.param_key,
-                  value: filter.value,
-                  placeholder: filter.key.to_s.humanize
-                ) %>
-              <% end %>
-            <% end %>
-          <% end %>
-        <% end %>
-      <% end %>
 
       <%= render FlatPack::Table::Component.new(
         data: screen.table.rows,

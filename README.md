@@ -68,6 +68,18 @@ Registries are idempotent for the same key/class pair and raise conflicts for di
 
 Sections are summary pages that define titles, subtitles, FlatPack button links, and widgets. They do not own screens directly.
 
+When you include a widget in a section, you can set a display-level `view_variant` without changing the widget definition itself:
+
+```ruby
+class ApiCallsAdminSection < RecordingStudioAdmin::Section
+  key "api_calls"
+
+  widget "api_requests.widgets.activity_last_24_hours", view_variant: :chip
+end
+```
+
+Supported section widget view variants are `:card` and `:chip`.
+
 Sections can also declare an optional RecordingStudio-backed recordable. This keeps the admin UI route separate from access control: `/admin/sections/:key` renders the section page, while the resolved section exposes a backing `recordable` and `recording` that `RecordingStudioAccessible` can use for section-level access grants.
 
 ```ruby
@@ -102,6 +114,12 @@ Widgets support three rendered types:
 - `number`: numeric summary cards with `value` and optional `change`
 - `list`: list cards with `items`
 - `chart`: embedded charts with `chart_type`, `series`, and optional `chart_options`
+
+`number` and `chart` widgets can set `change_good_when` to control trend semantics:
+
+- `:up` (default): positive change is styled as good
+- `:down`: negative change is styled as good (useful for churn or error rates)
+- `:neutral`: change text is always styled neutral
 
 Legacy `stat` widget definitions are normalized to `number` for compatibility.
 

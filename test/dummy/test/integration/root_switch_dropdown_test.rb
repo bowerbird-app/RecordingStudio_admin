@@ -22,8 +22,8 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_includes response.body, "Template Demo"
-    assert_includes response.body, "This dummy app is the browser-facing demo surface for the template."
+    assert_includes response.body, "Recording Studio Admin Demo"
+    assert_includes response.body, "Quickly create admin screens and dashboards using recording studio"
     assert_includes response.body, ">Admin<"
     assert_includes response.body, 'href="http://www.example.com/admin?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     refute_includes response.body, "What's working"

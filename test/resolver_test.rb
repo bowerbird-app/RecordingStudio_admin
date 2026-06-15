@@ -40,6 +40,11 @@ class ResolverTest < Minitest::Test
     end
 
     table do
+      filter :search, apply: lambda { |relation, value, _context|
+        next relation unless value.present?
+
+        ArrayRelation.new(relation.rows.select { |row| row.name.include?(value) })
+      }
       column :name
       column(
         :status,
@@ -54,13 +59,29 @@ class ResolverTest < Minitest::Test
 
     widget :total do
       title "Total"
+      description "Total requests returned by the current query."
       value { |context| context.query_result.count }
     end
 
     widget :recent_statuses do
       type :list
       title "Recent statuses"
-      items { |_context| ["200 OK", "500 Error"] }
+      list_options divider: true, spacing: :dense, hover: true
+      items do |context|
+        [
+          {
+            text: "200 OK",
+            icon: :check,
+            trailing: "Healthy",
+            href: context.admin_screen_path("requests")
+          },
+          {
+            label: "500 Error",
+            leading: "!",
+            href: "javascript:alert(1)"
+          }
+        ]
+      end
     end
 
     widget :traffic_preview do
@@ -70,10 +91,40 @@ class ResolverTest < Minitest::Test
       series { [{ name: "Requests", data: [{ x: "Jan", y: 2 }] }] }
     end
 
+    widget :churn do
+      type :number
+      title "Churn"
+      value 7
+      change "+30%"
+      change_good_when :down
+    end
+
+    widget :alias_polarity do
+      type :number
+      title "Alias"
+      value 1
+      change "-2%"
+      change_good_when :negative
+    end
+
     widget :legacy_total do
       type :stat
       title "Legacy total"
       value { |context| context.query_result.count }
+    end
+
+    metric :requests_total do
+      label "Total requests"
+      value { |context| context.query_result.count }
+      description "Requests matching the current filters."
+    end
+
+    metric :error_rate do
+      label "Error rate"
+      value "2.4%"
+      change "-0.4%"
+      change_good_when :down
+      period_label "Last 7 days"
     end
   end
 
@@ -87,7 +138,7 @@ class ResolverTest < Minitest::Test
     key "root"
     title "Root"
     link :requests, text: "Requests", url: ->(context) { context.admin_screen_path("requests") }, style: :primary
-    widget "requests.widgets.total"
+    widget "requests.widgets.total", view_variant: :chip
   end
 
   class HiddenSection < RecordingStudioAdmin::Section
@@ -127,7 +178,34 @@ class ResolverTest < Minitest::Test
     assert_equal :day, context.filter_value(:group_by)
     assert_equal 2, result.widgets.first.value
     assert_equal :number, result.widgets.first.type
-    assert_equal :list, result.widgets.find { |widget| widget.key == "requests.widgets.recent_statuses" }.type
+    total_metric = result.metrics.find { |metric| metric.key == :total_count }
+    assert_equal "Total", total_metric.label
+    assert_equal 2, total_metric.value
+
+    table_total_metric = result.metrics.find { |metric| metric.key == :table_total_count }
+    assert_equal "Table rows", table_total_metric.label
+    assert_equal 2, table_total_metric.value
+
+    custom_metric = result.metrics.find { |metric| metric.key == :requests_total }
+    assert_equal "Total requests", custom_metric.label
+    assert_equal 2, custom_metric.value
+    assert_equal "Requests matching the current filters.", custom_metric.description
+
+    error_rate_metric = result.metrics.find { |metric| metric.key == :error_rate }
+    assert_equal "2.4%", error_rate_metric.value
+    assert_equal "-0.4%", error_rate_metric.change
+    assert_equal :down, error_rate_metric.change_good_when
+    assert_equal "Last 7 days", error_rate_metric.period_label
+
+    recent_statuses = result.widgets.find { |widget| widget.key == "requests.widgets.recent_statuses" }
+    assert_equal :list, recent_statuses.type
+  assert_equal({ divider: true, spacing: :dense, hover: true }, recent_statuses.list_options)
+    assert_equal "200 OK", recent_statuses.items.first[:text]
+    assert_equal :check, recent_statuses.items.first[:icon]
+    assert_equal "Healthy", recent_statuses.items.first[:trailing]
+    assert_equal "/admin/screens/requests", recent_statuses.items.first[:href]
+    assert_equal "500 Error", recent_statuses.items.second[:label]
+    assert_equal "#", recent_statuses.items.second[:href]
     traffic_preview = result.widgets.find { |widget| widget.key == "requests.widgets.traffic_preview" }
     assert_equal :chart, traffic_preview.type
     assert_equal :bar, traffic_preview.chart_type
@@ -141,11 +219,43 @@ class ResolverTest < Minitest::Test
     )
   end
 
+  def test_table_filter_definitions_are_applied_to_the_whole_screen_relation
+    context = RecordingStudioAdmin::Context.new(params: { search: "a" })
+
+    result = RecordingStudioAdmin.resolve_screen(key: "requests", context: context)
+
+    assert_equal "a", context.filter_value(:search)
+    assert_equal(%w[group_by state search], result.filters.map { |filter| filter.param_key.to_s })
+    assert_equal 1, result.query_result.count
+    assert_equal 1, result.table.result.total_count
+    assert_equal ["a"], result.table.rows.map(&:name)
+  end
+
   def test_legacy_stat_widgets_are_normalized_to_number
     widget = RecordingStudioAdmin.resolve_widget(key: "requests.widgets.legacy_total", context: RecordingStudioAdmin::Context.new)
 
     assert_equal :number, widget.type
     assert_equal 2, widget.value
+    assert_equal :up, widget.change_good_when
+  end
+
+  def test_widget_description_is_resolved
+    widget = RecordingStudioAdmin.resolve_widget(key: "requests.widgets.total", context: RecordingStudioAdmin::Context.new)
+
+    assert_equal "Total requests returned by the current query.", widget.description
+  end
+
+  def test_widget_change_good_when_is_resolved
+    widget = RecordingStudioAdmin.resolve_widget(key: "requests.widgets.churn", context: RecordingStudioAdmin::Context.new)
+
+    assert_equal :down, widget.change_good_when
+    assert_equal "+30%", widget.change
+  end
+
+  def test_widget_change_good_when_aliases_are_normalized
+    widget = RecordingStudioAdmin.resolve_widget(key: "requests.widgets.alias_polarity", context: RecordingStudioAdmin::Context.new)
+
+    assert_equal :down, widget.change_good_when
   end
 
   def test_invalid_widget_types_raise_specific_error
@@ -159,6 +269,59 @@ class ResolverTest < Minitest::Test
     end
 
     assert_includes error.message, "unsupported type"
+  end
+
+  def test_invalid_change_good_when_raises_specific_error
+    widget = RecordingStudioAdmin::Widget.new("bad-polarity") do
+      type :number
+      value 1
+      change_good_when :sideways
+    end
+
+    error = assert_raises(RecordingStudioAdmin::InvalidDefinition) do
+      widget.resolve(RecordingStudioAdmin::Context.new)
+    end
+
+    assert_includes error.message, "unsupported change_good_when"
+  end
+
+  def test_list_widget_rejects_unknown_list_options
+    widget = RecordingStudioAdmin::Widget.new("bad-list-options") do
+      type :list
+      items ["one"]
+      list_options divider: true, unsupported: :value
+    end
+
+    error = assert_raises(RecordingStudioAdmin::InvalidDefinition) do
+      widget.resolve(RecordingStudioAdmin::Context.new)
+    end
+
+    assert_includes error.message, "unsupported list_options keys"
+  end
+
+  def test_list_widget_allows_hover_list_option
+    widget = RecordingStudioAdmin::Widget.new("hover-list-options") do
+      type :list
+      items ["one"]
+      list_options divider: true, hover: true
+    end
+
+    resolved = widget.resolve(RecordingStudioAdmin::Context.new)
+
+    assert_equal({ divider: true, hover: true }, resolved.list_options)
+  end
+
+  def test_list_widget_rejects_hash_items_without_text_or_label
+    widget = RecordingStudioAdmin::Widget.new("bad-list-item") do
+      type :list
+      items [{ icon: :check }]
+    end
+
+    error = assert_raises(RecordingStudioAdmin::InvalidDefinition) do
+      widget.resolve(RecordingStudioAdmin::Context.new)
+    end
+
+    assert_includes error.message, "require :text or :label"
   end
 
   def test_proc_backed_filter_options_are_resolved
@@ -210,8 +373,21 @@ class ResolverTest < Minitest::Test
     assert_equal "Root", section.title
     assert_equal "/admin/screens/requests", section.links.first.url
     assert_equal "requests.widgets.total", section.widgets.first.key
+    assert_equal :chip, section.widgets.first.view_variant
     assert_nil section.recordable
     assert_nil section.recording
+  end
+
+  def test_section_widget_view_variant_rejects_unknown_values
+    error = assert_raises(RecordingStudioAdmin::InvalidDefinition) do
+      Class.new(RecordingStudioAdmin::Section) do
+        key "bad-view-variant"
+        title "Bad"
+        widget "requests.widgets.total", view_variant: :tiny
+      end
+    end
+
+    assert_includes error.message, "unsupported view_variant"
   end
 
   def test_backed_section_resolves_recordable_and_reuses_existing_recording

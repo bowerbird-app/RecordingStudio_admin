@@ -13,14 +13,30 @@
 <% end %>
 
 <% if @screen.filters.any? %>
+  <% base_query = request.query_parameters.symbolize_keys.except(:page) %>
+  <% filter_param_keys = @screen.filters.flat_map do |filter|
+       if filter.type == :date_range
+         [filter.start_param, filter.end_param]
+       else
+         [filter.param_key]
+       end
+     end.map(&:to_sym) %>
+  <% hidden_query = base_query.except(*filter_param_keys) %>
   <%= form_with url: request.path, method: :get, id: "screen-filters-form", data: {
     controller: "flat-pack--auto-submit",
     turbo_frame: "screen-chart",
-    action: "change->flat-pack--auto-submit#queueSubmit"
+    action: "change->flat-pack--auto-submit#queueSubmit input->flat-pack--auto-submit#queueSubmit"
   } do %>
-    <% if page_nav_anchor_url.present? %>
-      <%= hidden_field_tag :anchor_url, page_nav_anchor_url %>
+    <% hidden_query.each do |key, value| %>
+      <% if value.is_a?(Array) %>
+        <% value.each do |entry| %>
+          <%= hidden_field_tag "#{key}[]", entry %>
+        <% end %>
+      <% else %>
+        <%= hidden_field_tag key, value %>
+      <% end %>
     <% end %>
+
     <%= render FlatPack::Grid::Component.new(cols: 4, gap: :md, class: "mb-6") do %>
       <% @screen.filters.each do |filter| %>
         <% if filter.type == :date_range %>
@@ -32,12 +48,20 @@
           ) %>
         <% else %>
           <% select_options = Array(filter.options[:values] || filter.options[:options]).map { |value| { label: value.to_s.humanize, value: value } } %>
-          <%= render FlatPack::Select::Component.new(
-            name: filter.param_key,
-            options: select_options,
-            value: filter.value,
-            placeholder: "All"
-          ) %>
+          <% if select_options.any? %>
+            <%= render FlatPack::Select::Component.new(
+              name: filter.param_key,
+              options: select_options,
+              value: filter.value,
+              placeholder: "All"
+            ) %>
+          <% else %>
+            <%= render FlatPack::SearchInput::Component.new(
+              name: filter.param_key,
+              value: filter.value,
+              placeholder: filter.key.to_s.humanize
+            ) %>
+          <% end %>
         <% end %>
       <% end %>
     <% end %>

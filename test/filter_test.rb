@@ -44,6 +44,7 @@ class FilterTest < Minitest::Test
 
       assert_equal Date.new(2026, 5, 13), value.start_date
       assert_equal Date.new(2026, 6, 12), value.end_date
+      assert_equal :last_30_days, value.preset_key
     end
   end
 

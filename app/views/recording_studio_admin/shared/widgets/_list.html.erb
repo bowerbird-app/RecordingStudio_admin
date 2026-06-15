@@ -1,5 +1,20 @@
-<ul class="list-disc space-y-1 pl-5 text-sm">
-  <% widget.items.each do |item| %>
-    <li><%= item %></li>
+<% list_options = (widget.list_options || {}).dup %>
+<% default_hover = list_options.delete(:hover) %>
+<%= render FlatPack::List::Component.new(**list_options) do %>
+  <% Array(widget.items).each do |item| %>
+    <% item_options = {} %>
+    <% item_text = item %>
+    <% if item.is_a?(Hash) %>
+      <% item_options = item.slice(:icon, :leading, :trailing, :href, :hover, :active, :link_arguments) %>
+      <% item_text = item[:text] || item[:label] %>
+      <% if item_options[:icon].present? && item_options[:leading].nil? %>
+        <% icon_name = item_options.delete(:icon) %>
+        <% item_options[:leading] = render(FlatPack::Shared::IconComponent.new(name: icon_name, size: :md, class: "text-[var(--surface-muted-content-color)]")) %>
+      <% end %>
+    <% end %>
+    <% item_options[:hover] = default_hover unless default_hover.nil? || item_options.key?(:hover) %>
+    <%= render FlatPack::List::Item.new(**item_options) do %>
+      <span class="text-sm"><%= item_text %></span>
+    <% end %>
   <% end %>
-</ul>
+<% end %>

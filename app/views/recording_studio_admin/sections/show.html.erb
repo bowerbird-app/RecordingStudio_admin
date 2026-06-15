@@ -11,9 +11,21 @@
 <% end %>
 
 <% if @section.widgets.any? %>
-  <%= render FlatPack::Grid::Component.new(cols: :auto, gap: :md, class: "my-8") do %>
-    <% @section.widgets.each do |widget| %>
-      <%= render partial: "recording_studio_admin/shared/widget", locals: { widget: widget } %>
+  <% compact_widgets, full_widgets = @section.widgets.partition { |widget| widget.view_variant == :chip } %>
+
+  <% if compact_widgets.any? %>
+    <%= render FlatPack::Grid::Component.new(cols: :auto, gap: :sm, class: "my-4") do %>
+      <% compact_widgets.each do |widget| %>
+        <%= render partial: "recording_studio_admin/shared/widget", locals: { widget: widget } %>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% if full_widgets.any? %>
+    <%= render FlatPack::Grid::Component.new(cols: :auto, gap: :md, class: (compact_widgets.any? ? "my-4" : "my-8")) do %>
+      <% full_widgets.each do |widget| %>
+        <%= render partial: "recording_studio_admin/shared/widget", locals: { widget: widget } %>
+      <% end %>
     <% end %>
   <% end %>
 <% end %>

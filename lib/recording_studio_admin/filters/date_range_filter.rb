@@ -3,7 +3,7 @@
 module RecordingStudioAdmin
   module Filters
     class DateRangeFilter
-      RangeValue = Data.define(:start_date, :end_date)
+      RangeValue = Data.define(:start_date, :end_date, :preset_key)
 
       def initialize(definition)
         @definition = definition
@@ -16,7 +16,7 @@ module RecordingStudioAdmin
         end_date = parse_date(params[end_key] || params[end_key.to_s])
         return default_range if !start_date && !end_date && default_range
 
-        RangeValue.new(start_date, end_date)
+        RangeValue.new(start_date, end_date, nil)
       end
 
       def apply(relation, value, _context)
@@ -43,7 +43,7 @@ module RecordingStudioAdmin
         return unless @definition.options[:default] == :last_30_days && defined?(Date)
 
         today = Date.respond_to?(:current) ? Date.current : Date.today
-        RangeValue.new(today - 30, today)
+        RangeValue.new(today - 30, today, :last_30_days)
       end
     end
   end

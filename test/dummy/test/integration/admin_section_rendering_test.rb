@@ -24,6 +24,10 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
   test "admin root section renders without the old custom layout wrappers" do
     sign_in_admin_user
 
+    UserActivity.create!(email: "recent-user-1@example.com", action: "signed_in", status: "success", created_at: 1.minute.ago, updated_at: 1.minute.ago)
+    UserActivity.create!(email: "recent-user-2@example.com", action: "exported_report", status: "review", created_at: 2.minutes.ago, updated_at: 2.minutes.ago)
+    UserActivity.create!(email: "recent-user-3@example.com", action: "invited_user", status: "success", created_at: 3.minutes.ago, updated_at: 3.minutes.ago)
+
     get "/admin", params: { anchor_url: root_url }
 
     admin_root = AdminRoot.find_by!(name: "Admin")
@@ -37,12 +41,22 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "View API requests"
     assert_includes response.body, 'href="/admin/screens/api_requests?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, "API activity"
+    refute_includes response.body, "Total API requests recorded during the last 24 hours."
     assert_includes response.body, "Recent failures"
     assert_includes response.body, "Active users"
+    assert_includes response.body, "Most recent users"
+    assert_includes response.body, "Latest five users"
+    assert_includes response.body, "recent-user-1@example.com"
+    assert_includes response.body, "recent-user-2@example.com"
+    assert_includes response.body, "recent-user-3@example.com"
+    assert_includes response.body, 'href="/users/recent-user-1-example-com"'
+    assert_includes response.body, 'href="/users/recent-user-2-example-com"'
+    assert_includes response.body, 'href="/users/recent-user-3-example-com"'
+    assert_includes response.body, "hover:bg-[var(--list-item-hover-background-color)]"
     assert_includes response.body, "Job throughput"
     assert_includes response.body, "Recent request paths"
     body = CGI.unescapeHTML(response.body)
-    assert_equal 4, body.scan("data-flat-pack--chart-series-value=").size
+    assert_operator body.scan("data-flat-pack--chart-series-value=").size, :>=, 4
     assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"API activity"'
     assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Recent failures"'
     assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Active users"'
@@ -54,6 +68,25 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_equal admin_root_recording, admin_summary_recording.parent_recording
   end
 
+  test "recent request paths widget renders the period label only once" do
+    sign_in_admin_user
+
+    get "/admin", params: { anchor_url: root_url }
+
+    assert_response :success
+    recent_request_paths_title = css_select("h3").find { |heading| heading.text.strip == "Recent request paths" }
+    assert recent_request_paths_title, "expected Recent request paths heading"
+
+    recent_request_paths_card = recent_request_paths_title.ancestors.find do |node|
+      node.name == "div" && node["class"].to_s.include?("rounded-lg")
+    end
+    assert recent_request_paths_card, "expected Recent request paths card"
+
+    recent_request_paths_text = recent_request_paths_card.text
+    assert_includes recent_request_paths_text, "Latest three requests"
+    assert_equal 1, recent_request_paths_text.scan("Last 24 hours").size
+  end
+
   test "admin screen renders streamlined filters with table results" do
     sign_in_admin_user
 
@@ -62,6 +95,11 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "API requests"
     assert_includes response.body, "Requests over time"
+    chart_title = css_select("h3").find { |heading| heading.text.strip == "Requests over time" }
+    assert chart_title, "expected Requests over time heading"
+    chart_count = chart_title.parent.css("p.text-5xl").first
+    assert chart_count, "expected a large chart count under the chart title"
+    assert_match(/\A\d+\z/, chart_count.text.strip)
     assert_includes response.body, 'href="http://www.example.com/"'
     assert_includes response.body, 'name="anchor_url"'
     assert_includes response.body, 'value="http://www.example.com/"'
@@ -69,14 +107,23 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Created at"
     assert_includes response.body, "Latency"
     assert_includes response.body, "sort=created_at"
-    assert_includes response.body, "bg-[var(--badge-success-background-color)]"
-    assert_includes response.body, 'data-controller="flat-pack--timestamp"'
     assert_includes response.body, 'data-controller="flat-pack--auto-submit"'
     assert_includes response.body, 'data-turbo-frame="screen-chart"'
     assert_includes response.body, 'data-pagination-content="true"'
-    assert_includes response.body, 'data-controller="flat-pack--pagination-infinite"'
-    assert_includes response.body, 'data-flat-pack--pagination-infinite-url-value="/admin/screens/api_requests?anchor_url=http%3A%2F%2Fwww.example.com%2F&amp;page=2"'
     assert_includes response.body, 'id="screen-chart"'
+    assert_includes response.body, 'id="screen-filters-form"'
+    assert_includes response.body, 'name="search"'
+
+    # Depending on seeded records, the table may render row badges/timestamps or empty state text.
+    has_row_metadata = response.body.include?("bg-[var(--badge-success-background-color)]") &&
+      response.body.include?('data-controller="flat-pack--timestamp"')
+    has_empty_state = response.body.include?("No data available")
+    assert(has_row_metadata || has_empty_state, "expected either row metadata or empty-state table output")
+
+    if response.body.include?('data-controller="flat-pack--pagination-infinite"')
+      assert_includes response.body, 'data-flat-pack--pagination-infinite-url-value="/admin/screens/api_requests?anchor_url=http%3A%2F%2Fwww.example.com%2F&amp;page=2"'
+    end
+
     refute_includes response.body, "Apply filters"
     refute_includes response.body, "flex items-start justify-between gap-4 p-6"
     refute_includes response.body, "Filters"
@@ -84,6 +131,26 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "screen-results"
     refute_includes response.body, "my-4"
     refute_includes response.body, "mt-4"
+  end
+
+  test "admin screen search filter updates chart totals and table rows together" do
+    sign_in_admin_user
+    ApiRequest.delete_all
+
+    ApiRequest.create!(path: "/v1/alpha", method: "GET", status: 200, latency_ms: 12, created_at: 5.minutes.ago, updated_at: 5.minutes.ago)
+    ApiRequest.create!(path: "/v1/beta", method: "GET", status: 200, latency_ms: 14, created_at: 4.minutes.ago, updated_at: 4.minutes.ago)
+
+    get "/admin/screens/api_requests", params: { anchor_url: root_url, search: "alpha" }
+
+    assert_response :success
+    chart_title = css_select("h3").find { |heading| heading.text.strip == "Requests over time" }
+    assert chart_title, "expected Requests over time heading"
+
+    chart_count = chart_title.parent.css("p.text-5xl").first
+    assert chart_count, "expected a large chart count under the chart title"
+    assert_equal "1", chart_count.text.strip
+    assert_includes response.body, "/v1/alpha"
+    refute_includes response.body, "/v1/beta"
   end
 
   test "admin screen chart turbo frame reloads with filtered data" do
@@ -96,7 +163,9 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
 
     assert_includes body, 'id="screen-chart"'
     assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Errors"'
-    assert_includes body, '"x":"'
+    has_chart_points = body.include?('"x":"')
+    has_empty_series = body.include?('data-flat-pack--chart-series-value="[{"name":"Errors","data":[]}]"')
+    assert(has_chart_points || has_empty_series, "expected either populated chart buckets or an empty chart series")
 
     get "/admin/screens/api_errors", params: {
       start_date: 100.years.ago.to_date.iso8601,

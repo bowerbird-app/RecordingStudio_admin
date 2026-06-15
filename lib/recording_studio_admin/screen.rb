@@ -3,11 +3,12 @@
 module RecordingStudioAdmin
   class Screen < Definitions::Base
     class << self
-      attr_reader :query_value, :filters_value, :chart_value, :table_value, :widgets_value
+      attr_reader :query_value, :filters_value, :chart_value, :table_value, :widgets_value, :metrics_value
 
       def inherited(subclass)
         super
         subclass.instance_variable_set(:@filters_value, [])
+        subclass.instance_variable_set(:@metrics_value, [])
         subclass.instance_variable_set(:@widgets_value, {})
       end
 
@@ -36,12 +37,20 @@ module RecordingStudioAdmin
         @widgets_value[definition.key] = definition
       end
 
+      def metric(name, &)
+        @metrics_value << ScreenMetric.new(name, &)
+      end
+
       def filters
         @filters_value || []
       end
 
       def widgets
         @widgets_value || {}
+      end
+
+      def metrics
+        @metrics_value || []
       end
 
       private
@@ -53,6 +62,47 @@ module RecordingStudioAdmin
         else :select
         end
       end
+    end
+  end
+
+  class ScreenMetric
+    attr_reader :key
+
+    def initialize(key, &block)
+      @key = key.to_sym
+      instance_eval(&block) if block
+    end
+
+    %i[label value change change_good_when description period_label].each do |name|
+      define_method(name) do |value = nil, &block|
+        instance_variable_set("@#{name}", block || value) if value || block
+        instance_variable_get("@#{name}")
+      end
+    end
+
+    def resolve(context)
+      Results::ResolvedMetric.new(
+        key: key,
+        label: evaluate(@label, context) || key.to_s.humanize,
+        value: evaluate(@value, context),
+        change: evaluate(@change, context),
+        change_good_when: normalize_change_good_when(evaluate(@change_good_when, context)),
+        description: evaluate(@description, context),
+        period_label: evaluate(@period_label, context)
+      )
+    end
+
+    private
+
+    def evaluate(value, context)
+      value.respond_to?(:call) ? value.call(context) : value
+    end
+
+    def normalize_change_good_when(value)
+      normalized = (value || :up).to_s.downcase.to_sym
+      normalized = :up if normalized == :positive
+      normalized = :down if normalized == :negative
+      normalized
     end
   end
 

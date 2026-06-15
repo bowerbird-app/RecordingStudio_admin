@@ -24,8 +24,9 @@ module RecordingStudioAdmin
           title: definition.evaluate(definition.title, @context),
           subtitle: definition.evaluate(definition.subtitle, @context),
           links: definition.links.filter_map { |link| link.resolve(@context) },
-          widgets: definition.widget_keys.map do |key|
-            RecordingStudioAdmin.resolve_widget(key: key, context: @context)
+          widgets: definition.widget_usages.map do |widget_usage|
+            widget = RecordingStudioAdmin.resolve_widget(key: widget_usage.key, context: @context)
+            widget_usage.view_variant.nil? ? widget : widget.with(view_variant: widget_usage.view_variant)
           end,
           recordable: section_recording&.recordable,
           recording: section_recording&.recording

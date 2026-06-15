@@ -34,6 +34,13 @@ module AdminScreens
         "%#{ActiveRecord::Base.sanitize_sql_like(value.to_s)}%"
       end
 
+      def period_change_label(relation, distinct_field: nil, current_period: 7.days.ago.., previous_period: 14.days.ago...7.days.ago)
+        current_count = period_count(relation, period: current_period, distinct_field: distinct_field)
+        previous_count = period_count(relation, period: previous_period, distinct_field: distinct_field)
+
+        percent_change_label(current_count: current_count, previous_count: previous_count)
+      end
+
       private
 
       def bucket_label(value, bucket)
@@ -73,6 +80,21 @@ module AdminScreens
           "DATE(#{field})"
         end
       end
+
+      def period_count(relation, period:, distinct_field: nil)
+        scoped_relation = relation.where(created_at: period)
+        return scoped_relation.distinct.count(distinct_field) if distinct_field
+
+        scoped_relation.count
+      end
+
+      def percent_change_label(current_count:, previous_count:)
+        return "0%" if current_count.zero? && previous_count.zero?
+        return "+100%" if previous_count.zero? && current_count.positive?
+
+        percent_change = ((current_count - previous_count) / previous_count.to_f) * 100
+        format("%+.0f%%", percent_change)
+      end
     end
   end
 
@@ -99,6 +121,31 @@ module AdminScreens
       end
     end
 
+    metric :total_count do
+      label "Total requests"
+      value { |context| context.query_result.count }
+      change do |context|
+        period = context.period_for
+        if period&.start_date && period&.end_date
+          span_days = (period.end_date - period.start_date).to_i + 1
+          current_period = period.start_date.beginning_of_day..period.end_date.end_of_day
+          previous_end = period.start_date - 1.day
+          previous_start = previous_end - (span_days - 1).days
+          previous_period = previous_start.beginning_of_day..previous_end.end_of_day
+
+          AdminScreens::Base.period_change_label(
+            ApiRequest.all,
+            current_period: current_period,
+            previous_period: previous_period
+          )
+        else
+          AdminScreens::Base.period_change_label(ApiRequest.all)
+        end
+      end
+      period_label { |context| context.period_label || "Last 30 days" }
+      change_good_when :up
+    end
+
     table do
       filter :search, apply: ->(relation, value, _context) { value.present? ? relation.where("path ILIKE ?", AdminScreens::Base.safe_like(value)) : relation }
       column :created_at
@@ -123,7 +170,8 @@ module AdminScreens
     widget :activity_last_24_hours do
       type :number
       title "API activity"
-      subtitle "Last 24 hours"
+      description "Total API requests recorded during the last 24 hours."
+      subtitle { |context| context.period_label(duration: 24.hours) || "Last 24 hours" }
       value { |_context| ApiRequest.where(created_at: 24.hours.ago..).count }
       link_to { |context| context.admin_screen_path("api_requests") }
     end
@@ -131,15 +179,25 @@ module AdminScreens
     widget :recent_request_paths do
       type :list
       title "Recent request paths"
+      description "The three most recent API request paths seen by the dummy app."
       subtitle "Latest three requests"
-      items { |_context| ApiRequest.order(created_at: :desc).limit(3).pluck(:path) }
+      list_options divider: true
+      metadata { |context| { period_label: context.period_label(duration: 24.hours) || "Last 24 hours" } }
+      items do |_context|
+        ApiRequest.order(created_at: :desc).limit(3).pluck(:path).map do |path|
+          { text: path, icon: "document-text" }
+        end
+      end
       link_to { |context| context.admin_screen_path("api_requests") }
     end
 
     widget :api_activity_chart do
       type :chart
       title "API activity"
-      subtitle "Last 7 days"
+      description "Seven-day request volume with the current period total and percentage change."
+      subtitle { |context| context.period_label(duration: 7.days) || "Last 7 days" }
+      value { |_context| ApiRequest.where(created_at: 7.days.ago..).count }
+      change { |_context| AdminScreens::Base.period_change_label(ApiRequest.all) }
       chart_type :line
       series do
         [ {
@@ -187,7 +245,8 @@ module AdminScreens
     widget :recent_failures do
       type :number
       title "Recent failures"
-      subtitle "Last 24 hours"
+      description "Total API errors recorded during the last 24 hours."
+      subtitle { |context| context.period_label(duration: 24.hours) || "Last 24 hours" }
       value { |_context| ApiError.where(created_at: 24.hours.ago..).count }
       link_to { |context| context.admin_screen_path("api_errors") }
     end
@@ -195,7 +254,10 @@ module AdminScreens
     widget :recent_failures_chart do
       type :chart
       title "Recent failures"
-      subtitle "Last 7 days"
+      description "Seven-day API error trend with the current period total and percentage change."
+      subtitle { |context| context.period_label(duration: 7.days) || "Last 7 days" }
+      value { |_context| ApiError.where(created_at: 7.days.ago..).count }
+      change { |_context| AdminScreens::Base.period_change_label(ApiError.all) }
       chart_type :bar
       series do
         [ {
@@ -242,7 +304,8 @@ module AdminScreens
     widget :active_users do
       type :number
       title "Active users"
-      subtitle "Last 24 hours"
+      description "Distinct users seen during the last 24 hours."
+      subtitle { |context| context.period_label(duration: 24.hours) || "Last 24 hours" }
       value { |_context| UserActivity.where(created_at: 24.hours.ago..).distinct.count(:email) }
       link_to { |context| context.admin_screen_path("users") }
     end
@@ -250,7 +313,11 @@ module AdminScreens
     widget :active_users_chart do
       type :chart
       title "Active users"
-      subtitle "Daily unique users for the last 7 days"
+      description "Daily unique users across the last seven days, plus the current period delta."
+      subtitle "Daily unique users"
+      metadata { |context| { period_label: context.period_label(duration: 7.days) || "Last 7 days" } }
+      value { |_context| UserActivity.where(created_at: 7.days.ago..).distinct.count(:email) }
+      change { |_context| AdminScreens::Base.period_change_label(UserActivity.all, distinct_field: :email) }
       chart_type :line
       series do
         [ {
@@ -259,6 +326,23 @@ module AdminScreens
         } ]
       end
       chart_options { { height: 220 } }
+      link_to { |context| context.admin_screen_path("users") }
+    end
+
+    widget :most_recent_users do
+      type :list
+      title "Most recent users"
+      description "The five most recent users seen by the dummy app."
+      subtitle "Latest five users"
+      list_options divider: true, hover: true
+      items do |_context|
+        UserActivity.order(created_at: :desc).limit(5).pluck(:email).map do |email|
+          {
+            text: email,
+            href: "/users/#{email.parameterize}"
+          }
+        end
+      end
       link_to { |context| context.admin_screen_path("users") }
     end
   end
@@ -298,7 +382,8 @@ module AdminScreens
     widget :job_throughput do
       type :number
       title "Job throughput"
-      subtitle "Last 24 hours"
+      description "Background jobs processed during the last 24 hours."
+      subtitle { |context| context.period_label(duration: 24.hours) || "Last 24 hours" }
       value { |_context| BackgroundJobRun.where(created_at: 24.hours.ago..).count }
       link_to { |context| context.admin_screen_path("background_jobs") }
     end
@@ -306,7 +391,10 @@ module AdminScreens
     widget :job_throughput_chart do
       type :chart
       title "Job throughput"
-      subtitle "Last 7 days"
+      description "Seven-day background job volume with the current period total and percentage change."
+      subtitle { |context| context.period_label(duration: 7.days) || "Last 7 days" }
+      value { |_context| BackgroundJobRun.where(created_at: 7.days.ago..).count }
+      change { |_context| AdminScreens::Base.period_change_label(BackgroundJobRun.all) }
       chart_type :bar
       series do
         [ {
@@ -333,14 +421,15 @@ module AdminScreens
     link :users, text: "View users", url: ->(context) { context.admin_screen_path("users") }, style: :secondary
     link :jobs, text: "View background jobs", url: ->(context) { context.admin_screen_path("background_jobs") }, style: :secondary
 
-    widget "api_requests.widgets.activity_last_24_hours"
+    widget "api_requests.widgets.activity_last_24_hours", view_variant: :chip
     widget "api_requests.widgets.recent_request_paths"
     widget "api_requests.widgets.api_activity_chart"
-    widget "api_errors.widgets.recent_failures"
+    widget "api_errors.widgets.recent_failures", view_variant: :chip
     widget "api_errors.widgets.recent_failures_chart"
-    widget "users.widgets.active_users"
+    widget "users.widgets.active_users", view_variant: :chip
     widget "users.widgets.active_users_chart"
-    widget "background_jobs.widgets.job_throughput"
+    widget "users.widgets.most_recent_users"
+    widget "background_jobs.widgets.job_throughput", view_variant: :chip
     widget "background_jobs.widgets.job_throughput_chart"
   end
 end

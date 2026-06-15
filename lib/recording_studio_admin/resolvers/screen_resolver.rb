@@ -18,12 +18,13 @@ module RecordingStudioAdmin
         raise DefinitionNotFound, "Screen #{@key.inspect} is not visible" unless visible?(definition)
 
         relation = definition.query.call(@context)
-        filters = resolve_filters(definition.filters)
+        filters = resolve_filters(combined_filters(definition))
         filters.each { |filter| relation = filter[:definition].apply(relation, filter[:value], @context) }
         query_result = Results::QueryResult.new(relation: relation)
         @context.query_result = query_result
 
-        table = resolve_table(definition.table_value, relation)
+        table = resolve_table(definition.table_value, relation, filters: filters)
+        metrics = resolve_metrics(definition, query_result: query_result, table: table)
         Results::ResolvedScreen.new(
           key: definition.key,
           title: definition.evaluate(definition.title, @context),
@@ -33,11 +34,16 @@ module RecordingStudioAdmin
           query_result: query_result,
           chart: resolve_chart(definition.chart_value),
           table: table,
+          metrics: metrics,
           widgets: definition.widgets.values.map { |widget| widget.resolve(@context) }
         )
       end
 
       private
+
+      def combined_filters(definition)
+        (Array(definition.filters) + Array(definition.table_value&.filters)).uniq(&:param_key)
+      end
 
       def resolve_filters(definitions)
         definitions.map do |definition|
@@ -72,20 +78,60 @@ module RecordingStudioAdmin
         )
       end
 
-      def resolve_table(definition, relation)
+      def resolve_table(definition, relation, filters: [])
         return unless definition
 
-        table_relation = relation
-        table_filters = resolve_filters(definition.filters)
-        table_filters.each do |filter|
-          table_relation = filter[:definition].apply(table_relation, filter[:value], @context)
-        end
-        sorted_relation, sort, direction = sort_relation(definition, table_relation)
+        table_filter_keys = Array(definition.filters).map(&:param_key)
+        table_filters = filters.select { |entry| table_filter_keys.include?(entry[:definition].param_key) }
+        sorted_relation, sort, direction = sort_relation(definition, relation)
         table_result = paginate(definition, sorted_relation, sort, direction)
         @context.table_result = table_result
         Results::ResolvedTable.new(definition.columns, table_filters.map do |entry|
           resolved_filter(entry)
         end, table_result.rows, definition.actions, table_result)
+      end
+
+      def resolve_metrics(definition, query_result:, table:)
+        default_metrics = build_default_metrics(query_result: query_result, table: table)
+        custom_metrics = definition.metrics.map { |metric| metric.resolve(@context) }
+
+        # Allow custom screen metrics to override defaults by key.
+        merged = {}
+        (default_metrics + custom_metrics).each { |metric| merged[metric.key.to_sym] = metric }
+        merged.values
+      end
+
+      def build_default_metrics(query_result:, table:)
+        metrics = []
+        metrics << Results::ResolvedMetric.new(
+          key: :total_count,
+          label: "Total",
+          value: query_result.count,
+          change: format_percent_change(query_result.change_percent),
+          change_good_when: :up,
+          description: nil,
+          period_label: nil
+        )
+
+        return metrics unless table&.result
+
+        metrics << Results::ResolvedMetric.new(
+          key: :table_total_count,
+          label: "Table rows",
+          value: table.result.total_count,
+          change: nil,
+          change_good_when: :up,
+          description: nil,
+          period_label: nil
+        )
+        metrics
+      end
+
+      def format_percent_change(value)
+        return if value.nil?
+        return "0%" if value.to_f.zero?
+
+        format("%+.1f%%", value.to_f).sub(".0%", "%")
       end
 
       def sort_relation(definition, relation)
