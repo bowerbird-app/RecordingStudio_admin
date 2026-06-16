@@ -3,6 +3,7 @@
 module RecordingStudioAdmin
   class Error < StandardError; end
   class DefinitionNotFound < Error; end
+  class AuthorizationFailed < Error; end
   class RegistryConflict < Error; end
   class InvalidDefinition < Error; end
 end

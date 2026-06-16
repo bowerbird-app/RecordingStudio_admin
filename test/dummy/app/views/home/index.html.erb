@@ -5,7 +5,11 @@
     variant: :h1
   ) do |page_title| %>
     <% page_title.slot do %>
-      <%= render FlatPack::Button::Component.new(text: "Admin", url: "#{request.base_url}/admin?anchor_url=#{ERB::Util.url_encode(root_url)}", style: :secondary) %>
+      <%= render FlatPack::ButtonGroup::Component.new do |group| %>
+        <% group.button(render(FlatPack::Button::Component.new(text: "Admin root", url: "#{request.base_url}/admin/root?anchor_url=#{ERB::Util.url_encode(root_url)}", style: :secondary))) %>
+        <% group.button(render(FlatPack::Button::Component.new(text: "Admin sections", url: "#{request.base_url}/admin/sections?anchor_url=#{ERB::Util.url_encode(root_url)}", style: :secondary))) %>
+        <% group.button(render(FlatPack::Button::Component.new(text: "Admin section dashboard", url: "#{request.base_url}/admin?anchor_url=#{ERB::Util.url_encode(root_url)}", style: :secondary))) %>
+      <% end %>
     <% end %>
   <% end %>
 </div>

@@ -28,6 +28,11 @@ module RecordingStudioAdmin
         template "app/views/layouts/admin.html.erb", "app/views/layouts/admin.html.erb"
       end
 
+      def copy_javascript
+        template "app/javascript/controllers/admin/root_search_controller.js",
+                 "app/javascript/controllers/admin/root_search_controller.js"
+      end
+
       def copy_migration
         migration_template "db/migrate/create_admin_roots.rb", "db/migrate/create_admin_roots.rb"
       end

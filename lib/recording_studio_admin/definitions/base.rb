@@ -4,7 +4,7 @@ module RecordingStudioAdmin
   module Definitions
     class Base
       class << self
-        attr_reader :key_value, :title_value, :subtitle_value, :buttons_value, :visible_if_value
+        attr_reader :key_value, :title_value, :subtitle_value, :icon_value, :buttons_value, :visible_if_value
 
         def inherited(subclass)
           super
@@ -24,6 +24,11 @@ module RecordingStudioAdmin
         def subtitle(value = nil, &block)
           @subtitle_value = block || value if value || block
           @subtitle_value
+        end
+
+        def icon(value = nil, &block)
+          @icon_value = block || value if value || block
+          @icon_value
         end
 
         def button(name, text:, url:, style: :secondary, visible_if: nil)

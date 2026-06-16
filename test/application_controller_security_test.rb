@@ -16,13 +16,11 @@ class ApplicationControllerSecurityTest < Minitest::Test
 
   def setup
     @original_authentication_method = RecordingStudioAdmin.configuration.authentication_method
-    @original_authorization_method = RecordingStudioAdmin.configuration.authorization_method
     @original_current_actor_method = RecordingStudioAdmin.configuration.current_actor_method
   end
 
   def teardown
     RecordingStudioAdmin.configuration.authentication_method = @original_authentication_method
-    RecordingStudioAdmin.configuration.authorization_method = @original_authorization_method
     RecordingStudioAdmin.configuration.current_actor_method = @original_current_actor_method
   end
 
@@ -30,42 +28,25 @@ class ApplicationControllerSecurityTest < Minitest::Test
     source = File.read(File.join(ROOT, "app/controllers/recording_studio_admin/application_controller.rb"))
 
     assert_includes source, "before_action :authenticate_recording_studio_admin!"
-    assert_includes source, "before_action :authorize_recording_studio_admin!"
     assert_includes source, "head :unauthorized"
     assert_includes source, "head :forbidden"
     assert_includes source, "set_recording_studio_admin_current_actor"
   end
 
-  def test_private_authentication_and_authorization_hooks_are_supported
+  def test_private_authentication_hook_is_supported
     controller = build_controller do
       private
 
       def require_admin!
         @authenticated = true
       end
-
-      def allow_admin!
-        @authorized = true
-      end
     end
     RecordingStudioAdmin.configuration.authentication_method = :require_admin!
-    RecordingStudioAdmin.configuration.authorization_method = :allow_admin!
 
     controller.send(:authenticate_recording_studio_admin!)
-    controller.send(:authorize_recording_studio_admin!)
 
     assert controller.instance_variable_get(:@authenticated)
-    assert controller.instance_variable_get(:@authorized)
     assert_equal 200, controller.response.status
-  end
-
-  def test_missing_authorization_hook_fails_closed
-    controller = build_controller
-    RecordingStudioAdmin.configuration.authorization_method = :missing_admin_authorization!
-
-    controller.send(:authorize_recording_studio_admin!)
-
-    assert_equal 403, controller.response.status
   end
 
   def test_missing_authentication_hook_fails_closed
@@ -75,17 +56,6 @@ class ApplicationControllerSecurityTest < Minitest::Test
     controller.send(:authenticate_recording_studio_admin!)
 
     assert_equal 401, controller.response.status
-  end
-
-  def test_false_authorization_hook_fails_closed
-    controller = build_controller do
-      define_method(:reject_admin_access!) { false }
-    end
-    RecordingStudioAdmin.configuration.authorization_method = :reject_admin_access!
-
-    controller.send(:authorize_recording_studio_admin!)
-
-    assert_equal 403, controller.response.status
   end
 
   def test_current_without_actor_writer_does_not_crash
@@ -149,13 +119,34 @@ class ApplicationControllerSecurityTest < Minitest::Test
     assert_equal "/fallback", controller.send(:page_nav_anchor_url, default: "/fallback")
   end
 
+  def test_page_nav_anchor_url_allows_explicit_external_return_url
+    controller = build_controller
+    params = ActionController::Parameters.new(anchor_url: "https://example.test/origin")
+    controller.define_singleton_method(:params) { params }
+
+    assert_equal "https://example.test/origin", controller.send(:page_nav_anchor_url, default: "/fallback")
+  end
+
   def test_preserve_anchor_url_merges_safe_relative_anchor_query
     controller = build_controller
     controller.define_singleton_method(:params) { ActionController::Parameters.new(anchor_url: "/origin?tab=overview") }
 
     assert_equal "/admin/screens/requests?anchor_url=%2Forigin%3Ftab%3Doverview",
                  controller.send(:preserve_anchor_url, "/admin/screens/requests")
-    assert_equal "https://example.test/reports", controller.send(:preserve_anchor_url, "https://example.test/reports")
+    assert_equal "#", controller.send(:preserve_anchor_url, "https://example.test/reports")
+  end
+
+  def test_widget_link_url_suppresses_same_page_links_when_only_anchor_url_differs
+    controller = build_controller
+    controller.set_request! ActionDispatch::TestRequest.create("PATH_INFO" => "/admin/screens/api_requests",
+                                                               "QUERY_STRING" => "anchor_url=http%3A%2F%2Fwww.example.com%2F")
+    controller.define_singleton_method(:params) { ActionController::Parameters.new(anchor_url: "http://www.example.com/") }
+
+    assert_nil controller.send(:widget_link_url, "/admin/screens/api_requests")
+    assert_equal "/admin/screens/users?anchor_url=http%3A%2F%2Fwww.example.com%2F",
+                 controller.send(:widget_link_url, "/admin/screens/users")
+    assert_equal "/admin/screens/api_requests?anchor_url=http%3A%2F%2Fwww.example.com%2F&page=2",
+                 controller.send(:widget_link_url, "/admin/screens/api_requests?page=2")
   end
 
   def test_current_actor_prefers_current_constant_reader

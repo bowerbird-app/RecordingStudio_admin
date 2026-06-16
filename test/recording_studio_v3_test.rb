@@ -7,6 +7,8 @@ require_relative "dummy/config/environment"
 require "rails/test_help"
 
 class RecordingStudioV3Test < ActiveSupport::TestCase
+  include DummyAccessTestHelpers
+
   test "dummy recordable declarations validate and expose v3 introspection" do
     assert RecordingStudio.validate_recordable_declarations!
     assert_equal %w[AdminRoot Workspace], RecordingStudio.root_recordable_types.sort
@@ -87,6 +89,13 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
     workspace_name = unique_name("Section Parent Workspace")
     folder_name = unique_name("Section Folder")
     original_registry = RecordingStudioAdmin.instance_variable_get(:@registry)
+    parent_workspace = Workspace.find_or_create_by!(name: workspace_name)
+    parent_recording = RecordingStudio.root_recording_for(parent_workspace)
+    actor = User.find_or_create_by!(email: "backed-section-#{SecureRandom.hex(4)}@example.com") do |record|
+      record.password = "Password123!"
+      record.password_confirmation = "Password123!"
+    end
+    grant_admin_access_for_test!(recording: parent_recording, actor: actor)
 
     section_class = Class.new(RecordingStudioAdmin::Section) do
       key section_key
@@ -99,10 +108,15 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
     RecordingStudioAdmin.instance_variable_set(:@registry, RecordingStudioAdmin::Registry.new)
     RecordingStudioAdmin.register_section(section_class)
 
-    first_result = RecordingStudioAdmin.resolve_section(key: section_key, context: RecordingStudioAdmin::Context.new)
-    second_result = RecordingStudioAdmin.resolve_section(key: section_key, context: RecordingStudioAdmin::Context.new)
+    context = RecordingStudioAdmin::Context.new(
+      current_actor: actor,
+      controller: Class.new do
+        define_method(:recording_studio_admin_access_recording) { parent_recording }
+      end.new
+    )
 
-    parent_recording = RecordingStudio.root_recording_for(Workspace.find_by!(name: workspace_name))
+    first_result = RecordingStudioAdmin.resolve_section(key: section_key, context: context)
+    second_result = RecordingStudioAdmin.resolve_section(key: section_key, context: context)
 
     assert_equal folder_name, first_result.recordable.name
     assert_equal first_result.recording, second_result.recording

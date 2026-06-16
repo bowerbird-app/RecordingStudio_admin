@@ -16,13 +16,40 @@ module RecordingStudioAdmin
       private
 
       def relation_count(relation)
-        relation.respond_to?(:count) ? relation.count : Array(relation).size
+        return Array(relation).size unless relation.respond_to?(:count)
+
+        return grouped_relation_count(relation) if grouped_select_relation?(relation)
+
+        normalized_count(relation.count)
+      rescue StandardError => e
+        raise unless active_record_statement_invalid?(e) && relation.respond_to?(:except)
+
+        grouped_relation_count(relation)
+      end
+
+      def active_record_statement_invalid?(error)
+        defined?(ActiveRecord::StatementInvalid) && error.is_a?(ActiveRecord::StatementInvalid)
+      end
+
+      def grouped_select_relation?(relation)
+        relation.respond_to?(:group_values) && relation.respond_to?(:select_values) &&
+          relation.group_values.any? && relation.select_values.any?
+      end
+
+      def grouped_relation_count(relation)
+        normalized_count(relation.except(:select, :order).count)
+      end
+
+      def normalized_count(value)
+        return value.size if value.is_a?(Hash)
+
+        value
       end
 
       def percent_change(current, previous)
         return if previous.nil?
         return 0 if previous.zero? && current.zero?
-        return if previous.zero?
+        return 100 if previous.zero? && current.positive?
 
         ((current - previous) / previous.to_f) * 100
       end

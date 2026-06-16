@@ -21,7 +21,7 @@ class InstallGeneratorTest < Minitest::Test
     generator = build_generator("/tmp", mount_path: "/backoffice")
     routes = []
 
-    generator.stub(:route, ->(value) { routes << value }) { generator.mount_engine }
+    with_singleton_stub(generator, :route, ->(value) { routes << value }) { generator.mount_engine }
 
     assert_equal [
       'mount RecordingStudioAccessible::Engine, at: "/backoffice/access"',
@@ -35,7 +35,7 @@ class InstallGeneratorTest < Minitest::Test
     assert_raises(ArgumentError) { generator.mount_engine }
   end
 
-  def test_copy_initializer_uses_configured_mount_path_and_authorization_hook
+  def test_copy_initializer_uses_configured_mount_path_and_access_recording_resolver
     with_temp_app do |dir|
       generator = build_generator(dir, mount_path: "/backoffice")
 
@@ -43,7 +43,7 @@ class InstallGeneratorTest < Minitest::Test
 
       initializer = File.read(File.join(dir, "config/initializers/recording_studio_admin.rb"))
       assert_includes initializer, 'config.default_mount_path = "/backoffice"'
-      assert_includes initializer, "config.authorization_method = :authorize_recording_studio_admin!"
+      assert_includes initializer, "config.access_recording_resolver = lambda do |context|"
     end
   end
 
@@ -53,8 +53,8 @@ class InstallGeneratorTest < Minitest::Test
       File.write(css_path, "@import \"tailwindcss\";\n")
       generator = build_generator(dir)
 
-      Rails.stub(:root, Pathname.new(dir)) do
-        generator.stub(:say, nil) { generator.add_tailwind_source }
+      with_singleton_stub(Rails, :root, Pathname.new(dir)) do
+        with_singleton_stub(generator, :say, nil) { generator.add_tailwind_source }
       end
 
       css = File.read(css_path)
@@ -69,6 +69,7 @@ class InstallGeneratorTest < Minitest::Test
     assert_includes install_guide, "recording_studio_admin:admin_root"
     assert_includes install_guide, "Register class-based sections and screens"
     assert_includes install_guide, "authentication_method"
-    assert_includes install_guide, "authorize_recording_studio_admin!"
+    assert_includes install_guide, "access_recording_resolver"
+    assert_includes install_guide, "RecordingStudioAccessible.authorized?"
   end
 end

@@ -3,11 +3,12 @@
 module RecordingStudioAdmin
   module Results
     ResolvedButton = Data.define(:name, :text, :url, :style)
-    ResolvedRowAction = Data.define(:name, :text, :url)
+    ResolvedRowAction = Data.define(:name, :text, :url, :icon, :method, :confirm, :destructive)
     ResolvedFilter = Data.define(:key, :type, :value, :options, :param_key, :start_param, :end_param)
     ResolvedChart = Data.define(:title, :subtitle, :type, :series, :options)
     ResolvedTable = Data.define(:columns, :filters, :rows, :actions, :result)
-    ResolvedMetric = Data.define(:key, :label, :value, :change, :change_good_when, :description, :period_label)
+    ResolvedSummary = Data.define(:label, :value, :change, :change_good_when, :period_label, :show_metric,
+                                  :show_change, :show_period)
     ResolvedWidget = Data.define(
       :key,
       :type,
@@ -18,6 +19,7 @@ module RecordingStudioAdmin
       :change,
       :change_good_when,
       :link_to,
+      :link_label,
       :series,
       :chart_type,
       :chart_options,
@@ -25,10 +27,26 @@ module RecordingStudioAdmin
       :items,
       :rows,
       :metadata,
-      :view_variant
+      :view_variant,
+      :show_metric,
+      :show_change,
+      :show_period
     )
     ResolvedSectionRecording = Data.define(:recordable, :recording, :root_recording, :parent_recording)
-    ResolvedSection = Data.define(:key, :title, :subtitle, :links, :widgets, :recordable, :recording)
+    ResolvedAvailableAdminItem = Data.define(
+      :type,
+      :key,
+      :title,
+      :subtitle,
+      :icon,
+      :url,
+      :parent_key,
+      :availability_scope,
+      :search_text
+    )
+    ResolvedSectionListItem = Data.define(:key, :title, :subtitle, :icon, :url)
+    ResolvedAvailableSection = Data.define(:key, :title, :subtitle, :icon, :url, :availability_scope)
+    ResolvedSection = Data.define(:key, :title, :subtitle, :icon, :links, :widgets, :recordable, :recording)
     ResolvedScreen = Data.define(
       :key,
       :title,
@@ -36,9 +54,9 @@ module RecordingStudioAdmin
       :buttons,
       :filters,
       :query_result,
+      :summary,
       :chart,
       :table,
-      :metrics,
       :widgets
     )
   end

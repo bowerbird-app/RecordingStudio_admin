@@ -15,6 +15,7 @@ class EngineTest < Minitest::Test
     content = File.read(File.join(ROOT, "config/routes.rb"))
 
     assert_includes content, 'root "sections#show", defaults: { key: "root" }'
+    assert_includes content, 'get "sections", to: "sections#index", as: :sections'
     assert_includes content, 'get "sections/:key"'
     assert_includes content, 'get "screens/:key"'
     refute_match(/\*path|\*key/, content)

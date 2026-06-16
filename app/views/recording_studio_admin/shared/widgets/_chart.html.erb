@@ -1,4 +1,6 @@
-<% chart_options = (widget.chart_options || {}).deep_merge(grid: { show: false }) %>
+<% chart_options = {
+     grid: { show: false }
+   }.deep_merge(widget.chart_options || {}) %>
 
 <%= render FlatPack::Chart::Component.new(
   type: widget.chart_type,

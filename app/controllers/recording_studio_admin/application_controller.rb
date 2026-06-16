@@ -5,12 +5,12 @@ module RecordingStudioAdmin
     layout "application"
 
     rescue_from RecordingStudioAdmin::DefinitionNotFound, with: :render_not_found
+    rescue_from RecordingStudioAdmin::AuthorizationFailed, with: :render_forbidden
 
     before_action :authenticate_recording_studio_admin!
-    before_action :authorize_recording_studio_admin!
     before_action :set_recording_studio_admin_current_actor
 
-    helper_method :recording_studio_admin_context, :page_nav_anchor_url, :preserve_anchor_url
+    helper_method :recording_studio_admin_context, :page_nav_anchor_url, :preserve_anchor_url, :widget_link_url
 
     private
 
@@ -19,16 +19,6 @@ module RecordingStudioAdmin
       return send(method_name) if method_name && respond_to?(method_name, true)
 
       head :unauthorized
-    end
-
-    def authorize_recording_studio_admin!
-      return if performed?
-
-      method_name = RecordingStudioAdmin.configuration.authorization_method
-      return head :forbidden unless method_name && respond_to?(method_name, true)
-
-      result = send(method_name)
-      head :forbidden if result == false && !performed?
     end
 
     def set_recording_studio_admin_current_actor
@@ -48,7 +38,7 @@ module RecordingStudioAdmin
     end
 
     def page_nav_anchor_url(default: nil)
-      safe_url = RecordingStudioAdmin::UrlSafety.safe_href(params[:anchor_url])
+      safe_url = RecordingStudioAdmin::UrlSafety.safe_href(params[:anchor_url], allow_external: true)
       return default if safe_url.blank? || safe_url == "#"
 
       safe_url
@@ -68,6 +58,32 @@ module RecordingStudioAdmin
       safe_url
     end
 
+    def widget_link_url(url)
+      safe_url = preserve_anchor_url(url)
+      return if widget_link_points_to_current_page?(safe_url)
+
+      safe_url
+    end
+
+    def widget_link_points_to_current_page?(url)
+      return false if url.blank? || url == "#" || !url.start_with?("/")
+
+      target_path, target_query = normalized_relative_url_parts(url)
+
+      target_path == request.path && target_query == normalized_query_hash(request.query_string)
+    rescue URI::InvalidURIError
+      false
+    end
+
+    def normalized_relative_url_parts(url)
+      uri = URI.parse(url)
+      [uri.path, normalized_query_hash(uri.query)]
+    end
+
+    def normalized_query_hash(query_string)
+      Rack::Utils.parse_nested_query(query_string).except("anchor_url")
+    end
+
     def current_actor
       return Current.actor if defined?(Current) && Current.respond_to?(:actor)
 
@@ -81,6 +97,10 @@ module RecordingStudioAdmin
 
     def render_not_found
       head :not_found
+    end
+
+    def render_forbidden
+      head :forbidden
     end
   end
 end

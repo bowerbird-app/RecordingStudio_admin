@@ -3,13 +3,16 @@
 module RecordingStudioAdmin
   class Screen < Definitions::Base
     class << self
-      attr_reader :query_value, :filters_value, :chart_value, :table_value, :widgets_value, :metrics_value
+      attr_reader :query_value, :filters_value, :chart_value, :table_value, :widgets_value, :summary_value,
+                  :availability_scope_value, :navigation_parent_value
 
       def inherited(subclass)
         super
         subclass.instance_variable_set(:@filters_value, [])
-        subclass.instance_variable_set(:@metrics_value, [])
         subclass.instance_variable_set(:@widgets_value, {})
+        subclass.instance_variable_set(:@summary_value, SummaryDefinition.new)
+        subclass.instance_variable_set(:@availability_scope_value, nil)
+        subclass.instance_variable_set(:@navigation_parent_value, nil)
       end
 
       def query(&block)
@@ -37,8 +40,19 @@ module RecordingStudioAdmin
         @widgets_value[definition.key] = definition
       end
 
-      def metric(name, &)
-        @metrics_value << ScreenMetric.new(name, &)
+      def summary(**options, &block)
+        @summary_value = SummaryDefinition.new(**options, &block) if options.any? || block
+        @summary_value
+      end
+
+      def availability_scope(value = nil, &block)
+        @availability_scope_value = block || normalize_availability_scope(value) if value || block
+        @availability_scope_value || DEFAULT_SECTION_AVAILABILITY_SCOPE
+      end
+
+      def navigation_parent(value = nil, &block)
+        @navigation_parent_value = block || value.to_s if value || block
+        @navigation_parent_value
       end
 
       def filters
@@ -49,11 +63,18 @@ module RecordingStudioAdmin
         @widgets_value || {}
       end
 
-      def metrics
-        @metrics_value || []
+      def navigation_parent_key
+        @navigation_parent_value
       end
 
       private
+
+      def normalize_availability_scope(value)
+        normalized = value.to_s.downcase.to_sym
+        return normalized if SECTION_AVAILABILITY_SCOPES.include?(normalized)
+
+        raise InvalidDefinition, "Screen availability_scope has unsupported value #{value.inspect}"
+      end
 
       def builtin_filter_type(name)
         case name.to_sym
@@ -65,45 +86,30 @@ module RecordingStudioAdmin
     end
   end
 
-  class ScreenMetric
-    attr_reader :key
+  class SummaryDefinition
+    attr_reader :show_metric_value, :show_change_value, :show_period_value
 
-    def initialize(key, &block)
-      @key = key.to_sym
+    def initialize(metric: true, change: true, period: true, &block)
+      @show_metric_value = metric
+      @show_change_value = change
+      @show_period_value = period
       instance_eval(&block) if block
     end
 
-    %i[label value change change_good_when description period_label].each do |name|
+    %i[label value previous_value change_good_when period_label].each do |name|
       define_method(name) do |value = nil, &block|
-        instance_variable_set("@#{name}", block || value) if value || block
+        instance_variable_set("@#{name}", block || value) if !value.nil? || block
         instance_variable_get("@#{name}")
       end
     end
 
-    def resolve(context)
-      Results::ResolvedMetric.new(
-        key: key,
-        label: evaluate(@label, context) || key.to_s.humanize,
-        value: evaluate(@value, context),
-        change: evaluate(@change, context),
-        change_good_when: normalize_change_good_when(evaluate(@change_good_when, context)),
-        description: evaluate(@description, context),
-        period_label: evaluate(@period_label, context)
-      )
-    end
+    def hide_metric = @show_metric_value = false
+    def hide_change = @show_change_value = false
+    def hide_period = @show_period_value = false
 
-    private
-
-    def evaluate(value, context)
-      value.respond_to?(:call) ? value.call(context) : value
-    end
-
-    def normalize_change_good_when(value)
-      normalized = (value || :up).to_s.downcase.to_sym
-      normalized = :up if normalized == :positive
-      normalized = :down if normalized == :negative
-      normalized
-    end
+    def show_metric(value = true) = @show_metric_value = value
+    def show_change(value = true) = @show_change_value = value
+    def show_period(value = true) = @show_period_value = value
   end
 
   class ChartDefinition
@@ -128,7 +134,7 @@ module RecordingStudioAdmin
       @columns = []
       @filters = []
       @actions = []
-      @pagination_options = { per_page: 50, mode: :standard }
+      @pagination_options = { per_page: 50, mode: :infinite }
       instance_eval(&block) if block
     end
 
@@ -142,11 +148,11 @@ module RecordingStudioAdmin
                                        value, display, display_options)
     end
 
-    def action(name, text:, url:, visible_if: nil)
-      @actions << RowActionDefinition.new(name.to_sym, text, url, visible_if)
+    def action(name, text:, url:, icon: nil, method: nil, confirm: nil, destructive: nil, visible_if: nil)
+      @actions << RowActionDefinition.new(name.to_sym, text, url, icon, method, confirm, destructive, visible_if)
     end
 
-    def paginate(per_page: 50, mode: :standard)
+    def paginate(per_page: 50, mode: :infinite)
       @pagination_options = { per_page: per_page.to_i, mode: mode.to_sym }
     end
 
@@ -179,12 +185,52 @@ module RecordingStudioAdmin
     end
   end
 
-  RowActionDefinition = Data.define(:name, :text, :url, :visible_if) do
+  RowActionDefinition = Data.define(:name, :text, :url, :icon, :method, :confirm, :destructive, :visible_if) do
     def resolve(row, context)
-      return if visible_if && !visible_if.call(row, context)
+      return if visible_if && !resolve_value(visible_if, row, context)
 
-      Results::ResolvedRowAction.new(name: name, text: text,
-                                     url: RecordingStudioAdmin::UrlSafety.safe_href(url.call(row, context)))
+      resolved_url = RecordingStudioAdmin::UrlSafety.safe_href(resolve_value(url, row, context))
+      return if resolved_url.blank?
+
+      resolved_method = normalize_method(resolve_value(method, row, context))
+      resolved_confirm = resolve_value(confirm, row, context)
+      resolved_destructive = resolve_destructive(row, context, resolved_method)
+
+      Results::ResolvedRowAction.new(
+        name: name,
+        text: resolve_value(text, row, context),
+        url: resolved_url,
+        icon: resolve_value(icon, row, context),
+        method: resolved_method,
+        confirm: resolved_confirm,
+        destructive: resolved_destructive
+      )
+    end
+
+    private
+
+    def resolve_destructive(row, context, resolved_method)
+      value = resolve_value(destructive, row, context)
+      return value unless value.nil?
+
+      resolved_method == :delete
+    end
+
+    def normalize_method(value)
+      normalized = value.to_s.downcase.presence
+      return if normalized.blank? || normalized == "get"
+
+      normalized.to_sym
+    end
+
+    def resolve_value(value, row, context)
+      return value unless value.respond_to?(:call)
+
+      case value.arity
+      when 0 then value.call
+      when 1, -1 then value.call(row)
+      else value.call(row, context)
+      end
     end
   end
 end

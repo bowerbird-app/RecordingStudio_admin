@@ -2,7 +2,7 @@
 
 module RecordingStudioAdmin
   class Widget
-    VALID_TYPES = %i[number list chart].freeze
+    VALID_TYPES = %i[number list chart progress].freeze
     LIST_OPTION_KEYS = %i[
       ordered
       spacing
@@ -24,10 +24,13 @@ module RecordingStudioAdmin
       @screen_key = screen_key&.to_s
       @key = registry_prefix || [@screen_key, "widgets", @local_key].compact.join(".")
       @type = :number
+      @show_metric = true
+      @show_change = true
+      @show_period = true
       instance_eval(&block) if block
     end
 
-    %i[type title subtitle description value change change_good_when link_to series chart_type chart_options
+    %i[type title subtitle description value change change_good_when link_to link_label series chart_type chart_options
        list_options items rows metadata].each do |name|
       define_method(name) do |value = nil, &block|
         instance_variable_set("@#{name}", block || value) if value || block
@@ -38,7 +41,7 @@ module RecordingStudioAdmin
     def resolve(context)
       attributes = resolved_attributes(context)
 
-      validate!(**attributes.slice(:type, :value, :series, :chart_type, :items, :change_good_when))
+      validate!(**attributes.slice(:type, :value, :series, :chart_type, :items, :change_good_when, :metadata))
 
       Results::ResolvedWidget.new(
         key: key,
@@ -58,19 +61,47 @@ module RecordingStudioAdmin
         change: evaluate(@change, context),
         change_good_when: normalize_change_good_when(evaluate(@change_good_when, context)),
         link_to: RecordingStudioAdmin::UrlSafety.safe_href(evaluate(@link_to, context)),
+        link_label: resolve_link_label(context),
         series: evaluate(@series, context),
         chart_type: evaluate(@chart_type, context),
         chart_options: evaluate(@chart_options, context) || {},
         list_options: normalize_list_options(evaluate(@list_options, context)),
         items: normalize_list_items(evaluate(@items, context)),
         rows: evaluate(@rows, context),
-        metadata: evaluate(@metadata, context) || {},
-        view_variant: nil
+        metadata: normalize_hash(evaluate(@metadata, context), field_name: :metadata),
+        view_variant: nil,
+        show_metric: @show_metric,
+        show_change: @show_change,
+        show_period: @show_period
       }
     end
 
+    def hide_metric = @show_metric = false
+    def hide_change = @show_change = false
+    def hide_period = @show_period = false
+
+    def show_metric(value = true) = @show_metric = value
+    def show_change(value = true) = @show_change = value
+    def show_period(value = true) = @show_period = value
+
     def evaluate(value, context)
       value.respond_to?(:call) ? value.call(context) : value
+    end
+
+    def resolve_link_label(context)
+      explicit_label = evaluate(@link_label, context)
+      return explicit_label if explicit_label.present?
+
+      screen_title(context)
+    end
+
+    def screen_title(context)
+      return unless screen_key
+
+      screen = RecordingStudioAdmin.screen_for(screen_key)
+      return unless screen
+
+      screen.evaluate(screen.title, context)
     end
 
     def normalize_type(value)
@@ -86,12 +117,13 @@ module RecordingStudioAdmin
       normalized
     end
 
-    def validate!(type:, value:, series:, chart_type:, items:, change_good_when:)
+    def validate!(type:, value:, series:, chart_type:, items:, change_good_when:, metadata:)
       validate_type!(type)
       validate_change_good_when!(change_good_when)
 
       return validate_number_widget!(value) if type == :number
       return validate_list_widget!(items: items) if type == :list
+      return validate_progress_widget!(metadata: metadata) if type == :progress
 
       validate_chart_widget!(chart_type: chart_type, series: series)
     end
@@ -118,6 +150,19 @@ module RecordingStudioAdmin
       return unless items.nil?
 
       raise InvalidDefinition, "Widget #{key.inspect} requires items for type :list"
+    end
+
+    def validate_progress_widget!(metadata:)
+      progress_value = metadata[:progress_value]
+      progress_max = metadata.fetch(:progress_max, 100)
+      return raise_missing_progress_value! if progress_value.nil?
+      return raise_invalid_progress_value!("must be numeric") unless progress_value.is_a?(Numeric)
+      return raise_invalid_progress_max!("must be numeric") unless progress_max.is_a?(Numeric)
+      return raise_invalid_progress_value!("must be non-negative") if progress_value.negative?
+      return raise_invalid_progress_max!("must be greater than zero") unless progress_max.positive?
+      return if progress_value <= progress_max
+
+      raise_invalid_progress_value!("must be less than or equal to progress_max")
     end
 
     def normalize_list_options(value)
@@ -169,6 +214,18 @@ module RecordingStudioAdmin
     def validate_chart_widget!(chart_type:, series:)
       raise InvalidDefinition, "Widget #{key.inspect} requires chart_type for type :chart" if chart_type.nil?
       raise InvalidDefinition, "Widget #{key.inspect} requires series for type :chart" if series.nil?
+    end
+
+    def raise_missing_progress_value!
+      raise InvalidDefinition, "Widget #{key.inspect} requires metadata[:progress_value] for type :progress"
+    end
+
+    def raise_invalid_progress_value!(message)
+      raise InvalidDefinition, "Widget #{key.inspect} metadata[:progress_value] #{message}"
+    end
+
+    def raise_invalid_progress_max!(message)
+      raise InvalidDefinition, "Widget #{key.inspect} metadata[:progress_max] #{message}"
     end
   end
 end

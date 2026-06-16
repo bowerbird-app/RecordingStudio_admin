@@ -1,6 +1,17 @@
-<% compact_card = widget.view_variant == :chip %>
+<% compact_card = widget.view_variant == :compact %>
+<% widget_href = widget.link_to.present? ? widget_link_url(widget.link_to) : nil %>
+<% compact_card_href = compact_card ? widget_href : nil %>
+<% widget_link_label = widget.link_label.presence || "Admin screen" %>
+<% compact_tooltip_text = compact_card_href.present? ? "Open #{widget_link_label}" : nil %>
 
-<%= render FlatPack::Card::Component.new(style: :outlined) do |card| %>
+<% widget_card = capture do %>
+  <%= render FlatPack::Card::Component.new(
+    style: :outlined,
+    hover: (compact_card ? :subtle : nil),
+    clickable: compact_card_href.present?,
+    href: compact_card_href,
+    class: "w-full"
+  ) do |card| %>
     <% card.body do %>
       <% change_tone = RecordingStudioAdmin::WidgetChangeSemantics.tone(
         change: widget.change,
@@ -15,50 +26,102 @@
                                "text-[var(--surface-muted-content-color)]"
                              end %>
       <% raw_subtitle = widget.subtitle %>
-      <% period_label = widget.metadata&.[](:period_label).presence || widget.metadata&.[]("period_label").presence %>
+      <% period_label = if widget.show_period
+           widget.metadata&.[](:period_label).presence || widget.metadata&.[]("period_label").presence
+         end %>
+      <% compact_period_label = widget.type == :progress ? nil : period_label %>
       <% unit_label = widget.metadata&.[](:unit_label).presence || widget.metadata&.[]("unit_label").presence %>
-      <% unless compact_card %>
-        <% if period_label.present? && unit_label.blank? && raw_subtitle.present? && widget.value.present? %>
-          <% unit_label = raw_subtitle %>
-        <% elsif period_label.blank? && unit_label.blank? && raw_subtitle.present? && (widget.value.present? || widget.change.present?) %>
-          <% period_label = raw_subtitle %>
-        <% end %>
-      <% end %>
-      <% header_subtitle = if raw_subtitle.present? && raw_subtitle != unit_label && raw_subtitle != period_label
-                             raw_subtitle
-                           end %>
+       <% progress_value = widget.metadata&.[](:progress_value) || widget.metadata&.[]("progress_value") %>
+       <% progress_max = widget.metadata&.[](:progress_max) || widget.metadata&.[]("progress_max") || 100 %>
+       <% progress_label = widget.metadata&.[](:progress_label).presence || widget.metadata&.[]("progress_label").presence %>
+       <% progress_variant = widget.metadata&.[](:progress_variant) || widget.metadata&.[]("progress_variant") || :default %>
+      <% mini_chart_options = {
+           chart: { sparkline: { enabled: true }, toolbar: { show: false } },
+           stroke: { curve: "smooth", width: 2 },
+           fill: {
+             type: "gradient",
+             gradient: {
+               shade: "light",
+               shadeIntensity: 0,
+               inverseColors: false,
+               opacityFrom: 0.45,
+               opacityTo: 0.05,
+               stops: [0, 90, 100]
+             }
+           },
+           markers: { size: 0 },
+           tooltip: { enabled: false },
+           grid: { show: false },
+           xaxis: {
+             labels: { show: false },
+             axisBorder: { show: false },
+             axisTicks: { show: false }
+           },
+           yaxis: { show: false },
+           legend: { show: false },
+           dataLabels: { enabled: false }
+         }.deep_merge(widget.chart_options || {}) %>
+      <% header_subtitle = raw_subtitle.presence %>
 
       <% if compact_card %>
-        <div class="space-y-1">
-          <% if widget.title.present? %>
-            <h3 class="text-sm font-semibold"><%= widget.title %></h3>
-          <% end %>
+          <div class="flex items-start gap-3">
+          <div class="shrink-0">
+            <% if widget.show_metric && widget.value.present? %>
+              <p class="flex items-baseline gap-1 leading-none">
+                <span class="text-4xl font-bold"><%= widget.value %></span>
+                <% if unit_label.present? %>
+                  <span class="text-xs text-(--surface-muted-content-color)"><%= unit_label %></span>
+                <% end %>
+              </p>
+            <% end %>
+          </div>
 
-          <% if widget.value.present? %>
-            <p class="flex flex-wrap items-baseline gap-1 leading-none">
-              <span class="text-2xl font-bold"><%= widget.value %></span>
-              <% if unit_label.present? %>
-                <span class="text-xs text-(--surface-muted-content-color)"><%= unit_label %></span>
-              <% end %>
-            </p>
-          <% end %>
+            <div class="min-w-0 flex-1 space-y-2 text-left">
+            <% if widget.title.present? %>
+              <h3 class="text-sm font-semibold leading-tight"><%= widget.title %></h3>
+            <% end %>
 
-          <% if widget.change.present? || period_label.present? %>
-            <p class="flex items-center gap-1">
-              <% if widget.change.present? %>
-                <span class="text-xs font-semibold <%= change_text_class %>"><%= widget.change %></span>
-              <% end %>
-              <% if period_label.present? %>
-                <span class="text-xs font-semibold text-(--surface-muted-content-color)"><%= period_label %></span>
-              <% end %>
-            </p>
+            <% if widget.type == :progress && progress_value.present? %>
+              <%= render FlatPack::Progress::Component.new(
+                value: progress_value,
+                max: progress_max,
+                variant: progress_variant,
+                size: :sm,
+                label: progress_label,
+                show_label: progress_label.present?
+              ) %>
+            <% end %>
+
+            <% if (widget.show_change && widget.change.present?) || compact_period_label.present? %>
+                <p class="flex flex-wrap items-center justify-start gap-2 text-left">
+                <% if widget.show_change && widget.change.present? %>
+                  <span class="text-sm font-semibold <%= change_text_class %>"><%= widget.change %></span>
+                <% end %>
+                <% if compact_period_label.present? %>
+                  <span class="text-sm font-semibold text-(--surface-muted-content-color)"><%= compact_period_label %></span>
+                <% end %>
+              </p>
+            <% end %>
+          </div>
+
+          <% if widget.series.present? %>
+            <div class="w-[104px] min-w-[104px] shrink-0">
+              <%= render FlatPack::Chart::Component.new(
+                type: widget.chart_type.presence || :area,
+                series: widget.series,
+                card: false,
+                height: 56,
+                class: "w-full",
+                options: mini_chart_options
+              ) %>
+            </div>
           <% end %>
         </div>
       <% else %>
         <div class="space-y-4">
-          <% if header_subtitle.present? || unit_label.present? || widget.title.present? || widget.value.present? || widget.change.present? || widget.link_to.present? || period_label.present? %>
+          <% if header_subtitle.present? || unit_label.present? || widget.title.present? || (widget.show_metric && widget.value.present?) || (widget.show_change && widget.change.present?) || widget_href.present? || period_label.present? %>
             <div class="flex items-start justify-between gap-3">
-              <% if header_subtitle.present? || unit_label.present? || widget.title.present? || widget.value.present? || widget.change.present? || period_label.present? %>
+              <% if header_subtitle.present? || unit_label.present? || widget.title.present? || (widget.show_metric && widget.value.present?) || (widget.show_change && widget.change.present?) || period_label.present? %>
                 <div class="space-y-2">
                   <% if widget.title.present? %>
                     <% if widget.description.present? %>
@@ -69,10 +132,10 @@
                       <h3 class="text-xl font-semibold"><%= widget.title %></h3>
                     <% end %>
                   <% end %>
-                  <% if header_subtitle.present? && !widget.value.present? && !widget.change.present? %>
+                  <% if header_subtitle.present? && !(widget.show_metric && widget.value.present?) && !(widget.show_change && widget.change.present?) %>
                     <p class="text-sm text-(--surface-muted-content-color)"><%= header_subtitle %></p>
                   <% end %>
-                  <% if widget.value.present? %>
+                  <% if widget.show_metric && widget.value.present? %>
                     <p class="flex flex-wrap items-baseline gap-2 leading-none">
                       <% if unit_label.present? %>
                         <%= render FlatPack::Tooltip::Component.new(text: unit_label) do %>
@@ -83,9 +146,9 @@
                       <% end %>
                     </p>
                   <% end %>
-                  <% if widget.change.present? || period_label.present? %>
+                  <% if (widget.show_change && widget.change.present?) || period_label.present? %>
                     <p class="flex items-center gap-2">
-                      <% if widget.change.present? %>
+                      <% if widget.show_change && widget.change.present? %>
                         <span class="text-sm font-semibold <%= change_text_class %>"><%= widget.change %></span>
                       <% end %>
                       <% if period_label.present? %>
@@ -96,19 +159,10 @@
                 </div>
               <% end %>
 
-              <% if widget.link_to.present? %>
-                <% widget_screen_key = widget.key.to_s[/\A(.+)\.widgets\./, 1] || widget.link_to.to_s[%r{/screens/([^/?#]+)}, 1] %>
-                <% widget_screen_name = begin
-                     if widget_screen_key.present?
-                       RecordingStudioAdmin.resolve_screen(key: widget_screen_key, context: recording_studio_admin_context).title
-                     end
-                   rescue RecordingStudioAdmin::DefinitionNotFound
-                     nil
-                   end %>
-                <% widget_screen_name = widget_screen_name.presence || widget_screen_key.to_s.humanize.presence || "Admin screen" %>
+              <% if widget_href.present? %>
                 <div class="shrink-0">
-                  <%= render FlatPack::Tooltip::Component.new(text: "Open #{widget_screen_name}") do %>
-                    <%= render FlatPack::Button::Component.new(text: "More", url: preserve_anchor_url(widget.link_to), style: :secondary, size: :sm) %>
+                  <%= render FlatPack::Tooltip::Component.new(text: "Open #{widget_link_label}") do %>
+                    <%= render FlatPack::Button::Component.new(text: "More", url: widget_href, style: :secondary, size: :sm) %>
                   <% end %>
                 </div>
               <% end %>
@@ -120,3 +174,12 @@
       <% end %>
     <% end %>
   <% end %>
+<% end %>
+
+<% if compact_tooltip_text.present? %>
+  <%= render FlatPack::Tooltip::Component.new(text: compact_tooltip_text, class: "flex w-full") do %>
+    <%= widget_card %>
+  <% end %>
+<% else %>
+  <%= widget_card %>
+<% end %>

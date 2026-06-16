@@ -13,6 +13,22 @@ class AdminRootGeneratorTest < Minitest::Test
     assert_includes template, 'layout "admin"'
     assert_includes template, "before_action :authenticate_admin_user!"
     assert_includes template, "before_action :authorize_admin_user!"
+    expected_helper_method =
+      "helper_method :recording_studio_admin_context, :recording_studio_admin_access_recording, " \
+      ":page_nav_anchor_url,"
+    assert_includes template, expected_helper_method
+    assert_includes template, ":preserve_anchor_url"
+    assert_includes template, "RecordingStudioAdmin::Authorization.authorize!("
+    assert_includes template, "recording_studio_admin_context,"
+    assert_includes template, "recording: recording_studio_admin_access_recording"
+    assert_includes template, "RecordingStudioAdmin::Context.new"
+    assert_includes template, "def recording_studio_admin_access_recording"
+    assert_includes template, "AdminRoot.find_or_create_by!(name: \"Admin\")"
+    assert_includes template, "RecordingStudio.root_recording_for(admin_root)"
+    assert_includes template, "def page_nav_anchor_url"
+    assert_includes template, "RecordingStudioAdmin::UrlSafety.safe_href(params[:anchor_url], allow_external: true)"
+    assert_includes template, "def preserve_anchor_url(url)"
+    assert_includes template, "reverse_merge(\"anchor_url\" => anchor_url)"
     assert_includes template, "head :unauthorized"
     assert_includes template, "head :forbidden"
   end
@@ -31,10 +47,43 @@ class AdminRootGeneratorTest < Minitest::Test
     refute_includes source, 'root "root#show"'
   end
 
-  def test_admin_root_view_links_to_configured_engine_mount_path
+  def test_admin_root_view_lists_available_admin_sections
     template = File.read(generator_template_path("app/views/admin/root/show.html.erb"))
 
-    assert_includes template, "RecordingStudioAdmin.configuration.default_mount_path"
+    expected_available_sections =
+      "recording_studio_admin_context.available_admin_sections(recording: " \
+      "recording_studio_admin_access_recording, placement: :root)"
+    assert_includes template, expected_available_sections
+    assert_includes template, "recording_studio_admin_context.available_admin_items("
+    assert_includes template, "parent: :root"
+    assert_includes template, "FlatPack::SearchInput::Component"
+    assert_includes template, "FlatPack::Badge::Component"
+    assert_includes template, "placeholder: \"Search\""
+    assert_includes template, 'data-controller="admin--root-search"'
+    assert_includes template, 'data-action="input->admin--root-search#filter search->admin--root-search#filter"'
+    assert_includes template, 'data-admin--root-search-target="results"'
+    assert_includes template, 'admin__root_search_target: "item"'
+    assert_includes template, "hidden: !item_matches_search"
+    assert_includes template, "No admin screens or sections match that search."
+    assert_includes template, "FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url"
+    assert_includes template, "href: preserve_anchor_url(section.url)"
+    assert_includes template, "FlatPack::List::Component"
+    assert_includes template, "FlatPack::List::Item"
+    assert_includes template, "FlatPack::Shared::IconComponent"
+    assert_includes template, "section.title"
+    assert_includes template, "section.subtitle"
+    assert_includes template, "section.url"
+    assert_includes template, "No admin sections are available."
+    refute_includes template, "Open admin screens"
+  end
+
+  def test_admin_root_generator_includes_live_search_controller_template
+    template = File.read(generator_template_path("app/javascript/controllers/admin/root_search_controller.js"))
+
+    assert_includes template, 'static targets = ["input", "results", "emptyState", "item"]'
+    assert_includes template, "this.filter()"
+    assert_includes template, "item.hidden = !matches"
+    assert_includes template, "this.resultsTarget.hidden = query.length === 0 || visibleCount === 0"
   end
 
   private

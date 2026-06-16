@@ -12,6 +12,14 @@
   <% end %>
 <% end %>
 
+<% if @screen.widgets.any? %>
+  <%= render FlatPack::Grid::Component.new(cols: :auto, gap: :md, class: "mb-6") do %>
+    <% @screen.widgets.each do |widget| %>
+      <%= render partial: "recording_studio_admin/shared/widget", locals: { widget: widget.with(view_variant: :compact) } %>
+    <% end %>
+  <% end %>
+<% end %>
+
 <% if @screen.filters.any? %>
   <% base_query = request.query_parameters.symbolize_keys.except(:page) %>
   <% filter_param_keys = @screen.filters.flat_map do |filter|
@@ -23,9 +31,9 @@
      end.map(&:to_sym) %>
   <% hidden_query = base_query.except(*filter_param_keys) %>
   <%= form_with url: request.path, method: :get, id: "screen-filters-form", data: {
-    controller: "flat-pack--auto-submit",
+    controller: "flat-pack--auto-submit recording-studio-admin--screen-filters",
     turbo_frame: "screen-chart",
-    action: "change->flat-pack--auto-submit#queueSubmit input->flat-pack--auto-submit#queueSubmit"
+    action: "change->flat-pack--auto-submit#queueSubmit input->flat-pack--auto-submit#queueSubmit click->recording-studio-admin--screen-filters#queueDateRangeSubmit"
   } do %>
     <% hidden_query.each do |key, value| %>
       <% if value.is_a?(Array) %>
@@ -37,36 +45,40 @@
       <% end %>
     <% end %>
 
-    <%= render FlatPack::Grid::Component.new(cols: 4, gap: :md, class: "mb-6") do %>
+    <div class="mb-6 flex flex-wrap items-start gap-4">
       <% @screen.filters.each do |filter| %>
-        <% if filter.type == :date_range %>
-          <%= render FlatPack::DateRangeInput::Component.new(
-            start_name: filter.start_param,
-            end_name: filter.end_param,
-            start_value: filter.value&.start_date,
-            end_value: filter.value&.end_date
-          ) %>
-        <% else %>
-          <% select_options = Array(filter.options[:values] || filter.options[:options]).map { |value| { label: value.to_s.humanize, value: value } } %>
-          <% if select_options.any? %>
-            <%= render FlatPack::Select::Component.new(
-              name: filter.param_key,
-              options: select_options,
-              value: filter.value,
-              placeholder: "All"
+        <div class="min-w-64 flex-none">
+          <% if filter.type == :date_range %>
+            <%= render FlatPack::DateRangeInput::Component.new(
+              start_name: filter.start_param,
+              end_name: filter.end_param,
+              start_value: filter.value&.start_date,
+              end_value: filter.value&.end_date
             ) %>
           <% else %>
-            <%= render FlatPack::SearchInput::Component.new(
-              name: filter.param_key,
-              value: filter.value,
-              placeholder: filter.key.to_s.humanize
-            ) %>
+            <% select_options = Array(filter.options[:values] || filter.options[:options]).map { |value| { label: value.to_s.humanize, value: value } } %>
+            <% if select_options.any? %>
+              <%= render FlatPack::Select::Component.new(
+                name: filter.param_key,
+                options: select_options,
+                value: filter.value,
+                placeholder: "All"
+              ) %>
+            <% else %>
+              <%= render FlatPack::SearchInput::Component.new(
+                name: filter.param_key,
+                value: filter.value,
+                placeholder: filter.key.to_s.humanize
+              ) %>
+            <% end %>
           <% end %>
-        <% end %>
+        </div>
       <% end %>
-    <% end %>
+    </div>
   <% end %>
 <% end %>
 
-<%= render "chart", screen: @screen %>
+<%= turbo_frame_tag "screen-chart" do %>
+  <%= render "chart", screen: @screen %>
+<% end %>
 

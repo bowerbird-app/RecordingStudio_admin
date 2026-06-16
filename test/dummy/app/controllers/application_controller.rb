@@ -23,10 +23,6 @@ class ApplicationController < ActionController::Base
     Current.actor = current_user
   end
 
-  def authorize_recording_studio_admin!
-    current_user.present?
-  end
-
   def authorize_dummy_page_access!
     return if accessible_for_current_root?
 

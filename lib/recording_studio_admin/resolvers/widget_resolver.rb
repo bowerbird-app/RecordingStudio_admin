@@ -8,6 +8,7 @@ module RecordingStudioAdmin
         raise DefinitionNotFound, "Widget #{key.inspect} is not registered" unless definition
         return resolve_screen_widget(definition, context) if definition.screen_key
 
+        RecordingStudioAdmin::Authorization.authorize!(context)
         definition.resolve(context)
       end
 

@@ -47,4 +47,21 @@ class ContextPeriodTest < Minitest::Test
 
     assert_equal "Last 4 weeks", label
   end
+
+  def test_widget_period_label_uses_widget_duration_override
+    context = RecordingStudioAdmin::Context.new.with_widget_params(duration: 24.hours)
+
+    label = context.widget_period_label(reference_time: reference_time)
+
+    assert_equal "Last 24 hours", label
+  end
+
+  def test_widget_time_range_uses_widget_duration_override
+    context = RecordingStudioAdmin::Context.new.with_widget_params(duration: 24.hours)
+
+    range = context.widget_time_range(reference_time: reference_time)
+
+    assert_equal reference_time - 24.hours, range.begin
+    assert_equal reference_time, range.end
+  end
 end

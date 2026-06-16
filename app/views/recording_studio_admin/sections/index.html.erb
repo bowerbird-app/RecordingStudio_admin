@@ -1,0 +1,26 @@
+<%= render layout: "recording_studio_admin/shared/page_shell" do %>
+  <%= render FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url(default: RecordingStudioAdmin.configuration.default_mount_path), class: "mb-4") %>
+
+  <%= render FlatPack::PageTitle::Component.new(title: "Admin sections", subtitle: "Browse the sections available in this admin context") %>
+
+  <% if @sections.any? %>
+    <%= render FlatPack::List::Component.new(divider: true, class: "w-full") do %>
+      <% @sections.each do |section| %>
+        <% item_options = { href: preserve_anchor_url(section.url), hover: true } %>
+        <% if section.icon.present? %>
+          <% item_options[:leading] = render(FlatPack::Shared::IconComponent.new(name: section.icon, size: :md, class: "text-[var(--surface-muted-content-color)]")) %>
+        <% end %>
+        <%= render FlatPack::List::Item.new(**item_options) do %>
+          <div class="flex flex-col gap-1">
+            <span><%= section.title %></span>
+            <% if section.subtitle.present? %>
+              <span class="text-sm text-(--surface-muted-content-color)"><%= section.subtitle %></span>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% else %>
+    <p class="text-sm text-(--surface-muted-content-color)">No admin sections are available.</p>
+  <% end %>
+<% end %>

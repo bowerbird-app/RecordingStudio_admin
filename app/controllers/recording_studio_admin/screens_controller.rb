@@ -5,7 +5,7 @@ module RecordingStudioAdmin
     def show
       @screen = RecordingStudioAdmin.resolve_screen(key: params[:key], context: recording_studio_admin_context)
 
-      return unless turbo_frame_request?
+      return unless turbo_frame_request? || request.xhr?
 
       render partial: "recording_studio_admin/screens/chart", locals: { screen: @screen }
     end

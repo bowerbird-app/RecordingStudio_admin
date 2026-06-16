@@ -15,6 +15,8 @@ module RecordingStudioAdmin
     def call
       return unless @definition
 
+      RecordingStudioAdmin::Authorization.authorize!(@context)
+
       parent_recording = resolve_parent_recording
       root_recording = RecordingStudio.root_recording_or_self(parent_recording)
       recordable = resolve_recordable

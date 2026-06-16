@@ -18,18 +18,20 @@ The old admin gem is not an implementation guide for this replacement.
 
 `RecordingStudioAccessible` is required. The generated admin root includes `RecordingStudioAccessible::AllowsAccessibleChildren` by default.
 
-The engine protects mounted screens through a configurable host-app authentication hook. By default it calls `authenticate_user!` and reads the actor from `current_user`, matching Devise-based host apps:
+The engine protects mounted screens through a configurable host-app authentication hook plus a mandatory context-owned `RecordingStudio::Recording` access target. By default it calls `authenticate_user!`, reads the actor from `current_user`, and checks `RecordingStudioAccessible.authorized?` with role `:view` before resolving sections, widgets, or screen queries:
 
 ```ruby
 RecordingStudioAdmin.configure do |config|
   config.authentication_method = :authenticate_user!
-  config.authorization_method = :authorize_recording_studio_admin!
   config.current_actor_method = :current_user
+  config.access_recording_resolver = lambda do |context|
+    context.controller.current_root_recording
+  end
 end
 ```
 
 If the configured authentication method is unavailable, the engine returns `401 Unauthorized` instead of rendering admin data.
-If the configured authorization method is unavailable or returns `false`, the engine returns `403 Forbidden`.
+If the access recording is unavailable or `RecordingStudioAccessible` denies access for the current actor, the engine returns `403 Forbidden`.
 
 ## Routing
 
@@ -74,13 +76,13 @@ When you include a widget in a section, you can set a display-level `view_varian
 class ApiCallsAdminSection < RecordingStudioAdmin::Section
   key "api_calls"
 
-  widget "api_requests.widgets.activity_last_24_hours", view_variant: :chip
+  widget "api_requests.widgets.activity_last_24_hours", view_variant: :compact
 end
 ```
 
-Supported section widget view variants are `:card` and `:chip`.
+Supported section widget view variants are `:card` and `:compact`.
 
-Sections can also declare an optional RecordingStudio-backed recordable. This keeps the admin UI route separate from access control: `/admin/sections/:key` renders the section page, while the resolved section exposes a backing `recordable` and `recording` that `RecordingStudioAccessible` can use for section-level access grants.
+Sections can also declare an optional RecordingStudio-backed recordable. This keeps the admin UI route separate from access control: `/admin/sections/:key` renders the section page, while the engine checks the mandatory current context access recording before creating or resolving the section's backing `recordable` and `recording`.
 
 ```ruby
 class ApiCallsAdminSection < RecordingStudioAdmin::Section
@@ -109,17 +111,52 @@ Add that model to the host app's `RecordingStudio.configure` `recordable_types` 
 
 Screens define detailed pages with main filters, charts, table filters, sortable/paginated tables, and widgets exposed to sections.
 
-Widgets support three rendered types:
+Every screen resolves a default summary from its filtered query relation:
+
+- metric: count of records matching the active chart/table filters
+- change: percent change against the previous equivalent date range when a date range filter is present
+- period: label for the active date range
+
+Customize the summary when the default label or trend semantics need to differ:
+
+```ruby
+summary do
+  label "Total errors"
+  change_good_when :down
+end
+```
+
+Screens can hide individual summary parts:
+
+```ruby
+summary do
+  hide_metric
+  hide_change
+  hide_period
+end
+```
+
+Widgets support four rendered types:
 
 - `number`: numeric summary cards with `value` and optional `change`
 - `list`: list cards with `items`
 - `chart`: embedded charts with `chart_type`, `series`, and optional `chart_options`
+- `progress`: progress bars with metadata-backed `progress_value`, optional `progress_max`, and optional `progress_label`
 
 `number` and `chart` widgets can set `change_good_when` to control trend semantics:
 
 - `:up` (default): positive change is styled as good
 - `:down`: negative change is styled as good (useful for churn or error rates)
 - `:neutral`: change text is always styled neutral
+
+Widgets can also call `hide_metric`, `hide_change`, or `hide_period` to suppress those header fields.
+
+Widget field semantics stay separate:
+
+- `subtitle` is descriptive copy
+- `metadata[:period_label]` is the reporting window
+- `metadata[:unit_label]` is the metric unit
+- `progress` widgets use metadata keys such as `:progress_value`, `:progress_max`, `:progress_label`, and `:progress_variant`
 
 Legacy `stat` widget definitions are normalized to `number` for compatibility.
 

@@ -1,0 +1,14 @@
+<% progress_value = widget.metadata[:progress_value] %>
+<% progress_max = widget.metadata.fetch(:progress_max, 100) %>
+<% progress_label = widget.metadata[:progress_label] %>
+<% progress_variant = widget.metadata.fetch(:progress_variant, :default) %>
+<% progress_size = widget.metadata.fetch(:progress_size, :lg) %>
+
+<%= render FlatPack::Progress::Component.new(
+  value: progress_value,
+  max: progress_max,
+  variant: progress_variant,
+  size: progress_size,
+  label: progress_label,
+  show_label: progress_label.present?
+) %>

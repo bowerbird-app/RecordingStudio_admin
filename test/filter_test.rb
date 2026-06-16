@@ -39,7 +39,7 @@ class FilterTest < Minitest::Test
       default: :last_30_days
     )
 
-    Date.stub(:current, Date.new(2026, 6, 12)) do
+    with_singleton_stub(Date, :current, Date.new(2026, 6, 12)) do
       value = definition.normalize({})
 
       assert_equal Date.new(2026, 5, 13), value.start_date

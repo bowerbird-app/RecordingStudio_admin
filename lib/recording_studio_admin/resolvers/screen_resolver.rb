@@ -15,16 +15,24 @@ module RecordingStudioAdmin
       def call
         definition = RecordingStudioAdmin.screen_for(@key)
         raise DefinitionNotFound, "Screen #{@key.inspect} is not registered" unless definition
+
+        RecordingStudioAdmin::Authorization.authorize!(@context)
         raise DefinitionNotFound, "Screen #{@key.inspect} is not visible" unless visible?(definition)
 
-        relation = definition.query.call(@context)
+        base_relation = definition.query.call(@context)
+        relation = base_relation
         filters = resolve_filters(combined_filters(definition))
         filters.each { |filter| relation = filter[:definition].apply(relation, filter[:value], @context) }
-        query_result = Results::QueryResult.new(relation: relation)
+        previous_count = previous_count_for(base_relation: base_relation, filters: filters)
+        query_result = Results::QueryResult.new(relation: relation, previous_count: previous_count)
         @context.query_result = query_result
 
         table = resolve_table(definition.table_value, relation, filters: filters)
-        metrics = resolve_metrics(definition, query_result: query_result, table: table)
+        summary = resolve_summary(
+          definition.summary_value || SummaryDefinition.new,
+          query_result: query_result,
+          previous_count: previous_count
+        )
         Results::ResolvedScreen.new(
           key: definition.key,
           title: definition.evaluate(definition.title, @context),
@@ -32,9 +40,9 @@ module RecordingStudioAdmin
           buttons: definition.buttons_value.filter_map { |button| button.resolve(@context) },
           filters: filters.map { |entry| resolved_filter(entry) },
           query_result: query_result,
+          summary: summary,
           chart: resolve_chart(definition.chart_value),
           table: table,
-          metrics: metrics,
           widgets: definition.widgets.values.map { |widget| widget.resolve(@context) }
         )
       end
@@ -91,40 +99,62 @@ module RecordingStudioAdmin
         end, table_result.rows, definition.actions, table_result)
       end
 
-      def resolve_metrics(definition, query_result:, table:)
-        default_metrics = build_default_metrics(query_result: query_result, table: table)
-        custom_metrics = definition.metrics.map { |metric| metric.resolve(@context) }
+      def resolve_summary(definition, query_result:, previous_count:)
+        value = evaluate_summary(definition.value) || query_result.count
+        previous_value = evaluate_summary(definition.previous_value)
+        previous_value = previous_count if previous_value.nil?
 
-        # Allow custom screen metrics to override defaults by key.
-        merged = {}
-        (default_metrics + custom_metrics).each { |metric| merged[metric.key.to_sym] = metric }
-        merged.values
+        Results::ResolvedSummary.new(
+          label: evaluate_summary(definition.label) || "Total",
+          value: value,
+          change: format_percent_change(percent_change(value, previous_value)),
+          change_good_when: normalize_change_good_when(evaluate_summary(definition.change_good_when)),
+          period_label: evaluate_summary(definition.period_label) || @context.period_label,
+          show_metric: definition.show_metric_value,
+          show_change: definition.show_change_value && !previous_value.nil?,
+          show_period: definition.show_period_value
+        )
       end
 
-      def build_default_metrics(query_result:, table:)
-        metrics = []
-        metrics << Results::ResolvedMetric.new(
-          key: :total_count,
-          label: "Total",
-          value: query_result.count,
-          change: format_percent_change(query_result.change_percent),
-          change_good_when: :up,
-          description: nil,
-          period_label: nil
-        )
+      def percent_change(current, previous)
+        return if previous.nil?
+        return 0 if previous.zero? && current.zero?
+        return 100 if previous.zero? && current.positive?
 
-        return metrics unless table&.result
+        ((current - previous) / previous.to_f) * 100
+      end
 
-        metrics << Results::ResolvedMetric.new(
-          key: :table_total_count,
-          label: "Table rows",
-          value: table.result.total_count,
-          change: nil,
-          change_good_when: :up,
-          description: nil,
-          period_label: nil
-        )
-        metrics
+      def previous_count_for(base_relation:, filters:)
+        previous_filters = filters.map { |entry| previous_filter_entry(entry) }
+        return unless previous_filters.any? { |entry| date_range_filter?(entry[:definition]) && entry[:value] }
+
+        previous_relation = base_relation
+        previous_filters.each do |filter|
+          previous_relation = filter[:definition].apply(previous_relation, filter[:value], @context)
+        end
+        relation_count(previous_relation)
+      end
+
+      def previous_filter_entry(entry)
+        definition = entry[:definition]
+        value = entry[:value]
+        return entry unless date_range_filter?(definition)
+
+        { definition: definition, value: previous_period_value(value) }
+      end
+
+      def date_range_filter?(definition)
+        definition.type.to_sym == :date_range
+      end
+
+      def previous_period_value(value)
+        return unless value.respond_to?(:start_date) && value.respond_to?(:end_date)
+        return unless value.start_date && value.end_date
+
+        span_days = (value.end_date - value.start_date).to_i + 1
+        previous_end = value.start_date - 1.day
+        previous_start = previous_end - (span_days - 1).days
+        Filters::DateRangeFilter::RangeValue.new(previous_start, previous_end, nil)
       end
 
       def format_percent_change(value)
@@ -132,6 +162,17 @@ module RecordingStudioAdmin
         return "0%" if value.to_f.zero?
 
         format("%+.1f%%", value.to_f).sub(".0%", "%")
+      end
+
+      def normalize_change_good_when(value)
+        normalized = (value || :up).to_s.downcase.to_sym
+        normalized = :up if normalized == :positive
+        normalized = :down if normalized == :negative
+        normalized
+      end
+
+      def evaluate_summary(value)
+        value.respond_to?(:call) ? value.call(@context) : value
       end
 
       def sort_relation(definition, relation)
@@ -153,7 +194,7 @@ module RecordingStudioAdmin
         per_page = definition.pagination_options.fetch(:per_page, 50)
         requested_page = [(@context.params[:page] || @context.params["page"] || 1).to_i, 1].max
         page = [requested_page, RecordingStudioAdmin.configuration.max_page].min
-        total = relation.respond_to?(:count) ? relation.count : Array(relation).size
+        total = relation_count(relation)
         rows = if relation.respond_to?(:limit)
                  relation.limit(per_page).offset((page - 1) * per_page).to_a
                else
@@ -161,6 +202,37 @@ module RecordingStudioAdmin
                end
         Results::TableResult.new(rows, total, page, per_page, (total.to_f / per_page).ceil, sort, direction,
                                  definition.pagination_options[:mode])
+      end
+
+      def relation_count(relation)
+        return Array(relation).size unless relation.respond_to?(:count)
+
+        return grouped_relation_count(relation) if grouped_select_relation?(relation)
+
+        normalized_count(relation.count)
+      rescue StandardError => e
+        raise unless active_record_statement_invalid?(e) && relation.respond_to?(:except)
+
+        grouped_relation_count(relation)
+      end
+
+      def active_record_statement_invalid?(error)
+        defined?(ActiveRecord::StatementInvalid) && error.is_a?(ActiveRecord::StatementInvalid)
+      end
+
+      def grouped_select_relation?(relation)
+        relation.respond_to?(:group_values) && relation.respond_to?(:select_values) &&
+          relation.group_values.any? && relation.select_values.any?
+      end
+
+      def grouped_relation_count(relation)
+        normalized_count(relation.except(:select, :order).count)
+      end
+
+      def normalized_count(value)
+        return value.size if value.is_a?(Hash)
+
+        value
       end
 
       def evaluate(value)

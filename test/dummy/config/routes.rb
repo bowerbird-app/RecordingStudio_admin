@@ -7,6 +7,10 @@ Rails.application.routes.draw do
   mount RecordingStudio::Engine, at: "/recording_studio"
   mount RecordingStudioRootSwitchable::Engine, at: "/recording_studio_root_switchable"
   mount RecordingStudioAccessible::Engine, at: "/admin/access"
+  namespace :admin do
+    get "root", to: "root#show"
+    resources :user_activities, only: :destroy
+  end
   mount RecordingStudioAdmin::Engine, at: "/admin"
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

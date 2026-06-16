@@ -22,6 +22,7 @@ Metrics/ClassLength:
     - 'test/**/*'
     - 'lib/recording_studio_admin/resolvers/**/*'
     - 'lib/recording_studio_admin/widget.rb'
+    - 'lib/recording_studio_admin/context.rb'
 
 Metrics/MethodLength:
   Exclude:
@@ -31,6 +32,7 @@ Metrics/MethodLength:
     - 'lib/recording_studio_admin/widget.rb'
     - 'lib/recording_studio_admin/period.rb'
     - 'lib/recording_studio_admin/widget_change_semantics.rb'
+    - 'lib/recording_studio_admin/context.rb'
 
 Metrics/AbcSize:
   Exclude:
@@ -61,6 +63,7 @@ Metrics/CyclomaticComplexity:
     - 'lib/recording_studio_admin/filters/date_range_filter.rb'
     - 'lib/recording_studio_admin/resolvers/**/*'
     - 'lib/recording_studio_admin/period.rb'
+    - 'lib/recording_studio_admin/url_safety.rb'
 
 Metrics/PerceivedComplexity:
   Exclude:
@@ -69,6 +72,22 @@ Metrics/PerceivedComplexity:
     - 'lib/recording_studio_admin/period.rb'
 
 Metrics/ParameterLists:
+  Exclude:
+    - 'lib/recording_studio_admin/screen.rb'
+    - 'lib/recording_studio_admin/widget.rb'
+    - 'lib/recording_studio_admin/context.rb'
+    - 'lib/recording_studio_admin/section.rb'
+
+Metrics/BlockLength:
+  Exclude:
+    - 'test/recording_studio_v3_test.rb'
+
+Style/MultilineBlockChain:
+  Exclude:
+    - 'lib/recording_studio_admin/resolvers/available_sections_resolver.rb'
+    - 'lib/recording_studio_admin/resolvers/sections_resolver.rb'
+
+Style/OptionalBooleanParameter:
   Exclude:
     - 'lib/recording_studio_admin/screen.rb'
     - 'lib/recording_studio_admin/widget.rb'
