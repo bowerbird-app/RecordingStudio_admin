@@ -22,6 +22,24 @@
       ) %>
 
       <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "Admin access",
+        href: main_app.docs_admin_access_path,
+        icon: :lock
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "Admin root",
+        href: main_app.docs_admin_root_path,
+        icon: :building_office
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "Admin section",
+        href: main_app.docs_admin_section_path,
+        icon: :folder
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
         label: "Config",
         href: main_app.docs_config_path,
         icon: :settings
@@ -31,6 +49,18 @@
         label: "Methods",
         href: main_app.docs_methods_path,
         icon: :code_bracket
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "Helpers",
+        href: main_app.docs_helpers_path,
+        icon: :magnifying_glass
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "Generators",
+        href: main_app.admin_generators_path,
+        icon: :wrench_screwdriver
       ) %>
 
       <%= render FlatPack::Sidebar::Item::Component.new(

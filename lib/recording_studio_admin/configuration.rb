@@ -3,7 +3,8 @@
 module RecordingStudioAdmin
   class Configuration
     attr_accessor :authentication_method, :current_actor_method, :access_recording_method,
-                  :access_recording_resolver, :required_access_role, :default_mount_path, :max_page
+                  :access_recording_resolver, :admin_sections_resolver, :required_access_role, :default_mount_path,
+                  :max_page
 
     def initialize
       @default_mount_path = "/admin"
@@ -11,6 +12,7 @@ module RecordingStudioAdmin
       @current_actor_method = :current_user
       @access_recording_method = :recording_studio_admin_access_recording
       @access_recording_resolver = nil
+      @admin_sections_resolver = nil
       @required_access_role = :view
       @max_page = 1_000
     end

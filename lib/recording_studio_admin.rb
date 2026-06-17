@@ -17,6 +17,7 @@ require "recording_studio_admin/filters/group_by_filter"
 require "recording_studio_admin/filters/select_filter"
 require "recording_studio_admin/period"
 require "recording_studio_admin/context"
+require "recording_studio_admin/allows_admin_sections"
 require "recording_studio_admin/widget"
 require "recording_studio_admin/widget_change_semantics"
 require "recording_studio_admin/section"
@@ -71,6 +72,20 @@ module RecordingStudioAdmin
       Resolvers::AvailableSectionsResolver.call(context: context, recording: recording, placement: placement)
     end
 
+    def enabled_admin_section_keys(recording:, context:)
+      recordable = recording&.recordable if recording.respond_to?(:recordable)
+      resolved_keys = resolve_configured_admin_sections(recording: recording, recordable: recordable, context: context)
+      return normalize_admin_section_keys(resolved_keys) unless resolved_keys.nil?
+
+      return unless recordable&.class.respond_to?(:recording_studio_admin_section_keys_for)
+
+      recordable.class.recording_studio_admin_section_keys_for(recordable, recording, context)
+    end
+
+    def normalize_admin_section_keys(keys)
+      Array(keys).compact.map(&:to_s).uniq
+    end
+
     def register_widget(widget) = registry.register_widget(widget)
     def widget_for(key) = registry.widget_for(key)
 
@@ -78,5 +93,31 @@ module RecordingStudioAdmin
     def resolve_screen(key:, context:) = Resolvers::ScreenResolver.call(key: key, context: context)
     def resolve_section(key:, context:) = Resolvers::SectionResolver.call(key: key, context: context)
     def resolve_widget(key:, context:) = Resolvers::WidgetResolver.call(key: key, context: context)
+
+    private
+
+    def resolve_configured_admin_sections(recording:, recordable:, context:)
+      resolver = configuration.admin_sections_resolver
+      return unless resolver
+
+      if keyword_resolver?(resolver)
+        return resolver.call(recording: recording, recordable: recordable, context: context)
+      end
+
+      positional_resolver_call(resolver, recording, recordable, context)
+    end
+
+    def positional_resolver_call(resolver, recording, recordable, context)
+      case resolver.arity
+      when 0 then resolver.call
+      when 1, -1 then resolver.call(recording)
+      when 2 then resolver.call(recording, context)
+      else resolver.call(recording, recordable, context)
+      end
+    end
+
+    def keyword_resolver?(resolver)
+      resolver.parameters.any? { |type, _name| %i[key keyreq].include?(type) }
+    end
   end
 end

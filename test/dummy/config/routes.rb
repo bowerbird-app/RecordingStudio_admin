@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   mount RecordingStudioAccessible::Engine, at: "/admin/access"
   namespace :admin do
     get "root", to: "root#show"
+    get "generators", to: "generators#index"
     resources :user_activities, only: :destroy
   end
   mount RecordingStudioAdmin::Engine, at: "/admin"
@@ -24,11 +25,15 @@ Rails.application.routes.draw do
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   get "docs/install", to: "docs#install", as: :docs_install
+  get "docs/admin_access", to: "docs#admin_access", as: :docs_admin_access
+  get "docs/admin_root", to: "docs#admin_root", as: :docs_admin_root
+  get "docs/admin_section", to: "docs#admin_section", as: :docs_admin_section
   get "docs/config", to: "docs#configuration", as: :docs_config
   get "docs/recordable_types", to: "docs#recordable_types", as: :docs_recordable_types
   get "docs/recordings_tree", to: "docs#recordings_tree", as: :docs_recordings_tree
   get "docs/gem_views", to: "docs#gem_views", as: :docs_gem_views
   get "docs/methods", to: "docs#methods", as: :docs_methods
+  get "docs/helpers", to: "docs#helpers", as: :docs_helpers
 
   # Defines the root path route ("/")
   root "home#index"

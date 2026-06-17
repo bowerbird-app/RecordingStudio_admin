@@ -1,9 +1,8 @@
-<% admin_sections = recording_studio_admin_context.available_admin_sections(recording: recording_studio_admin_access_recording, placement: :root) %>
+<% admin_sections = recording_studio_admin_context.available_admin_sections(recording: recording_studio_admin_access_recording) %>
 <% admin_search_query = params[:q].to_s.strip %>
 <% admin_search_results = recording_studio_admin_context.available_admin_items(
-     recording: recording_studio_admin_access_recording,
-     placement: :root,
-     parent: :root
+  recording: recording_studio_admin_access_recording,
+  include: %i[sections screens]
    ) %>
 <% normalized_admin_search_query = admin_search_query.downcase %>
 <% matching_admin_search_results = if admin_search_query.present?
@@ -12,7 +11,13 @@
      0
    end %>
 
-<%= render FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url, class: "mb-4") %>
+<%= render FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url, class: "mb-4") do |page_nav| %>
+  <% page_nav.right do %>
+    <% if recording_studio_admin_access_recording.present? %>
+      <%= recording_studio_accessible_avatars(recording_studio_admin_access_recording, button_style: :ghost, button_size: :md) %>
+    <% end %>
+  <% end %>
+<% end %>
 
 <%= render FlatPack::PageTitle::Component.new(title: "Admin", subtitle: "Manage and monitor your application") %>
 

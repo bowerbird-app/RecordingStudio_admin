@@ -1,0 +1,92 @@
+<div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+  <%= render FlatPack::PageTitle::Component.new(
+    title: "Admin section",
+    subtitle: "Sections are admin landing pages that group links and widgets into a reusable navigation unit.",
+    variant: :h1
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "What a section does",
+    subtitle: "Use sections to organize screens into clear overview areas like root, users, jobs, or billing.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+    code: <<~'CODE'
+      class UsersSection < RecordingStudioAdmin::Section
+        key "users"
+        icon :users
+        title "Users"
+        subtitle "User activity and membership"
+
+        link :users,
+          text: "View users overview",
+          url: ->(context) { context.admin_screen_path("users") },
+          style: :secondary
+      end
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Sections can reuse screen widgets",
+    subtitle: "A section can render widgets defined on screens by using the full widget key and optional display overrides.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+    code: <<~'CODE'
+      class RootSection < RecordingStudioAdmin::Section
+        key "root"
+
+        widget "api_requests.widgets.api_activity", view_variant: :compact
+        widget "users.widgets.active_users", title: "Active users", chart_options: { height: 180 }
+      end
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Section enablement",
+    subtitle: "Host recordables decide which registered sections appear for a recording.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+    code: <<~'CODE'
+      class RootSection < RecordingStudioAdmin::Section
+        key "root"
+      end
+
+      class AdminRoot < ApplicationRecord
+        include RecordingStudioAdmin::AllowsAdminSections
+
+        recording_studio_admin_sections do
+          section :root
+          section :users
+        end
+      end
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Optional RecordingStudio recordable",
+    subtitle: "Sections may map to an app recordable, but this is optional and chosen by host-app needs.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+    code: <<~'CODE'
+      class RootSection < RecordingStudioAdmin::Section
+        key "root"
+
+        recordable "AdminSection",
+          find_or_create_by: -> { { key: "root", name: "Admin section" } },
+          parent: -> { AdminRoot.find_or_create_by!(name: "Admin") }
+      end
+    CODE
+  ) %>
+
+  <p class="text-sm text-(--body-muted-content-color)">
+    In practice, sections are your navigation and overview layer. They do not replace screens; they curate links,
+    widget summaries, and optional nested navigation around them.
+  </p>
+</div>

@@ -29,8 +29,6 @@ class DummyAppAdminTest < Minitest::Test
     assert_includes initializer, 'widget "user_sign_ins.widgets.sign_in_activity",'
     assert_includes initializer, 'widget "user_reviews.widgets.review_volume",'
     assert_includes initializer, 'widget "user_invitations.widgets.recent_invites"'
-    assert_includes initializer, 'navigation_parent "root"'
-    assert_includes initializer, 'navigation_parent "users"'
   end
 
   def test_dummy_app_includes_admin_root_live_search_controller

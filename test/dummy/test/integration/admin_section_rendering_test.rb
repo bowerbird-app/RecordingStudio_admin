@@ -50,18 +50,18 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
 
     admin_root = AdminRoot.find_by!(name: "Admin")
     admin_root_recording = RecordingStudio.root_recording_for(admin_root)
-    admin_summary_section = AdminSummarySection.find_by!(key: "root")
-    admin_summary_recording = RecordingStudio::Recording.find_by!(recordable: admin_summary_section)
+    admin_section = AdminSection.find_by!(key: "root")
+    admin_section_recording = RecordingStudio::Recording.find_by!(recordable: admin_section)
 
     assert_response :success
-    assert_includes response.body, "Admin summary"
+    assert_includes response.body, "Admin section"
     refute_includes response.body, 'data-flat-pack--icon-name-value="folder"'
     assert_includes response.body, 'href="http://www.example.com/"'
     assert_includes response.body, "View API requests"
     assert_includes response.body, 'href="/admin/screens/api_requests?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, ">More<"
-    assert_includes response.body, 'mx-auto flex w-full flex-col gap-6'
-    refute_includes response.body, 'max-w-6xl'
+    assert_includes response.body, "mx-auto flex w-full flex-col gap-6"
+    refute_includes response.body, "max-w-6xl"
     refute_includes response.body, "Admin menu"
     assert_includes response.body, "View most common errors"
     assert_includes response.body, 'href="/admin/screens/most_common_errors?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
@@ -106,15 +106,15 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_match(/Recent failures.*?data-controller="flat-pack--chart"/m, response.body)
     assert_match(/Active users.*?data-controller="flat-pack--chart"/m, response.body)
     assert_match(/Job throughput.*?data-controller="flat-pack--chart"/m, response.body)
-    assert_operator response.body.scan('grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4').size, :>=, 2
-    assert_operator response.body.scan('gap-4').size, :>=, 2
-    assert_operator response.body.scan('my-4').size, :>=, 2
-    refute_includes response.body, 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 items-stretch my-4'
+    assert_operator response.body.scan("grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4").size, :>=, 2
+    assert_operator response.body.scan("gap-4").size, :>=, 2
+    assert_operator response.body.scan("my-4").size, :>=, 2
+    refute_includes response.body, "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 items-stretch my-4"
     refute_includes response.body, "--button-primary-background-color"
     refute_includes response.body, "flex flex-wrap gap-2 my-4"
     refute_includes response.body, "grid gap-4 md:grid-cols-2 xl:grid-cols-4"
-    assert_equal admin_root_recording, admin_summary_recording.root_recording
-    assert_equal admin_root_recording, admin_summary_recording.parent_recording
+    assert_equal admin_root_recording, admin_section_recording.root_recording
+    assert_equal admin_root_recording, admin_section_recording.parent_recording
   end
 
   test "admin sections index lists sections available to the current user" do
@@ -124,7 +124,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Admin sections"
-    assert_includes response.body, "Admin summary"
+    assert_includes response.body, "Admin section"
     assert_includes response.body, "Monitor API traffic, users, jobs, and failures"
     assert_includes response.body, 'data-flat-pack--icon-name-value="folder"'
     assert_includes response.body, "Users"
@@ -133,8 +133,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'href="http://www.example.com/"'
     assert_includes response.body, 'href="/admin/sections/root?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'href="/admin/sections/users?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
-    assert_includes response.body, 'mx-auto flex w-full flex-col gap-6'
-    refute_includes response.body, 'max-w-6xl'
+    assert_includes response.body, "mx-auto flex w-full flex-col gap-6"
+    refute_includes response.body, "max-w-6xl"
   end
 
   test "generated admin root view lists available root sections" do
@@ -145,11 +145,13 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Admin"
     assert_includes response.body, "flat-pack-page-nav"
+    assert_includes response.body, "avatar-group"
+    assert_includes response.body, "Admin Section Rendering"
     assert_includes response.body, 'aria-label="Go back"'
     assert_includes response.body, 'aria-label="Close"'
     assert_includes response.body, 'href="http://www.example.com/"'
     assert_includes response.body, "Manage and monitor your application"
-    assert_includes response.body, "Admin summary"
+    assert_includes response.body, "Admin section"
     assert_includes response.body, "Monitor API traffic, users, jobs, and failures"
     assert_includes response.body, 'data-flat-pack--icon-name-value="folder"'
     assert_includes response.body, "Users"
@@ -201,6 +203,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Users"
+  assert_includes response.body, %(/admin/access/recordings/#{admin_root_recording_for_test.id}/accesses)
+  refute_includes response.body, ">+ Access<"
     assert_includes response.body, "View users overview"
     assert_includes response.body, "View user sign-ins"
     assert_includes response.body, "View review queue"
@@ -210,8 +214,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'href="/admin/screens/user_sign_ins?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'href="/admin/screens/user_reviews?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'href="/admin/screens/user_invitations?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
-    assert_includes response.body, 'mx-auto flex w-full flex-col gap-6'
-    refute_includes response.body, 'max-w-6xl'
+    assert_includes response.body, "mx-auto flex w-full flex-col gap-6"
+    refute_includes response.body, "max-w-6xl"
     assert_includes response.body, "Active users"
     assert_includes response.body, "Sign-in activity"
     assert_includes response.body, "Review queue"
@@ -224,17 +228,27 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-flat-pack--icon-name-value="user-plus"'
   end
 
+  test "mounted access page renders for the admin root recording" do
+    sign_in_admin_user
+
+    get "/admin/access/recordings/#{admin_root_recording_for_test.id}/accesses", params: { anchor_url: root_url }
+
+    assert_response :success
+    assert_includes response.body, "Manage access"
+    assert_includes response.body, "admin-section-rendering@example.com"
+  end
+
   test "signed in user without admin root access cannot render admin root section" do
     sign_in_user_without_admin_access
 
-    assert_no_difference -> { AdminSummarySection.count } do
+    assert_no_difference -> { AdminSection.count } do
       assert_no_difference -> { RecordingStudio::Recording.count } do
         get "/admin"
       end
     end
 
     assert_response :forbidden
-    refute_includes response.body, "Admin summary"
+    refute_includes response.body, "Admin section"
   end
 
   test "signed in user without admin root access cannot render admin screens" do
@@ -253,6 +267,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     get "/admin/screens/api_requests", params: { anchor_url: root_url }
 
     assert_response :success
+    table_headers = css_select("th").map { |header| header.text.squish.sub(/\s+[↑↓]\z/, "") }
+
     assert_includes response.body, "API requests"
     assert_includes response.body, "Requests over time"
     chart_title = css_select("h3").find { |heading| heading.text.strip == "Requests over time" }
@@ -264,23 +280,34 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'name="anchor_url"'
     assert_includes response.body, 'value="http://www.example.com/"'
     assert_includes response.body, "Table data"
-    assert_includes response.body, "Created at"
-    assert_includes response.body, "Latency"
     assert_includes response.body, "sort=created_at"
     assert_includes response.body, "flat-pack--auto-submit"
     assert_includes response.body, "recording-studio-admin--screen-filters"
     assert_includes response.body, 'data-turbo-frame="screen-chart"'
+    assert_includes response.body, 'id="screen-table"'
+    assert_includes response.body, 'data-turbo-frame="screen-table"'
     assert_includes response.body, "click-&gt;recording-studio-admin--screen-filters#queueDateRangeSubmit"
     assert_includes response.body, 'data-pagination-content="true"'
     assert_includes response.body, 'id="screen-chart"'
     assert_includes response.body, 'id="screen-filters-form"'
     assert_includes response.body, 'name="search"'
-    assert_includes response.body, 'flex flex-wrap items-start gap-4'
-    assert_includes response.body, 'min-w-64 flex-none'
+    assert_includes response.body, "flex flex-wrap items-start gap-4"
+    assert_includes response.body, "min-w-64 flex-none"
+    assert_includes response.body, "Columns"
+    assert_includes response.body, 'data-modal-id="screen-table-columns-modal"'
+    assert_includes response.body, 'id="screen-table-columns-modal"'
+    assert_includes response.body, "Choose table columns"
+    assert_includes response.body, 'name="columns[]"'
+    assert_includes response.body, 'id="screen-table-columns-form"'
     assert_includes response.body, "Monthly API usage"
     assert_includes response.body, "/ 10000 requests"
     assert_includes response.body, 'role="progressbar"'
-    refute_includes response.body, "Open API requests"
+    assert_includes response.body, "API requests"
+    assert_includes table_headers, "Created at"
+    assert_includes table_headers, "Method"
+    assert_includes table_headers, "Status"
+    assert_includes table_headers, "Path"
+    refute_includes table_headers, "Latency"
 
     # Depending on seeded records, the table may render row badges/timestamps or empty state text.
     has_row_metadata = response.body.include?("bg-[var(--badge-success-background-color)]") &&
@@ -299,6 +326,41 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
     refute_includes response.body, "screen-results"
     refute_includes response.body, "my-4"
+  end
+
+  test "admin screen column picker shows selected columns and falls back to defaults" do
+    sign_in_admin_user
+
+    get "/admin/screens/api_requests", params: {
+      columns: %w[created_at latency_ms],
+      columns_present: "1"
+    }, headers: { "Turbo-Frame" => "screen-table" }
+
+    assert_response :success
+
+    selected_headers = css_select("th").map { |header| header.text.squish.sub(/\s+[↑↓]\z/, "") }
+
+    assert_includes selected_headers, "Created at"
+    assert_includes selected_headers, "Latency"
+    refute_includes selected_headers, "Method"
+    refute_includes selected_headers, "Status"
+    refute_includes selected_headers, "Path"
+    assert_includes response.body, "Reset"
+    assert_includes response.body, 'name="columns_present"'
+
+    get "/admin/screens/api_requests", params: {
+      columns_present: "1"
+    }, headers: { "Turbo-Frame" => "screen-table" }
+
+    assert_response :success
+
+    fallback_headers = css_select("th").map { |header| header.text.squish.sub(/\s+[↑↓]\z/, "") }
+
+    assert_includes fallback_headers, "Created at"
+    assert_includes fallback_headers, "Method"
+    assert_includes fallback_headers, "Status"
+    assert_includes fallback_headers, "Path"
+    refute_includes fallback_headers, "Latency"
   end
 
   test "admin screen search filter updates chart totals and table rows together" do
@@ -349,8 +411,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Delete activity"
     assert_includes response.body, 'data-turbo-method="delete"'
     assert_includes response.body, 'data-turbo-confirm="Delete activity for scroll-user-0@example.com?"'
-    assert_includes response.body, '/admin/user_activities/'
-    assert_includes response.body, 'href="/admin/screens/user_reviews?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    assert_includes response.body, "/admin/user_activities/"
+    assert_includes response.body, "/admin/screens/user_reviews"
     assert_includes response.body, 'data-pagination-content="true"'
     assert_includes response.body, 'data-controller="flat-pack--pagination-infinite"'
     assert_includes response.body, 'data-flat-pack--pagination-infinite-url-value="/admin/screens/users?'
@@ -481,6 +543,23 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     body = CGI.unescapeHTML(response.body)
 
     assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Errors","data":[]}]"'
+  end
+
+  test "admin screen table turbo frame reloads without rerendering the chart" do
+    sign_in_admin_user
+
+    get "/admin/screens/api_requests", params: {
+      anchor_url: root_url,
+      sort: "created_at",
+      direction: "asc"
+    }, headers: { "Turbo-Frame" => "screen-table" }
+
+    assert_response :success
+    assert_includes response.body, "Table data"
+    assert_includes response.body, 'data-turbo-frame="screen-table"'
+    assert_includes response.body, "Created at ↑"
+    refute_includes response.body, 'data-controller="flat-pack--chart"'
+    refute_includes response.body, "Requests over time"
   end
 
   test "most common errors screen renders a pie chart and table data" do

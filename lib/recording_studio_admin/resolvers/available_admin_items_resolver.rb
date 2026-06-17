@@ -22,6 +22,9 @@ module RecordingStudioAdmin
       def call
         RecordingStudioAdmin::Authorization.authorize!(@context, recording: @recording)
 
+        enabled_keys = RecordingStudioAdmin.enabled_admin_section_keys(recording: @recording, context: @context)
+        return available_enabled_items(enabled_keys) if enabled_keys
+
         items = []
         items.concat(section_items) if @include.include?(:sections)
         items.concat(screen_items) if @include.include?(:screens)
@@ -31,6 +34,86 @@ module RecordingStudioAdmin
       end
 
       private
+
+      def available_enabled_items(enabled_keys)
+        enabled_sections = enabled_keys.filter_map do |key|
+          definition = RecordingStudioAdmin.sections[key.to_s]
+          definition if definition && visible?(definition)
+        end
+
+        items = []
+        if @include.include?(:sections)
+          items.concat(enabled_sections.map do |definition|
+            build_item(definition, type: :section, url: @context.admin_section_path(definition.key))
+          end)
+        end
+        if @include.include?(:screens)
+          items.concat(enabled_sections.flat_map { |definition| link_items_for(definition) })
+        end
+
+        scoped_items = filter_by_parent(items.compact)
+        scoped_items.sort_by { |item| [item.title.to_s, item.key.to_s] }
+      end
+
+      def link_items_for(definition)
+        definition.links.filter_map do |link|
+          build_link_item(definition, link)
+        end
+      end
+
+      def build_link_item(definition, link)
+        resolved_link = link.resolve(@context)
+        return unless resolved_link
+
+        screen_definition = screen_definition_for_link(resolved_link)
+        title = link_item_title(resolved_link, screen_definition)
+        return if title.blank?
+
+        Results::ResolvedAvailableAdminItem.new(
+          type: :screen,
+          key: screen_definition&.key || "#{definition.key}.#{resolved_link.name}",
+          title: title,
+          subtitle: link_item_subtitle(definition, screen_definition),
+          icon: screen_definition&.evaluate(screen_definition.icon, @context),
+          url: resolved_link.url,
+          parent_key: definition.key,
+          availability_scope: availability_scope_label(definition),
+          search_text: link_item_search_text(definition, resolved_link, title, screen_definition)
+        )
+      end
+
+      def link_item_title(resolved_link, screen_definition)
+        if screen_definition
+          screen_definition.evaluate(screen_definition.title, @context).to_s
+        else
+          resolved_link.text.to_s
+        end
+      end
+
+      def link_item_subtitle(definition, screen_definition)
+        if screen_definition
+          screen_definition.evaluate(screen_definition.subtitle, @context)
+        else
+          definition.evaluate(definition.title, @context)
+        end
+      end
+
+      def link_item_search_text(definition, resolved_link, title, screen_definition)
+        [
+          :screen,
+          definition.key,
+          resolved_link.name,
+          title,
+          screen_definition&.subtitle
+        ].compact.join(" ").downcase
+      end
+
+      def screen_definition_for_link(resolved_link)
+        link_path = resolved_link.url.to_s.split("?").first
+        RecordingStudioAdmin.screens.values.find do |definition|
+          @context.admin_screen_path(definition.key).to_s.split("?").first == link_path
+        end
+      end
 
       def normalize_placement(value)
         normalized = value.to_s.downcase.to_sym
@@ -70,7 +153,6 @@ module RecordingStudioAdmin
         return if title.blank?
 
         subtitle = definition.evaluate(definition.subtitle, @context)
-        parent_key = navigation_parent_for(definition)
 
         Results::ResolvedAvailableAdminItem.new(
           type: type,
@@ -79,9 +161,9 @@ module RecordingStudioAdmin
           subtitle: subtitle,
           icon: definition.evaluate(definition.icon, @context),
           url: url,
-          parent_key: parent_key,
+          parent_key: nil,
           availability_scope: availability_scope_label(definition),
-          search_text: [type, definition.key, title, subtitle, parent_key].compact.join(" ").downcase
+          search_text: [type, definition.key, title, subtitle].compact.join(" ").downcase
         )
       end
 
@@ -135,11 +217,6 @@ module RecordingStudioAdmin
       def availability_scope_label(definition)
         scope = definition.availability_scope
         scope.respond_to?(:call) ? :custom : scope
-      end
-
-      def navigation_parent_for(definition)
-        parent_key = definition.evaluate(definition.navigation_parent_key, @context)
-        parent_key.present? ? parent_key.to_s : nil
       end
 
       def custom_scope_matches?(callable)

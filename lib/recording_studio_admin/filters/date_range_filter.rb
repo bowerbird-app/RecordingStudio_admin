@@ -12,11 +12,19 @@ module RecordingStudioAdmin
       def normalize(params)
         start_key = (@definition.options[:start_param] || :start_date).to_sym
         end_key = (@definition.options[:end_param] || :end_date).to_sym
+        preset_key_param = (@definition.options[:preset_param] || :date_range_preset).to_sym
         start_date = parse_date(params[start_key] || params[start_key.to_s])
         end_date = parse_date(params[end_key] || params[end_key.to_s])
-        return default_range if !start_date && !end_date && default_range
+        preset_key = parse_preset_key(params[preset_key_param] || params[preset_key_param.to_s])
 
-        RangeValue.new(start_date, end_date, nil)
+        if !start_date && !end_date
+          preset_range = range_for_preset(preset_key)
+          return preset_range if preset_range
+
+          return default_range if default_range
+        end
+
+        RangeValue.new(start_date, end_date, preset_key)
       end
 
       def apply(relation, value, _context)
@@ -40,10 +48,26 @@ module RecordingStudioAdmin
       end
 
       def default_range
-        return unless @definition.options[:default] == :last_30_days && defined?(Date)
+        return unless defined?(Date)
+        return unless @definition.options[:default]
 
-        today = Date.respond_to?(:current) ? Date.current : Date.today
-        RangeValue.new(today - 30, today, :last_30_days)
+        range_for_preset(@definition.options[:default])
+      end
+
+      def range_for_preset(key)
+        period = RecordingStudioAdmin::Period.from_preset_key(key)
+        return unless period&.start_date && period.end_date
+
+        RangeValue.new(period.start_date, period.end_date, period.preset_key)
+      end
+
+      def parse_preset_key(value)
+        return if value.nil?
+
+        normalized = value.to_s.strip.downcase
+        return if normalized.empty?
+
+        normalized.to_sym
       end
     end
   end

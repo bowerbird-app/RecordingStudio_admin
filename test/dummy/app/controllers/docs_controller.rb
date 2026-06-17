@@ -1,7 +1,18 @@
 # frozen_string_literal: true
 
 class DocsController < ApplicationController
+  GEM_RECORDABLE_TYPES = %w[AdminRoot AdminSection].freeze
+
   def install
+  end
+
+  def admin_access
+  end
+
+  def admin_root
+  end
+
+  def admin_section
   end
 
   def configuration
@@ -17,7 +28,7 @@ class DocsController < ApplicationController
   end
 
   def recordings_tree
-    recordings = RecordingStudio::Recording.includes(:recordable).reorder(:created_at, :id).to_a
+    recordings = RecordingStudio::Recording.reorder(:created_at, :id).to_a
     recordings_by_parent_id = recordings.group_by(&:parent_recording_id)
 
     @recording_tree = recordings_by_parent_id.fetch(nil, []).map do |recording|
@@ -36,6 +47,9 @@ class DocsController < ApplicationController
   def methods
   end
 
+  def helpers
+  end
+
   private
 
   def normalize_recordable_declaration(declaration)
@@ -45,8 +59,15 @@ class DocsController < ApplicationController
       root: declaration.root?,
       allowed_parent_types: RecordingStudio.allowed_parent_types_for(declaration.type),
       recordings_count: RecordingStudio::Recording.where(recordable_type: declaration.type).count,
-      recordables_count: count_recordables_for(declaration.type)
+      recordables_count: count_recordables_for(declaration.type),
+      source: recordable_source_for(declaration.type)
     }
+  end
+
+  def recordable_source_for(type_name)
+    return "RecordingStudioAdmin gem" if GEM_RECORDABLE_TYPES.include?(type_name)
+
+    "Dummy app"
   end
 
   def count_recordables_for(type_name)
@@ -70,13 +91,19 @@ class DocsController < ApplicationController
 
   def recording_label(recording)
     type_label = recording.recordable_type.to_s.demodulize.underscore.humanize
-    identifier = recordable_identifier(recording.recordable)
+    recordable = safe_recordable_for(recording)
+    identifier = recordable_identifier(
+      recordable,
+      fallback_type: recording.recordable_type,
+      fallback_id: recording.recordable_id
+    )
 
     "#{type_label}: #{identifier}"
   end
 
-  def recordable_identifier(recordable)
-    return "Unknown recordable" if recordable.nil?
+  def recordable_identifier(recordable, fallback_type:, fallback_id:)
+    return "Missing recordable class (#{fallback_type} ##{fallback_id})" if recordable == :missing_recordable_class
+    return "Unknown recordable (#{fallback_type} ##{fallback_id})" if recordable.nil?
 
     %i[name title email label slug identifier].each do |attribute|
       next unless recordable.respond_to?(attribute)
@@ -98,5 +125,11 @@ class DocsController < ApplicationController
       recordable.minimum_role.present?
 
     "##{recordable.id}"
+  end
+
+  def safe_recordable_for(recording)
+    recording.recordable
+  rescue NameError
+    :missing_recordable_class
   end
 end

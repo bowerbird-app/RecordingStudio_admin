@@ -48,6 +48,23 @@ class FilterTest < Minitest::Test
     end
   end
 
+  def test_date_range_uses_preset_param_when_dates_are_not_supplied
+    definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(
+      :date_range,
+      :date_range,
+      default: :last_30_days,
+      preset_param: :date_range_preset
+    )
+
+    with_singleton_stub(Date, :current, Date.new(2026, 6, 12)) do
+      value = definition.normalize(date_range_preset: "yesterday")
+
+      assert_equal Date.new(2026, 6, 11), value.start_date
+      assert_equal Date.new(2026, 6, 11), value.end_date
+      assert_equal :yesterday, value.preset_key
+    end
+  end
+
   def test_date_range_applies_start_and_end_bounds_to_relation
     definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(:created_at, :date_range, field: :occurred_at)
     value = definition.normalize(start_date: "2026-06-01", end_date: "2026-06-12")

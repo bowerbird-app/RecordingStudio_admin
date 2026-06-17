@@ -1,5 +1,13 @@
 <%= render layout: "recording_studio_admin/shared/page_shell" do %>
-  <%= render FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url(default: RecordingStudioAdmin.configuration.default_mount_path), class: "mb-4") %>
+  <% access_recording = recording_studio_admin_context.root_recording || recording_studio_admin_context.access_recording %>
+
+  <%= render FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url(default: RecordingStudioAdmin.configuration.default_mount_path), class: "mb-4") do |page_nav| %>
+    <% page_nav.right do %>
+      <% if access_recording.present? %>
+        <%= recording_studio_accessible_avatars(access_recording, button_style: :ghost, button_size: :md) %>
+      <% end %>
+    <% end %>
+  <% end %>
 
   <%= render FlatPack::PageTitle::Component.new(title: @section.title, subtitle: @section.subtitle) do |page_title| %>
     <% if @section.links.any? %>

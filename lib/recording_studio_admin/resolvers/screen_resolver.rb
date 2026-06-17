@@ -70,7 +70,8 @@ module RecordingStudioAdmin
           definition.options.merge(values: definition.allowed_values),
           definition.param_key,
           definition.options.fetch(:start_param, :start_date).to_sym,
-          definition.options.fetch(:end_param, :end_date).to_sym
+          definition.options.fetch(:end_param, :end_date).to_sym,
+          definition.options.fetch(:preset_param, :date_range_preset).to_sym
         )
       end
 
@@ -91,12 +92,13 @@ module RecordingStudioAdmin
 
         table_filter_keys = Array(definition.filters).map(&:param_key)
         table_filters = filters.select { |entry| table_filter_keys.include?(entry[:definition].param_key) }
-        sorted_relation, sort, direction = sort_relation(definition, relation)
+        visible_columns, selected_column_keys = resolve_visible_columns(definition)
+        sorted_relation, sort, direction = sort_relation(definition, relation, columns: visible_columns)
         table_result = paginate(definition, sorted_relation, sort, direction)
         @context.table_result = table_result
-        Results::ResolvedTable.new(definition.columns, table_filters.map do |entry|
+        Results::ResolvedTable.new(visible_columns, table_filters.map do |entry|
           resolved_filter(entry)
-        end, table_result.rows, definition.actions, table_result)
+        end, table_result.rows, definition.actions, table_result, definition.columns, selected_column_keys)
       end
 
       def resolve_summary(definition, query_result:, previous_count:)
@@ -175,8 +177,41 @@ module RecordingStudioAdmin
         value.respond_to?(:call) ? value.call(@context) : value
       end
 
-      def sort_relation(definition, relation)
-        sortable = definition.columns.select(&:sortable).map { |column| column.key.to_s }
+      def resolve_visible_columns(definition)
+        allowed_columns = definition.columns
+        allowed_keys = allowed_columns.map { |column| column.key.to_s }
+        default_keys = Array(definition.default_column_keys).presence&.map(&:to_s) || allowed_keys
+        requested_keys = requested_column_keys.select { |key| allowed_keys.include?(key) }
+        selected_keys = if requested_keys.any?
+                          requested_keys
+                        elsif columns_param_present?
+                          []
+                        else
+                          default_keys
+                        end
+
+        selected_keys = fallback_column_keys(default_keys, allowed_keys) if selected_keys.empty?
+
+        [allowed_columns.select { |column| selected_keys.include?(column.key.to_s) }, selected_keys]
+      end
+
+      def requested_column_keys
+        Array(@context.params[:columns] || @context.params["columns"]).filter_map do |value|
+          value.to_s.presence
+        end
+      end
+
+      def columns_param_present?
+        @context.params.key?(:columns_present) || @context.params.key?("columns_present") ||
+          @context.params.key?(:columns) || @context.params.key?("columns")
+      end
+
+      def fallback_column_keys(default_keys, allowed_keys)
+        Array(default_keys).presence || Array(allowed_keys.first)
+      end
+
+      def sort_relation(definition, relation, columns: definition.columns)
+        sortable = columns.select(&:sortable).map { |column| column.key.to_s }
         requested_sort = (@context.params[:sort] || @context.params["sort"] || definition.default_sort_key).to_s
         sort = sortable.include?(requested_sort) ? requested_sort : sortable.first
         direction = if %w[asc

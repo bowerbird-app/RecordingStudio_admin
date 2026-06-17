@@ -1,6 +1,6 @@
-> **Architecture Documentation**
-> *   **Canonical Source:** [bowerbird-app/gem_template](https://github.com/bowerbird-app/gem_template/tree/main/docs/gem_template)
-> *   **Last Updated:** May 5, 2026
+> **Repository Documentation**
+> *   **Applies To:** RecordingStudioAdmin devcontainer and dummy app workflow
+> *   **Last Updated:** June 17, 2026
 >
 > *Maintainers: Please update the date above when modifying this file.*
 
@@ -32,15 +32,17 @@ The `postCreateCommand` in `.devcontainer/devcontainer.json` executes:
 
 ```bash
 git lfs install && \
-bundle config set --local path '/usr/local/bundle' && \
-bundle install && \
+npm install -g playwright && \
+playwright install --with-deps && \
 cd test/dummy && \
+bundle install && \
 bundle exec rails db:prepare && \
 bundle exec rails tailwindcss:build
 ```
 
 This:
 - Installs Git LFS (if needed)
+- Installs Playwright and its browser dependencies for browser-based checks
 - Installs gem dependencies
 - Prepares the PostgreSQL database (creates, migrates, seeds)
 - Builds TailwindCSS assets
@@ -71,18 +73,10 @@ Set automatically inside the container:
 | `DB_PORT` | `5432` |
 | `DB_USER` | `postgres` |
 | `DB_PASSWORD` | `postgres` |
+| `DB_NAME` | `app_development` |
+| `BUNDLE_PATH` | `/usr/local/bundle` |
 | `REDIS_URL` | `redis://redis:6379/0` |
 | `CODESPACES` | `true` |
-
----
-
-## Private Gem Access (Deprecated)
-
-**⚠️ As of February 2025, this gem template no longer uses private gems.**
-
-All dependencies are now public and available on RubyGems.org or public GitHub repositories. No authentication tokens or special configuration is required.
-
-For historical reference: Previously, this template used private gems that required authentication via Codespaces secrets. This is no longer necessary.
 
 ---
 
@@ -95,8 +89,6 @@ When `ENV["CODESPACES"] == "true"`:
 For best results, access your app consistently via:
 - The Codespaces forwarded URL (`*.app.github.dev`), **or**
 - `localhost:3000` (if port forwarding is set to local).
-
-See [SECURITY.md](../SECURITY.md) for details.
 
 ---
 
@@ -122,7 +114,13 @@ Binding to `0.0.0.0` is required for Codespaces port forwarding.
 
 ## Port Forwarding
 
-Codespaces automatically forwards port 3000. Find it in the **Ports** tab and click the globe icon to open in your browser.
+Codespaces forwards port `3000` for the dummy app and `5432` for PostgreSQL. Find them in the **Ports** tab.
+
+Open the forwarded Rails app from the globe icon or from the command line with:
+
+```bash
+"$BROWSER" https://<your-forwarded-url>
+```
 
 If port 3000 is busy:
 
@@ -146,8 +144,9 @@ If you change `.devcontainer/` files:
 | Issue | Solution |
 |-------|----------|
 | Container fails to start | Check Docker Compose logs in the terminal. |
-| Database connection refused | Ensure `db` service is healthy (`docker ps`). |
+| Database connection refused | Ensure the `db` service is healthy and the dummy app is using `DB_HOST=db`. |
 | Tailwind not rebuilding | Restart `bin/dev` or run `bin/rails tailwindcss:build`. |
+| `bin/dev` exits immediately | Remove a stale `test/dummy/tmp/pids/server.pid`; the dummy `bin/dev` script already cleans up dead PID files on startup. |
 | Port already in use | Use a different port: `PORT=3001 bin/dev`. |
 
 ---
@@ -156,12 +155,8 @@ If you change `.devcontainer/` files:
 
 | File | Purpose |
 |------|---------|
-| `.devcontainer/devcontainer.json` | Codespaces/VS Code configuration |
-| `.devcontainer/docker-compose.yml` | Service definitions |
+| `.devcontainer/devcontainer.json` | Codespaces and post-create setup |
+| `.devcontainer/docker-compose.yml` | Postgres, Redis, and app service definitions |
 | `.devcontainer/Dockerfile` | Ruby container build |
-| `test/dummy/Procfile.dev` | Foreman process definitions |
-| `test/dummy/bin/dev` | Development startup script |
-
----
-
-Happy coding in Codespaces! ☁️
+| `test/dummy/Procfile.dev` | Foreman process definitions for Rails and Tailwind |
+| `test/dummy/bin/dev` | Development startup script with Foreman install and stale PID cleanup |

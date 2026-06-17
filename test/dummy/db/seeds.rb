@@ -80,10 +80,10 @@ begin
   admin_root_recording = RecordingStudio.root_recording_for(admin_root)
   grant_admin_access.call(admin_root_recording, user)
 
-  admin_summary_section = AdminSummarySection.find_or_create_by!(key: "root") do |record|
-    record.name = "Admin summary"
+  admin_section = AdminSection.find_or_create_by!(key: "root") do |record|
+    record.name = "Admin section"
   end
-  find_or_record_child.call(admin_summary_section, admin_root_recording, admin_root_recording)
+  find_or_record_child.call(admin_section, admin_root_recording, admin_root_recording)
 ensure
   RecordingStudioAccessible.configuration.access_management_authorizer = previous_access_authorizer
   Current.actor = previous_actor

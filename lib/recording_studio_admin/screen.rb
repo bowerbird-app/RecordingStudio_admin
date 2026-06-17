@@ -4,7 +4,7 @@ module RecordingStudioAdmin
   class Screen < Definitions::Base
     class << self
       attr_reader :query_value, :filters_value, :chart_value, :table_value, :widgets_value, :summary_value,
-                  :availability_scope_value, :navigation_parent_value
+                  :availability_scope_value
 
       def inherited(subclass)
         super
@@ -12,7 +12,6 @@ module RecordingStudioAdmin
         subclass.instance_variable_set(:@widgets_value, {})
         subclass.instance_variable_set(:@summary_value, SummaryDefinition.new)
         subclass.instance_variable_set(:@availability_scope_value, nil)
-        subclass.instance_variable_set(:@navigation_parent_value, nil)
       end
 
       def query(&block)
@@ -50,21 +49,12 @@ module RecordingStudioAdmin
         @availability_scope_value || DEFAULT_SECTION_AVAILABILITY_SCOPE
       end
 
-      def navigation_parent(value = nil, &block)
-        @navigation_parent_value = block || value.to_s if value || block
-        @navigation_parent_value
-      end
-
       def filters
         @filters_value || []
       end
 
       def widgets
         @widgets_value || {}
-      end
-
-      def navigation_parent_key
-        @navigation_parent_value
       end
 
       private
@@ -134,6 +124,7 @@ module RecordingStudioAdmin
       @columns = []
       @filters = []
       @actions = []
+      @default_column_keys = nil
       @pagination_options = { per_page: 50, mode: :infinite }
       instance_eval(&block) if block
     end
@@ -148,6 +139,10 @@ module RecordingStudioAdmin
                                        value, display, display_options)
     end
 
+    def default_columns(*keys)
+      @default_column_keys = keys.flatten.map(&:to_sym).uniq
+    end
+
     def action(name, text:, url:, icon: nil, method: nil, confirm: nil, destructive: nil, visible_if: nil)
       @actions << RowActionDefinition.new(name.to_sym, text, url, icon, method, confirm, destructive, visible_if)
     end
@@ -159,6 +154,16 @@ module RecordingStudioAdmin
     def default_sort(key, direction: :desc)
       @default_sort_key = key&.to_sym
       @default_direction = direction.to_s == "asc" ? "asc" : "desc"
+    end
+
+    def default_column_keys
+      return if @default_column_keys.nil?
+
+      allowed_keys = columns.map(&:key)
+      unknown_keys = @default_column_keys - allowed_keys
+      return @default_column_keys if unknown_keys.empty?
+
+      raise ArgumentError, "Unknown default columns: #{unknown_keys.join(', ')}"
     end
   end
 

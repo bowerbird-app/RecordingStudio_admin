@@ -91,8 +91,18 @@ module RecordingStudioAdmin
 
       def tailwind_injection(missing_theme_lines:, missing_source_lines:)
         sections = []
-        sections << ["/* Bridge FlatPack theme tokens into Tailwind semantic utilities */", *missing_theme_lines].join("\n") if missing_theme_lines.any?
-        sections << ["/* Include RecordingStudioAdmin engine and FlatPack sources */", *missing_source_lines].join("\n") if missing_source_lines.any?
+        if missing_theme_lines.any?
+          sections << [
+            "/* Bridge FlatPack theme tokens into Tailwind semantic utilities */",
+            *missing_theme_lines
+          ].join("\n")
+        end
+        if missing_source_lines.any?
+          sections << [
+            "/* Include RecordingStudioAdmin engine and FlatPack sources */",
+            *missing_source_lines
+          ].join("\n")
+        end
 
         "\n#{sections.join("\n\n")}\n"
       end

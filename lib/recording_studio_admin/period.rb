@@ -15,14 +15,15 @@ module RecordingStudioAdmin
       last_year: "Last year"
     }.freeze
 
-    attr_reader :amount, :unit, :start_date, :end_date
+    attr_reader :amount, :unit, :start_date, :end_date, :preset_key
 
-    def initialize(amount:, unit:, start_date: nil, end_date: nil, explicit_label: nil)
+    def initialize(amount:, unit:, start_date: nil, end_date: nil, explicit_label: nil, preset_key: nil)
       @amount = amount.to_i
       @unit = unit.to_sym
       @start_date = start_date
       @end_date = end_date
       @explicit_label = explicit_label
+      @preset_key = preset_key&.to_sym
     end
 
     def label
@@ -38,7 +39,41 @@ module RecordingStudioAdmin
 
         end_date = reference_time.to_date
         start_date = calculate_start_date(end_date, amount, unit)
-        new(amount: amount, unit: unit, start_date: start_date, end_date: end_date)
+        new(
+          amount: amount,
+          unit: unit,
+          start_date: start_date,
+          end_date: end_date,
+          preset_key: "last_#{amount}_#{plural_unit(unit)}"
+        )
+      end
+
+      def from_preset_key(key, reference_date: current_date)
+        normalized_key = key.to_s.strip.downcase
+        return if normalized_key.empty?
+
+        quick_preset_key = normalize_quick_preset_key(normalized_key)
+        if quick_preset_key
+          start_date, end_date = quick_preset_range(quick_preset_key, reference_date)
+          return unless start_date && end_date
+
+          span_days = (end_date - start_date).to_i + 1
+          return new(
+            amount: span_days,
+            unit: :day,
+            start_date: start_date,
+            end_date: end_date,
+            explicit_label: QUICK_PRESET_LABELS.fetch(quick_preset_key),
+            preset_key: quick_preset_key
+          )
+        end
+
+        amount, unit = parse_preset_key(normalized_key)
+        return unless amount && unit
+
+        end_date = reference_date
+        start_date = calculate_start_date(end_date, amount, unit)
+        new(amount: amount, unit: unit, start_date: start_date, end_date: end_date, preset_key: normalized_key)
       end
 
       def from_date_range(start_date:, end_date:, preset_key: nil, reference_date: current_date)
@@ -54,13 +89,17 @@ module RecordingStudioAdmin
             unit: :day,
             start_date: start_date,
             end_date: end_date,
-            explicit_label: QUICK_PRESET_LABELS.fetch(quick_preset_key)
+            explicit_label: QUICK_PRESET_LABELS.fetch(quick_preset_key),
+            preset_key: quick_preset_key
           )
         end
 
         if preset_key
           amount, unit = parse_preset_key(preset_key)
-          return new(amount: amount, unit: unit, start_date: start_date, end_date: end_date) if amount && unit
+          if amount && unit
+            return new(amount: amount, unit: unit, start_date: start_date, end_date: end_date,
+                       preset_key: preset_key)
+          end
         end
 
         return unless start_date && end_date
@@ -116,10 +155,11 @@ module RecordingStudioAdmin
 
         yesterday = reference_date - 1
         return :yesterday if start_date == yesterday && end_date == yesterday
-        return :last_3_days if start_date == (reference_date - 2) && end_date == reference_date
 
         this_week_start = start_of_week(reference_date)
         return :this_week if start_date == this_week_start && end_date == reference_date
+
+        return :last_3_days if start_date == (reference_date - 2) && end_date == reference_date
 
         last_week_end = this_week_start - 1
         last_week_start = start_of_week(last_week_end)
@@ -143,6 +183,34 @@ module RecordingStudioAdmin
         nil
       end
 
+      def quick_preset_range(key, reference_date)
+        case key
+        when :today
+          [reference_date, reference_date]
+        when :yesterday
+          yesterday = reference_date - 1
+          [yesterday, yesterday]
+        when :last_3_days
+          [reference_date - 2, reference_date]
+        when :this_week
+          [start_of_week(reference_date), reference_date]
+        when :last_week
+          this_week_start = start_of_week(reference_date)
+          last_week_end = this_week_start - 1
+          [start_of_week(last_week_end), last_week_end]
+        when :this_month
+          [Date.new(reference_date.year, reference_date.month, 1), reference_date]
+        when :last_month
+          this_month_start = Date.new(reference_date.year, reference_date.month, 1)
+          last_month_reference = reference_date << 1
+          [Date.new(last_month_reference.year, last_month_reference.month, 1), this_month_start - 1]
+        when :this_year
+          [Date.new(reference_date.year, 1, 1), reference_date]
+        when :last_year
+          [Date.new(reference_date.year - 1, 1, 1), Date.new(reference_date.year - 1, 12, 31)]
+        end
+      end
+
       def start_of_week(date)
         date - ((date.wday + 6) % 7)
       end
@@ -153,6 +221,16 @@ module RecordingStudioAdmin
         return unless %w[hour day week month year].include?(value)
 
         value.to_sym
+      end
+
+      def plural_unit(unit)
+        case unit.to_sym
+        when :hour then :hours
+        when :day then :days
+        when :week then :weeks
+        when :month then :months
+        else :years
+        end
       end
 
       def calculate_start_date(end_date, amount, unit)

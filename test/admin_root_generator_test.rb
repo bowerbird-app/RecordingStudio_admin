@@ -37,7 +37,10 @@ class AdminRootGeneratorTest < Minitest::Test
     template = File.read(generator_template_path("app/models/admin_root.rb"))
 
     assert_includes template, "include RecordingStudioAccessible::AllowsAccessibleChildren"
+    assert_includes template, "include RecordingStudioAdmin::AllowsAdminSections"
     assert_includes template, "recording_studio_accessible_children :access"
+    assert_includes template, "recording_studio_admin_sections do"
+    assert_includes template, "section :root"
   end
 
   def test_admin_root_route_does_not_conflict_with_default_engine_mount
@@ -52,10 +55,11 @@ class AdminRootGeneratorTest < Minitest::Test
 
     expected_available_sections =
       "recording_studio_admin_context.available_admin_sections(recording: " \
-      "recording_studio_admin_access_recording, placement: :root)"
+      "recording_studio_admin_access_recording)"
     assert_includes template, expected_available_sections
     assert_includes template, "recording_studio_admin_context.available_admin_items("
-    assert_includes template, "parent: :root"
+    assert_includes template, "include: %i[sections screens]"
+    refute_includes template, "parent: :root"
     assert_includes template, "FlatPack::SearchInput::Component"
     assert_includes template, "FlatPack::Badge::Component"
     assert_includes template, "placeholder: \"Search\""

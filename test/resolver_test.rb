@@ -5,6 +5,7 @@ require "test_helper"
 class ResolverTest < Minitest::Test
   Row = Struct.new(:created_at, :status, :name)
   TestRecording = Struct.new(:parent_recording)
+  TestRecordingWithRecordable = Struct.new(:recordable, :parent_recording)
 
   class ArrayRelation
     attr_reader :rows, :orders
@@ -46,7 +47,6 @@ class ResolverTest < Minitest::Test
     title "Requests"
     subtitle "Traffic"
     availability_scope :root
-    navigation_parent "root"
     query do |_context|
       ArrayRelation.new([
                           Row.new(Time.now - 1.day, 200, "b"),
@@ -74,6 +74,7 @@ class ResolverTest < Minitest::Test
 
         ArrayRelation.new(relation.rows.select { |row| row.name.include?(value) })
       }
+      column :created_at
       column :name
       column(
         :status,
@@ -82,6 +83,7 @@ class ResolverTest < Minitest::Test
           { text: value.to_s, style: value.to_i >= 500 ? :danger : :success, size: :sm }
         }
       )
+      default_columns :name, :status
       action :unsafe,
              text: ->(row, _context) { "Review #{row.name}" },
              icon: "eye",
@@ -210,7 +212,6 @@ class ResolverTest < Minitest::Test
     subtitle "Should not execute queries"
     icon :magnifying_glass
     availability_scope :root
-    navigation_parent "root"
     query { |_context| flunk "search metadata helper should not resolve screen queries" }
   end
 
@@ -220,7 +221,6 @@ class ResolverTest < Minitest::Test
     subtitle "Descendant screen"
     icon :user_circle
     availability_scope :descendant
-    navigation_parent "child"
     query { |_context| ArrayRelation.new([]) }
   end
 
@@ -247,14 +247,30 @@ class ResolverTest < Minitest::Test
     key "child"
     title "Child"
     availability_scope :descendant
-    navigation_parent "root"
   end
 
   class EverywhereSection < RecordingStudioAdmin::Section
     key "everywhere"
     title "Everywhere"
     availability_scope :all
-    navigation_parent "root"
+  end
+
+  class AdminSectionEnabledRecordable
+    include RecordingStudioAdmin::AllowsAdminSections
+
+    recording_studio_admin_sections do
+      section :root
+      section :missing
+      section :hidden
+    end
+  end
+
+  class AlternateAdminSectionRecordable
+    include RecordingStudioAdmin::AllowsAdminSections
+
+    recording_studio_admin_sections do
+      section :everywhere
+    end
   end
 
   FakeRecordable = Struct.new(:attributes) do
@@ -265,7 +281,9 @@ class ResolverTest < Minitest::Test
 
   def setup
     @original_registry = RecordingStudioAdmin.instance_variable_get(:@registry)
+    @original_admin_sections_resolver = RecordingStudioAdmin.configuration.admin_sections_resolver
     RecordingStudioAdmin.instance_variable_set(:@registry, RecordingStudioAdmin::Registry.new)
+    RecordingStudioAdmin.configuration.admin_sections_resolver = nil
     RecordingStudioAdmin.register_screen(RequestsScreen)
     RecordingStudioAdmin.register_screen(HiddenScreen)
     RecordingStudioAdmin.register_screen(HiddenSummaryScreen)
@@ -279,6 +297,7 @@ class ResolverTest < Minitest::Test
 
   def teardown
     RecordingStudioAdmin.instance_variable_set(:@registry, @original_registry)
+    RecordingStudioAdmin.configuration.admin_sections_resolver = @original_admin_sections_resolver
   end
 
   def allowed_context(params: {}, recording: nil)
@@ -342,6 +361,27 @@ class ResolverTest < Minitest::Test
     end
   end
 
+  def test_available_sections_authorizes_explicit_recording
+    context_recording = Object.new
+    explicit_recording = Object.new
+    context = allowed_context(recording: context_recording)
+    authorized_recordings = []
+    authorizer = lambda do |actor:, recording:, role:|
+      assert_equal :actor, actor
+      assert_equal :view, role
+      authorized_recordings << recording
+      recording.equal?(context_recording)
+    end
+
+    with_singleton_stub(RecordingStudioAccessible, :authorized?, authorizer) do
+      assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
+        RecordingStudioAdmin.available_sections(context: context, recording: explicit_recording, placement: :root)
+      end
+    end
+
+    assert_equal [explicit_recording], authorized_recordings
+  end
+
   def with_access_allowed(&)
     with_singleton_stub(RecordingStudioAccessible, :authorized?, true, &)
   end
@@ -356,6 +396,9 @@ class ResolverTest < Minitest::Test
     assert_equal 1, result.table.rows.size
     assert_equal "name", result.table.result.sort
     assert_equal :infinite, result.table.result.mode
+    assert_equal %i[name status], result.table.columns.map(&:key)
+    assert_equal %i[created_at name status], result.table.available_columns.map(&:key)
+    assert_equal %w[name status], result.table.selected_column_keys
     assert_equal :day, context.filter_value(:group_by)
     assert_equal 2, result.widgets.first.value
     assert_equal :number, result.widgets.first.type
@@ -419,6 +462,40 @@ class ResolverTest < Minitest::Test
     assert_equal 1, result.query_result.count
     assert_equal 1, result.table.result.total_count
     assert_equal ["a"], result.table.rows.map(&:name)
+  end
+
+  def test_table_uses_default_columns_until_request_overrides_them
+    result = with_access_allowed do
+      RecordingStudioAdmin.resolve_screen(key: "requests", context: allowed_context)
+    end
+
+    assert_equal %i[name status], result.table.columns.map(&:key)
+  end
+
+  def test_table_column_selection_allows_only_declared_columns
+    context = allowed_context(params: { columns: %w[status created_at unknown] })
+
+    result = with_access_allowed { RecordingStudioAdmin.resolve_screen(key: "requests", context: context) }
+
+    assert_equal %i[created_at status], result.table.columns.map(&:key)
+    assert_equal %w[status created_at], result.table.selected_column_keys
+  end
+
+  def test_table_column_selection_keeps_at_least_one_visible_column
+    context = allowed_context(params: { columns_present: "1" })
+
+    result = with_access_allowed { RecordingStudioAdmin.resolve_screen(key: "requests", context: context) }
+
+    assert_equal %i[name status], result.table.columns.map(&:key)
+    assert_equal %w[name status], result.table.selected_column_keys
+  end
+
+  def test_table_sort_falls_back_when_requested_column_is_not_visible
+    context = allowed_context(params: { sort: "created_at" })
+
+    result = with_access_allowed { RecordingStudioAdmin.resolve_screen(key: "requests", context: context) }
+
+    assert_equal "name", result.table.result.sort
   end
 
   def test_table_pagination_defaults_to_infinite_scroll
@@ -695,7 +772,7 @@ class ResolverTest < Minitest::Test
     requests = items.find { |item| item.key == "requests" }
     assert_equal :document_text, requests.icon
     assert_equal "/admin/screens/requests", requests.url
-    assert_equal "root", requests.parent_key
+    assert_nil requests.parent_key
     assert_equal :root, requests.availability_scope
     assert_includes requests.search_text, "requests"
     metadata_only = items.find { |item| item.key == "metadata_only" }
@@ -718,27 +795,19 @@ class ResolverTest < Minitest::Test
     assert_equal %w[metadata_only requests], screens.map(&:key)
   end
 
-  def test_available_admin_items_can_be_scoped_to_a_parent_subtree
-    root_recording = TestRecording.new(nil)
-    child_recording = TestRecording.new(root_recording)
+  def test_enabled_admin_items_can_be_scoped_to_section_links
+    recording = TestRecordingWithRecordable.new(AdminSectionEnabledRecordable.new, nil)
 
-    root_items = with_access_allowed do
+    items = with_access_allowed do
       RecordingStudioAdmin.available_admin_items(
-        context: allowed_context(recording: root_recording),
-        placement: :root,
-        parent: :root
-      )
-    end
-    child_items = with_access_allowed do
-      RecordingStudioAdmin.available_admin_items(
-        context: allowed_context(recording: child_recording),
-        placement: :descendant,
+        context: allowed_context(recording: recording),
+        recording: recording,
         parent: :root
       )
     end
 
-    assert_equal %w[everywhere metadata_only requests], root_items.map(&:key)
-    assert_equal %w[child child_screen everywhere], child_items.map(&:key)
+    assert_equal ["requests"], items.map(&:key)
+    assert_equal ["root"], items.map(&:parent_key)
   end
 
   def test_context_available_admin_items_uses_context_access_recording
@@ -784,6 +853,65 @@ class ResolverTest < Minitest::Test
     sections = with_access_allowed { context.available_admin_sections(placement: :root) }
 
     assert_equal %w[everywhere root], sections.map(&:key)
+  end
+
+  def test_available_sections_prefers_recordable_enabled_admin_sections
+    recording = TestRecordingWithRecordable.new(AdminSectionEnabledRecordable.new, nil)
+
+    sections = with_access_allowed do
+      RecordingStudioAdmin.available_sections(context: allowed_context(recording: recording), recording: recording)
+    end
+
+    assert_equal ["root"], sections.map(&:key)
+  end
+
+  def test_same_section_can_be_enabled_on_different_recordable_types
+    first_recording = TestRecordingWithRecordable.new(AdminSectionEnabledRecordable.new, nil)
+    second_recording = TestRecordingWithRecordable.new(AlternateAdminSectionRecordable.new, nil)
+
+    first_sections = with_access_allowed do
+      RecordingStudioAdmin.available_sections(
+        context: allowed_context(recording: first_recording),
+        recording: first_recording
+      )
+    end
+    second_sections = with_access_allowed do
+      RecordingStudioAdmin.available_sections(
+        context: allowed_context(recording: second_recording),
+        recording: second_recording
+      )
+    end
+
+    assert_equal ["root"], first_sections.map(&:key)
+    assert_equal ["everywhere"], second_sections.map(&:key)
+  end
+
+  def test_available_admin_items_searches_enabled_sections_and_links_only
+    recording = TestRecordingWithRecordable.new(AdminSectionEnabledRecordable.new, nil)
+
+    items = with_access_allowed do
+      RecordingStudioAdmin.available_admin_items(context: allowed_context(recording: recording), recording: recording)
+    end
+
+    assert_equal %w[requests root], items.map(&:key)
+    assert_equal %i[screen section], items.map(&:type)
+    refute_includes items.map(&:key), "metadata_only"
+  end
+
+  def test_configured_admin_sections_resolver_replaces_recordable_declarations
+    recording = TestRecordingWithRecordable.new(AdminSectionEnabledRecordable.new, nil)
+    RecordingStudioAdmin.configuration.admin_sections_resolver = lambda do |recording:, recordable:, context:|
+      assert_equal recording.recordable, recordable
+      assert_kind_of RecordingStudioAdmin::Context, context
+
+      [:everywhere]
+    end
+
+    sections = with_access_allowed do
+      RecordingStudioAdmin.available_sections(context: allowed_context(recording: recording), recording: recording)
+    end
+
+    assert_equal ["everywhere"], sections.map(&:key)
   end
 
   def test_available_sections_do_not_resolve_section_recordables

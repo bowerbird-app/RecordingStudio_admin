@@ -12,7 +12,7 @@ class RecordingStudioV3TemplateTest < ActiveSupport::TestCase
   test "dummy app validates v3 recordable declarations" do
     assert RecordingStudio.validate_recordable_declarations!
     assert_equal [ "AdminRoot", "Workspace" ], RecordingStudio.root_recordable_types.sort
-    assert_equal [ "AdminRoot" ], RecordingStudio.allowed_parent_types_for("AdminSummarySection")
+    assert_equal [ "AdminRoot" ], RecordingStudio.allowed_parent_types_for("AdminSection")
     assert_equal [ "Workspace", "Folder" ], RecordingStudio.allowed_parent_types_for("Page")
   end
 
@@ -34,7 +34,7 @@ class RecordingStudioV3TemplateTest < ActiveSupport::TestCase
     accessible_workspace = Workspace.find_by!(name: "Client Workspace")
     private_workspace = Workspace.find_by!(name: "Private Workspace")
     admin_root = AdminRoot.find_by!(name: "Admin")
-    admin_summary_section = AdminSummarySection.find_by!(key: "root")
+    admin_section = AdminSection.find_by!(key: "root")
     admin_user = User.find_by!(email: "admin@admin.com")
     folder = Folder.find_by!(name: "Product Docs")
     page = Page.find_by!(title: "Getting Started")
@@ -42,7 +42,7 @@ class RecordingStudioV3TemplateTest < ActiveSupport::TestCase
     accessible_root_recording = RecordingStudio::Recording.find_by!(recordable: accessible_workspace)
     private_root_recording = RecordingStudio::Recording.find_by!(recordable: private_workspace)
     admin_root_recording = RecordingStudio::Recording.find_by!(recordable: admin_root)
-    admin_summary_recording = RecordingStudio::Recording.find_by!(recordable: admin_summary_section)
+    admin_section_recording = RecordingStudio::Recording.find_by!(recordable: admin_section)
     folder_recording = RecordingStudio::Recording.find_by!(recordable: folder)
     page_recording = RecordingStudio::Recording.find_by!(recordable: page)
 
@@ -50,8 +50,8 @@ class RecordingStudioV3TemplateTest < ActiveSupport::TestCase
     assert_nil root_recording.parent_recording_id
     assert_nil accessible_root_recording.parent_recording_id
     assert_nil private_root_recording.parent_recording_id
-    assert_equal admin_root_recording, admin_summary_recording.parent_recording
-    assert_equal admin_root_recording, admin_summary_recording.root_recording
+    assert_equal admin_root_recording, admin_section_recording.parent_recording
+    assert_equal admin_root_recording, admin_section_recording.root_recording
     assert_equal root_recording, folder_recording.parent_recording
     assert_equal root_recording, folder_recording.root_recording
     assert_equal folder_recording, page_recording.parent_recording

@@ -9,8 +9,7 @@ module RecordingStudioAdmin
 
   class Section < Definitions::Base
     class << self
-      attr_reader :links_value, :widget_keys_value, :recordable_definition_value, :availability_scope_value,
-                  :navigation_parent_value
+      attr_reader :links_value, :widget_keys_value, :recordable_definition_value, :availability_scope_value
 
       def inherited(subclass)
         super
@@ -18,7 +17,6 @@ module RecordingStudioAdmin
         subclass.instance_variable_set(:@widget_keys_value, [])
         subclass.instance_variable_set(:@recordable_definition_value, nil)
         subclass.instance_variable_set(:@availability_scope_value, nil)
-        subclass.instance_variable_set(:@navigation_parent_value, nil)
       end
 
       def link(name, text:, url:, style: :secondary, visible_if: nil)
@@ -54,11 +52,6 @@ module RecordingStudioAdmin
         @availability_scope_value || DEFAULT_SECTION_AVAILABILITY_SCOPE
       end
 
-      def navigation_parent(value = nil, &block)
-        @navigation_parent_value = block || value.to_s if value || block
-        @navigation_parent_value
-      end
-
       def links
         @links_value || []
       end
@@ -80,10 +73,6 @@ module RecordingStudioAdmin
 
       def recordable_definition
         @recordable_definition_value
-      end
-
-      def navigation_parent_key
-        @navigation_parent_value
       end
     end
 

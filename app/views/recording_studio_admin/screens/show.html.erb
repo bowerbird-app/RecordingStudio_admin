@@ -24,7 +24,7 @@
   <% base_query = request.query_parameters.symbolize_keys.except(:page) %>
   <% filter_param_keys = @screen.filters.flat_map do |filter|
        if filter.type == :date_range
-         [filter.start_param, filter.end_param]
+         [filter.start_param, filter.end_param, filter.preset_param]
        else
          [filter.param_key]
        end
@@ -55,6 +55,7 @@
               start_value: filter.value&.start_date,
               end_value: filter.value&.end_date
             ) %>
+            <%= hidden_field_tag filter.preset_param, filter.value&.preset_key %>
           <% else %>
             <% select_options = Array(filter.options[:values] || filter.options[:options]).map { |value| { label: value.to_s.humanize, value: value } } %>
             <% if select_options.any? %>

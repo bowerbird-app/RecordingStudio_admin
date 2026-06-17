@@ -4,9 +4,9 @@ module RecordingStudioAdmin
   module Results
     ResolvedButton = Data.define(:name, :text, :url, :style)
     ResolvedRowAction = Data.define(:name, :text, :url, :icon, :method, :confirm, :destructive)
-    ResolvedFilter = Data.define(:key, :type, :value, :options, :param_key, :start_param, :end_param)
+    ResolvedFilter = Data.define(:key, :type, :value, :options, :param_key, :start_param, :end_param, :preset_param)
     ResolvedChart = Data.define(:title, :subtitle, :type, :series, :options)
-    ResolvedTable = Data.define(:columns, :filters, :rows, :actions, :result)
+    ResolvedTable = Data.define(:columns, :filters, :rows, :actions, :result, :available_columns, :selected_column_keys)
     ResolvedSummary = Data.define(:label, :value, :change, :change_good_when, :period_label, :show_metric,
                                   :show_change, :show_period)
     ResolvedWidget = Data.define(

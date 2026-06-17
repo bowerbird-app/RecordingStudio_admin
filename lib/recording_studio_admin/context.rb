@@ -50,26 +50,80 @@ module RecordingStudioAdmin
       (widget_param(:group_by, default: default) || default).to_sym
     end
 
-    def widget_time_range(filter_key: :date_range, default_duration: nil, reference_time: current_time)
+    def widget_time_range(filter_key: :date_range, default_duration: nil, default_preset_key: nil,
+                          reference_time: current_time)
       explicit_range = widget_param(:time_range) || widget_param(:range)
       return explicit_range if explicit_range
 
       duration = widget_param(:duration) || default_duration
       return (reference_time - duration)..reference_time if duration
 
-      filter_range(filter_key)
+      period = widget_period(
+        filter_key: filter_key,
+        default_duration: nil,
+        default_preset_key: default_preset_key,
+        reference_time: reference_time
+      )
+      return unless period&.start_date && period.end_date
+
+      period.start_date.beginning_of_day..period.end_date.end_of_day
     end
 
-    def widget_period_label(filter_key: :date_range, default_duration: nil, reference_time: current_time)
-      duration = widget_param(:duration)
-      return period_label(duration: duration, reference_time: reference_time) if duration
-      return period_label(duration: default_duration, reference_time: reference_time) if default_duration
-
-      period_label(filter_key: filter_key, reference_time: reference_time)
+    def widget_period_label(filter_key: :date_range, default_duration: nil, default_preset_key: nil,
+                            reference_time: current_time)
+      widget_period(
+        filter_key: filter_key,
+        default_duration: default_duration,
+        default_preset_key: default_preset_key,
+        reference_time: reference_time
+      )&.label
     end
 
-    def period_for(filter_key: :date_range, duration: nil, reference_time: current_time)
+    def widget_filter_params(filter_key: :date_range, start_param: :start_date, end_param: :end_date,
+                             preset_param: :date_range_preset, default_duration: nil, default_preset_key: nil,
+                             reference_time: current_time)
+      period = widget_period(
+        filter_key: filter_key,
+        default_duration: default_duration,
+        default_preset_key: default_preset_key,
+        reference_time: reference_time
+      )
+      return {} unless period&.start_date && period.end_date
+
+      params = {
+        start_param.to_sym => period.start_date.iso8601,
+        end_param.to_sym => period.end_date.iso8601
+      }
+      params[preset_param.to_sym] = period.preset_key if preset_param && period.preset_key
+      params
+    end
+
+    def widget_period(filter_key: :date_range, default_duration: nil, default_preset_key: nil,
+                      reference_time: current_time)
+      widget_duration = widget_param(:duration)
+      widget_preset_key = widget_param(:preset_key)
+      if widget_duration || widget_preset_key
+        explicit_period = period_for(
+          duration: widget_duration,
+          preset_key: widget_preset_key,
+          reference_time: reference_time
+        )
+        return explicit_period if explicit_period
+      end
+
+      return period_for(duration: default_duration, reference_time: reference_time) if default_duration
+      return period_for(preset_key: default_preset_key, reference_time: reference_time) if default_preset_key
+
+      period_for(filter_key: filter_key, reference_time: reference_time)
+    end
+
+    def period_for(filter_key: :date_range, duration: nil, preset_key: nil, reference_time: current_time)
       return RecordingStudioAdmin::Period.from_duration(duration, reference_time: reference_time) if duration
+
+      if preset_key
+        return RecordingStudioAdmin::Period.from_preset_key(preset_key,
+                                                            reference_date: reference_time.to_date)
+      end
 
       value = filter_value(filter_key)
       return unless value.respond_to?(:start_date) && value.respond_to?(:end_date)

@@ -1,0 +1,49 @@
+<div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+  <%= render FlatPack::PageTitle::Component.new(
+    title: "Generators",
+    subtitle: "Rails generators shipped with RecordingStudioAdmin.",
+    variant: :h1
+  ) %>
+
+  <% @generator_rows.each do |generator| %>
+    <%= render FlatPack::SectionTitle::Component.new(
+      title: generator[:name],
+      subtitle: generator[:summary],
+      anchor_link: true
+    ) %>
+
+    <div class="space-y-3 text-sm">
+      <div>
+        <p class="font-medium text-(--surface-content-color)">Command</p>
+        <p class="text-(--surface-muted-content-color)"><%= generator[:command] %></p>
+      </div>
+
+      <div>
+        <p class="font-medium text-(--surface-content-color)">Routes</p>
+        <ul class="list-disc pl-5 text-(--surface-muted-content-color)">
+          <% generator[:routes].each do |route| %>
+            <li><%= route %></li>
+          <% end %>
+        </ul>
+      </div>
+
+      <div>
+        <p class="font-medium text-(--surface-content-color)">Generated files</p>
+        <ul class="list-disc pl-5 text-(--surface-muted-content-color)">
+          <% generator[:generated_files].each do |generated_file| %>
+            <li><%= generated_file %></li>
+          <% end %>
+        </ul>
+      </div>
+
+      <div>
+        <p class="font-medium text-(--surface-content-color)">Notes</p>
+        <ul class="list-disc pl-5 text-(--surface-muted-content-color)">
+          <% generator[:outputs].each do |output| %>
+            <li><%= output %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+</div>

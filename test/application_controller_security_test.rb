@@ -138,8 +138,10 @@ class ApplicationControllerSecurityTest < Minitest::Test
 
   def test_widget_link_url_suppresses_same_page_links_when_only_anchor_url_differs
     controller = build_controller
-    controller.set_request! ActionDispatch::TestRequest.create("PATH_INFO" => "/admin/screens/api_requests",
-                                                               "QUERY_STRING" => "anchor_url=http%3A%2F%2Fwww.example.com%2F")
+    controller.set_request! ActionDispatch::TestRequest.create(
+      "PATH_INFO" => "/admin/screens/api_requests",
+      "QUERY_STRING" => "anchor_url=http%3A%2F%2Fwww.example.com%2F"
+    )
     controller.define_singleton_method(:params) { ActionController::Parameters.new(anchor_url: "http://www.example.com/") }
 
     assert_nil controller.send(:widget_link_url, "/admin/screens/api_requests")

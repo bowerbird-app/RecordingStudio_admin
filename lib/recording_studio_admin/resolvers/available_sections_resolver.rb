@@ -17,24 +17,45 @@ module RecordingStudioAdmin
       end
 
       def call
-        RecordingStudioAdmin::Authorization.authorize!(@context)
+        RecordingStudioAdmin::Authorization.authorize!(@context, recording: @recording)
 
+        enabled_keys = RecordingStudioAdmin.enabled_admin_section_keys(recording: @recording, context: @context)
+        return available_enabled_sections(enabled_keys) if enabled_keys
+
+        available_legacy_sections
+      end
+
+      private
+
+      def available_enabled_sections(enabled_keys)
+        enabled_keys.filter_map do |key|
+          definition = RecordingStudioAdmin.sections[key.to_s]
+          next unless definition
+          next unless visible?(definition)
+
+          build_section(definition)
+        end.sort_by { |section| [section.title.to_s, section.key.to_s] }
+      end
+
+      def available_legacy_sections
         RecordingStudioAdmin.sections.values.filter_map do |definition|
           next unless visible?(definition)
           next unless available_for_placement?(definition)
 
-          Results::ResolvedAvailableSection.new(
-            key: definition.key,
-            title: definition.evaluate(definition.title, @context),
-            subtitle: definition.evaluate(definition.subtitle, @context),
-            icon: definition.evaluate(definition.icon, @context),
-            url: @context.admin_section_path(definition.key),
-            availability_scope: availability_scope_label(definition)
-          )
+          build_section(definition)
         end.sort_by { |section| [section.title.to_s, section.key.to_s] }
       end
 
-      private
+      def build_section(definition)
+        Results::ResolvedAvailableSection.new(
+          key: definition.key,
+          title: definition.evaluate(definition.title, @context),
+          subtitle: definition.evaluate(definition.subtitle, @context),
+          icon: definition.evaluate(definition.icon, @context),
+          url: @context.admin_section_path(definition.key),
+          availability_scope: availability_scope_label(definition)
+        )
+      end
 
       def normalize_placement(value)
         normalized = value.to_s.downcase.to_sym

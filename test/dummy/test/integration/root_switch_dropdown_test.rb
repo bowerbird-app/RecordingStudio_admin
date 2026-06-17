@@ -24,14 +24,11 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Recording Studio Admin Demo"
     assert_includes response.body, "Quickly create admin screens and dashboards using recording studio"
-    assert_includes response.body, ">Admin root<"
-    assert_includes response.body, ">Admin sections<"
+    assert_includes response.body, ">Admin<"
     assert_includes response.body, ">Admin section dashboard<"
     assert_includes response.body, 'href="http://www.example.com/admin?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'href="http://www.example.com/admin/root?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
-    assert_includes response.body, 'href="http://www.example.com/admin/sections?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
-    assert_operator response.body.index("Admin root"), :<, response.body.index("Admin sections")
-    assert_operator response.body.index("Admin sections"), :<, response.body.index("Admin section dashboard")
+    assert_operator response.body.index("Admin"), :<, response.body.index("Admin section dashboard")
     refute_includes response.body, "What's working"
     refute_includes response.body, "Next steps"
     assert_includes response.body, workspace.name

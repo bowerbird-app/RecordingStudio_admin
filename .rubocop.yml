@@ -23,14 +23,17 @@ Metrics/ClassLength:
     - 'lib/recording_studio_admin/resolvers/**/*'
     - 'lib/recording_studio_admin/widget.rb'
     - 'lib/recording_studio_admin/context.rb'
+    - 'lib/recording_studio_admin/period.rb'
 
 Metrics/MethodLength:
   Exclude:
     - 'test/**/*'
     - 'lib/generators/**/*'
+    - 'lib/recording_studio_admin/filters/date_range_filter.rb'
     - 'lib/recording_studio_admin/resolvers/**/*'
     - 'lib/recording_studio_admin/widget.rb'
     - 'lib/recording_studio_admin/period.rb'
+    - 'lib/recording_studio_admin/screen.rb'
     - 'lib/recording_studio_admin/widget_change_semantics.rb'
     - 'lib/recording_studio_admin/context.rb'
 
@@ -40,6 +43,8 @@ Metrics/AbcSize:
     - 'lib/generators/**/*'
     - 'lib/recording_studio_admin/filters/date_range_filter.rb'
     - 'lib/recording_studio_admin/resolvers/**/*'
+    - 'lib/recording_studio_admin/screen.rb'
+    - 'lib/recording_studio_admin/period.rb'
     - 'lib/recording_studio_admin/widget.rb'
 
 # Allow empty blocks in tests (common for stubs/mocks)
@@ -60,6 +65,8 @@ Naming/VariableNumber:
 Metrics/CyclomaticComplexity:
   Exclude:
     - 'test/**/*'
+    - 'lib/generators/**/*'
+    - 'lib/recording_studio_admin/context.rb'
     - 'lib/recording_studio_admin/filters/date_range_filter.rb'
     - 'lib/recording_studio_admin/resolvers/**/*'
     - 'lib/recording_studio_admin/period.rb'
@@ -68,11 +75,14 @@ Metrics/CyclomaticComplexity:
 Metrics/PerceivedComplexity:
   Exclude:
     - 'test/**/*'
+    - 'lib/generators/**/*'
+    - 'lib/recording_studio_admin/filters/date_range_filter.rb'
     - 'lib/recording_studio_admin/resolvers/**/*'
     - 'lib/recording_studio_admin/period.rb'
 
 Metrics/ParameterLists:
   Exclude:
+    - 'lib/recording_studio_admin/period.rb'
     - 'lib/recording_studio_admin/screen.rb'
     - 'lib/recording_studio_admin/widget.rb'
     - 'lib/recording_studio_admin/context.rb'

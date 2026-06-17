@@ -32,12 +32,12 @@ class AdminLayoutWidthConsistencyTest < ActionDispatch::IntegrationTest
 
     get "/admin/sections", params: { anchor_url: root_url }
     assert_response :success
-    assert_includes response.body, 'mx-auto flex w-full flex-col gap-6'
+    assert_includes response.body, "mx-auto flex w-full flex-col gap-6"
     refute_includes response.body, "max-w-6xl"
 
     get "/admin/sections/users", params: { anchor_url: root_url }
     assert_response :success
-    assert_includes response.body, 'mx-auto flex w-full flex-col gap-6'
+    assert_includes response.body, "mx-auto flex w-full flex-col gap-6"
     refute_includes response.body, "max-w-6xl"
   end
 end
