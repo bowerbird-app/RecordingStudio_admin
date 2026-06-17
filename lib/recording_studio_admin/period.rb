@@ -3,6 +3,17 @@
 module RecordingStudioAdmin
   class Period
     PRESET_PATTERN = /\Alast_(\d+)_(hours|days|weeks|months|years)\z/
+    QUICK_PRESET_LABELS = {
+      today: "Today",
+      yesterday: "Yesterday",
+      last_3_days: "Last 3 days",
+      this_week: "This week",
+      last_week: "Last week",
+      this_month: "This month",
+      last_month: "Last month",
+      this_year: "This year",
+      last_year: "Last year"
+    }.freeze
 
     attr_reader :amount, :unit, :start_date, :end_date
 
@@ -31,6 +42,22 @@ module RecordingStudioAdmin
       end
 
       def from_date_range(start_date:, end_date:, preset_key: nil, reference_date: current_date)
+        quick_preset_key = normalize_quick_preset_key(preset_key) || infer_quick_preset_key(
+          start_date,
+          end_date,
+          reference_date
+        )
+        if quick_preset_key
+          span_days = (end_date - start_date).to_i + 1
+          return new(
+            amount: span_days,
+            unit: :day,
+            start_date: start_date,
+            end_date: end_date,
+            explicit_label: QUICK_PRESET_LABELS.fetch(quick_preset_key)
+          )
+        end
+
         if preset_key
           amount, unit = parse_preset_key(preset_key)
           return new(amount: amount, unit: unit, start_date: start_date, end_date: end_date) if amount && unit
@@ -73,6 +100,51 @@ module RecordingStudioAdmin
         amount = match[1].to_i
         unit = normalize_unit(match[2])
         [amount, unit]
+      end
+
+      def normalize_quick_preset_key(key)
+        normalized = key.to_s.downcase.strip.to_sym
+        return unless QUICK_PRESET_LABELS.key?(normalized)
+
+        normalized
+      end
+
+      def infer_quick_preset_key(start_date, end_date, reference_date)
+        return unless start_date && end_date && reference_date
+
+        return :today if start_date == reference_date && end_date == reference_date
+
+        yesterday = reference_date - 1
+        return :yesterday if start_date == yesterday && end_date == yesterday
+        return :last_3_days if start_date == (reference_date - 2) && end_date == reference_date
+
+        this_week_start = start_of_week(reference_date)
+        return :this_week if start_date == this_week_start && end_date == reference_date
+
+        last_week_end = this_week_start - 1
+        last_week_start = start_of_week(last_week_end)
+        return :last_week if start_date == last_week_start && end_date == last_week_end
+
+        this_month_start = Date.new(reference_date.year, reference_date.month, 1)
+        return :this_month if start_date == this_month_start && end_date == reference_date
+
+        last_month_reference = reference_date << 1
+        last_month_start = Date.new(last_month_reference.year, last_month_reference.month, 1)
+        last_month_end = this_month_start - 1
+        return :last_month if start_date == last_month_start && end_date == last_month_end
+
+        this_year_start = Date.new(reference_date.year, 1, 1)
+        return :this_year if start_date == this_year_start && end_date == reference_date
+
+        last_year_start = Date.new(reference_date.year - 1, 1, 1)
+        last_year_end = Date.new(reference_date.year - 1, 12, 31)
+        return :last_year if start_date == last_year_start && end_date == last_year_end
+
+        nil
+      end
+
+      def start_of_week(date)
+        date - ((date.wday + 6) % 7)
       end
 
       def normalize_unit(unit)

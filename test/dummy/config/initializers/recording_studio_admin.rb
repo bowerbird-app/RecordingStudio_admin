@@ -167,12 +167,19 @@ module AdminScreens
       type :chart
       title "API activity"
       description "Seven-day request volume with the current period total and percentage change."
-      metadata { |context| { period_label: context.widget_period_label(default_duration: 7.days) || "Last 7 days" } }
-      value { |context| ApiRequest.where(created_at: context.widget_time_range(default_duration: 7.days)).count }
+      metadata do |context|
+        {
+          period_label: context.widget_period_label || context.widget_period_label(default_duration: 7.days) || "Last 7 days"
+        }
+      end
+      value do |context|
+        range = context.widget_time_range || context.widget_time_range(default_duration: 7.days)
+        ApiRequest.where(created_at: range).count
+      end
       change { |_context| AdminScreens::Base.period_change_label(ApiRequest.all) }
       chart_type :area
       series do
-        range = _1.widget_time_range(default_duration: 7.days)
+        range = _1.widget_time_range || _1.widget_time_range(default_duration: 7.days)
         [ {
           name: "API activity",
           data: AdminScreens::Base.date_series(ApiRequest.where(created_at: range), bucket: _1.widget_group_by(default: :day))
@@ -263,12 +270,19 @@ module AdminScreens
       type :chart
       title "Recent failures"
       description "Seven-day API error trend with the current period total and percentage change."
-      metadata { |context| { period_label: context.widget_period_label(default_duration: 7.days) || "Last 7 days" } }
-      value { |context| ApiError.where(created_at: context.widget_time_range(default_duration: 7.days)).count }
+      metadata do |context|
+        {
+          period_label: context.widget_period_label || context.widget_period_label(default_duration: 7.days) || "Last 7 days"
+        }
+      end
+      value do |context|
+        range = context.widget_time_range || context.widget_time_range(default_duration: 7.days)
+        ApiError.where(created_at: range).count
+      end
       change { |_context| AdminScreens::Base.period_change_label(ApiError.all) }
       chart_type :bar
       series do
-        range = _1.widget_time_range(default_duration: 7.days)
+        range = _1.widget_time_range || _1.widget_time_range(default_duration: 7.days)
         [ {
           name: "Recent failures",
           data: AdminScreens::Base.date_series(ApiError.where(created_at: range), bucket: _1.widget_group_by(default: :day))
@@ -339,12 +353,19 @@ module AdminScreens
       title "Active users"
       description "Daily unique users across the last seven days, plus the current period delta."
       subtitle "Daily unique users"
-      metadata { |context| { period_label: context.widget_period_label(default_duration: 7.days) || "Last 7 days" } }
-      value { |context| UserActivity.where(created_at: context.widget_time_range(default_duration: 7.days)).distinct.count(:email) }
+      metadata do |context|
+        {
+          period_label: context.widget_period_label || context.widget_period_label(default_duration: 7.days) || "Last 7 days"
+        }
+      end
+      value do |context|
+        range = context.widget_time_range || context.widget_time_range(default_duration: 7.days)
+        UserActivity.where(created_at: range).distinct.count(:email)
+      end
       change { |_context| AdminScreens::Base.period_change_label(UserActivity.all, distinct_field: :email) }
       chart_type :line
       series do
-        range = _1.widget_time_range(default_duration: 7.days)
+        range = _1.widget_time_range || _1.widget_time_range(default_duration: 7.days)
         [ {
           name: "Active users",
           data: AdminScreens::Base.distinct_date_series(
@@ -364,17 +385,16 @@ module AdminScreens
       subtitle "Resolved review backlog"
       link_label "User reviews"
       metadata do |context|
-        range = context.widget_time_range(default_duration: 14.days)
+        range = context.widget_time_range || context.widget_time_range(default_duration: 14.days)
         scope = UserActivity.where(created_at: range)
         total = scope.count
         completed = scope.where.not(status: "review").count
 
         {
-          period_label: context.widget_period_label(default_duration: 14.days) || "Last 14 days",
+          period_label: context.widget_period_label || context.widget_period_label(default_duration: 14.days) || "Last 14 days",
           progress_value: completed,
           progress_max: [total, 1].max,
-          progress_label: "#{completed} / #{total} reviewed",
-          progress_variant: completed == total ? :success : :warning
+          progress_label: "#{completed} / #{total} reviewed"
         }
       end
       link_to { |context| context.admin_screen_path("user_reviews") }
@@ -452,12 +472,19 @@ module AdminScreens
       type :chart
       title "Sign-in activity"
       description "Seven-day sign-in volume with the current period total and percentage change."
-      metadata { |context| { period_label: context.widget_period_label(default_duration: 7.days) || "Last 7 days" } }
-      value { |context| UserActivity.where(action: "signed_in", created_at: context.widget_time_range(default_duration: 7.days)).count }
+      metadata do |context|
+        {
+          period_label: context.widget_period_label || context.widget_period_label(default_duration: 7.days) || "Last 7 days"
+        }
+      end
+      value do |context|
+        range = context.widget_time_range || context.widget_time_range(default_duration: 7.days)
+        UserActivity.where(action: "signed_in", created_at: range).count
+      end
       change { |_context| AdminScreens::Base.period_change_label(UserActivity.where(action: "signed_in")) }
       chart_type :area
       series do
-        range = _1.widget_time_range(default_duration: 7.days)
+        range = _1.widget_time_range || _1.widget_time_range(default_duration: 7.days)
         [ {
           name: "Sign-in activity",
           data: AdminScreens::Base.date_series(
@@ -524,12 +551,19 @@ module AdminScreens
       type :chart
       title "Review queue"
       description "Review-needed user activity across the last fourteen days."
-      metadata { |context| { period_label: context.widget_period_label(default_duration: 14.days) || "Last 14 days" } }
-      value { |context| UserActivity.where(status: "review", created_at: context.widget_time_range(default_duration: 14.days)).count }
+      metadata do |context|
+        {
+          period_label: context.widget_period_label || context.widget_period_label(default_duration: 14.days) || "Last 14 days"
+        }
+      end
+      value do |context|
+        range = context.widget_time_range || context.widget_time_range(default_duration: 14.days)
+        UserActivity.where(status: "review", created_at: range).count
+      end
       change { |_context| AdminScreens::Base.period_change_label(UserActivity.where(status: "review")) }
       chart_type :bar
       series do
-        range = _1.widget_time_range(default_duration: 14.days)
+        range = _1.widget_time_range || _1.widget_time_range(default_duration: 14.days)
         [ {
           name: "Review queue",
           data: AdminScreens::Base.date_series(
@@ -656,12 +690,19 @@ module AdminScreens
       type :chart
       title "Job throughput"
       description "Seven-day background job volume with the current period total and percentage change."
-      metadata { |context| { period_label: context.widget_period_label(default_duration: 7.days) || "Last 7 days" } }
-      value { |context| BackgroundJobRun.where(created_at: context.widget_time_range(default_duration: 7.days)).count }
+      metadata do |context|
+        {
+          period_label: context.widget_period_label || context.widget_period_label(default_duration: 7.days) || "Last 7 days"
+        }
+      end
+      value do |context|
+        range = context.widget_time_range || context.widget_time_range(default_duration: 7.days)
+        BackgroundJobRun.where(created_at: range).count
+      end
       change { |_context| AdminScreens::Base.period_change_label(BackgroundJobRun.all) }
       chart_type :bar
       series do
-        range = _1.widget_time_range(default_duration: 7.days)
+        range = _1.widget_time_range || _1.widget_time_range(default_duration: 7.days)
         [ {
           name: "Job throughput",
           data: AdminScreens::Base.date_series(BackgroundJobRun.where(created_at: range), bucket: _1.widget_group_by(default: :day))
@@ -755,17 +796,26 @@ module AdminScreens
       type :chart
       title "Most common errors"
       description "Top API error classes over the last seven days."
-      metadata { |context| { period_label: context.period_label(duration: 7.days) || "Last 7 days" } }
-      value { |_context| ApiError.where(created_at: 7.days.ago..).count }
+      metadata do |context|
+        {
+          period_label: context.widget_period_label || context.widget_period_label(default_duration: 7.days) || "Last 7 days"
+        }
+      end
+      value do |context|
+        range = context.widget_time_range || context.widget_time_range(default_duration: 7.days)
+        ApiError.where(created_at: range).count
+      end
       change { |_context| AdminScreens::Base.period_change_label(ApiError.all) }
       chart_type :pie
-      series do
-        AdminScreens::MostCommonErrors.top_error_breakdown(ApiError.where(created_at: 7.days.ago..)).map do |entry|
+      series do |context|
+        range = context.widget_time_range || context.widget_time_range(default_duration: 7.days)
+        AdminScreens::MostCommonErrors.top_error_breakdown(ApiError.where(created_at: range)).map do |entry|
           entry[:value]
         end
       end
-      chart_options do
-        breakdown = AdminScreens::MostCommonErrors.top_error_breakdown(ApiError.where(created_at: 7.days.ago..))
+      chart_options do |context|
+        range = context.widget_time_range || context.widget_time_range(default_duration: 7.days)
+        breakdown = AdminScreens::MostCommonErrors.top_error_breakdown(ApiError.where(created_at: range))
         {
           labels: breakdown.map { |entry| entry[:label] },
           height: 220,

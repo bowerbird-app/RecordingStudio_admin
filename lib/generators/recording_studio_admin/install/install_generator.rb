@@ -26,19 +26,20 @@ module RecordingStudioAdmin
         return show_missing_tailwind_notice unless File.exist?(tailwind_css_path)
 
         content = File.read(tailwind_css_path)
-        missing_lines = tailwind_source_lines.reject { |line| content.include?(line) }
-        if missing_lines.empty?
+        missing_theme_lines = flatpack_theme_bridge_missing?(content) ? flatpack_theme_bridge_lines : []
+        missing_source_lines = tailwind_source_lines.reject { |line| content.include?(line) }
+        if missing_theme_lines.empty? && missing_source_lines.empty?
           return say("Tailwind already includes RecordingStudioAdmin and FlatPack sources.",
                      :green)
         end
 
         if content.include?('@import "tailwindcss"')
           inject_into_file tailwind_css_path, after: "@import \"tailwindcss\";\n" do
-            "\n/* Include RecordingStudioAdmin engine and FlatPack sources */\n#{missing_lines.join("\n")}\n"
+            tailwind_injection(missing_theme_lines: missing_theme_lines, missing_source_lines: missing_source_lines)
           end
         else
-          say "Could not find @import \"tailwindcss\". Add these Tailwind source lines manually:", :yellow
-          missing_lines.each { |line| say "  #{line}", :yellow }
+          say "Could not find @import \"tailwindcss\". Add these Tailwind lines manually:", :yellow
+          (missing_theme_lines + missing_source_lines).each { |line| say "  #{line}", :yellow }
         end
       end
 
@@ -70,6 +71,30 @@ module RecordingStudioAdmin
           '@source "../../vendor/bundle/**/flat_pack/app/components/**/*.{rb,erb}";',
           '@source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/flatpack-*/app/components/**/*.{rb,erb}";'
         ]
+      end
+
+      def flatpack_theme_bridge_lines
+        [
+          "@theme inline {",
+          "  --color-primary: var(--color-primary);",
+          "  --color-primary-hover: var(--color-primary-hover);",
+          "  --color-primary-text: var(--color-primary-text);",
+          "  --color-danger-background-color: var(--color-danger-background-color);",
+          "  --color-danger-text-color: var(--color-danger-text-color);",
+          "}"
+        ]
+      end
+
+      def flatpack_theme_bridge_missing?(content)
+        !flatpack_theme_bridge_lines.all? { |line| content.include?(line) }
+      end
+
+      def tailwind_injection(missing_theme_lines:, missing_source_lines:)
+        sections = []
+        sections << ["/* Bridge FlatPack theme tokens into Tailwind semantic utilities */", *missing_theme_lines].join("\n") if missing_theme_lines.any?
+        sections << ["/* Include RecordingStudioAdmin engine and FlatPack sources */", *missing_source_lines].join("\n") if missing_source_lines.any?
+
+        "\n#{sections.join("\n\n")}\n"
       end
     end
   end

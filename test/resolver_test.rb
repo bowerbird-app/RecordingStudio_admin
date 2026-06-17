@@ -147,8 +147,7 @@ class ResolverTest < Minitest::Test
           period_label: context.widget_period_label(default_duration: 7.days),
           progress_value: reviewed,
           progress_max: total,
-          progress_label: "#{reviewed} / #{total}",
-          progress_variant: :warning
+          progress_label: "#{reviewed} / #{total}"
         }
       end
     end
@@ -582,7 +581,7 @@ class ResolverTest < Minitest::Test
     assert_equal 3, widget.metadata[:progress_value]
     assert_equal 5, widget.metadata[:progress_max]
     assert_equal "3 / 5", widget.metadata[:progress_label]
-    assert_equal :warning, widget.metadata[:progress_variant]
+    assert_nil widget.metadata[:progress_variant]
   end
 
   def test_progress_widget_requires_metadata_progress_value

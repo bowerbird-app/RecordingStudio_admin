@@ -48,6 +48,30 @@ class ContextPeriodTest < Minitest::Test
     assert_equal "Last 4 weeks", label
   end
 
+  def test_period_label_uses_today_name_when_date_range_matches_today
+    context = RecordingStudioAdmin::Context.new
+    context.set_filter_value(
+      :date_range,
+      RecordingStudioAdmin::Filters::DateRangeFilter::RangeValue.new(Date.new(2026, 6, 15), Date.new(2026, 6, 15), nil)
+    )
+
+    label = context.period_label(reference_time: reference_time)
+
+    assert_equal "Today", label
+  end
+
+  def test_period_label_uses_last_week_name_when_date_range_matches_last_week
+    context = RecordingStudioAdmin::Context.new
+    context.set_filter_value(
+      :date_range,
+      RecordingStudioAdmin::Filters::DateRangeFilter::RangeValue.new(Date.new(2026, 6, 8), Date.new(2026, 6, 14), nil)
+    )
+
+    label = context.period_label(reference_time: reference_time)
+
+    assert_equal "Last week", label
+  end
+
   def test_widget_period_label_uses_widget_duration_override
     context = RecordingStudioAdmin::Context.new.with_widget_params(duration: 24.hours)
 

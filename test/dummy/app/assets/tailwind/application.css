@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@theme inline {
+	--color-primary: var(--color-primary);
+	--color-primary-hover: var(--color-primary-hover);
+	--color-primary-text: var(--color-primary-text);
+	--color-danger-background-color: var(--color-danger-background-color);
+	--color-danger-text-color: var(--color-danger-text-color);
+}
+
 /* Include dummy app views for Tailwind CSS */
 @source "../../views/**/*.erb";
 

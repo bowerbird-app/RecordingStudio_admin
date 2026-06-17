@@ -58,6 +58,8 @@ class InstallGeneratorTest < Minitest::Test
       end
 
       css = File.read(css_path)
+      assert_includes css, "@theme inline"
+      assert_includes css, "--color-primary: var(--color-primary);"
       assert_includes css, "recording_studio_admin/app/views/**/*.erb"
       assert_includes css, "flat_pack/app/components/**/*.{rb,erb}"
     end
