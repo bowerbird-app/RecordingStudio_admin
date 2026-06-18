@@ -10,5 +10,6 @@ class AdminRoot < ApplicationRecord
 
   recording_studio_admin_sections do
     section :root
+    section :admin_activity_logs
   end
 end

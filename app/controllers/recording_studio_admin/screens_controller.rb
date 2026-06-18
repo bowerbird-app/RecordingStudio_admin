@@ -5,12 +5,17 @@ module RecordingStudioAdmin
     def show
       @screen = RecordingStudioAdmin.resolve_screen(key: params[:key], context: recording_studio_admin_context)
 
-      if request.headers["Turbo-Frame"] == "screen-table"
-        render partial: "recording_studio_admin/screens/table", locals: { screen: @screen }
+      if request.headers["Turbo-Frame"] == "screen-table" || request.xhr?
+        render partial: "recording_studio_admin/screens/table_frame", locals: { screen: @screen }
         return
       end
 
-      return unless turbo_frame_request? || request.xhr?
+      if request.headers["Turbo-Frame"] == "screen-chart"
+        render partial: "recording_studio_admin/screens/chart_frame", locals: { screen: @screen }
+        return
+      end
+
+      return unless turbo_frame_request?
 
       render partial: "recording_studio_admin/screens/chart", locals: { screen: @screen }
     end

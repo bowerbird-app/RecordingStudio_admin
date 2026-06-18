@@ -15,6 +15,7 @@
     code: <<~'CODE'
       RecordingStudioAdmin.configure do |config|
         config.default_mount_path = "/admin"
+        config.engine_layout = "application"
         config.authentication_method = :authenticate_user!
         config.current_actor_method = :current_user
         config.required_access_role = :view
@@ -31,23 +32,31 @@
   ) %>
 
   <%= render FlatPack::SectionTitle::Component.new(
-    title: "Supported configuration keys",
-    subtitle: "These values come directly from RecordingStudioAdmin::Configuration.",
+    title: "Configuration keys",
+    subtitle: "These are the top-level keys exposed by RecordingStudioAdmin::Configuration.",
   ) %>
 
   <%= render FlatPack::CodeBlock::Component.new(
     language: :ruby,
     code: <<~'CODE'
       config.default_mount_path
+      config.engine_layout
       config.authentication_method
       config.current_actor_method
       config.access_recording_method
       config.access_recording_resolver
+      config.site_admin_recording_resolver
       config.admin_sections_resolver
       config.required_access_role
       config.max_page
+      config.surface(:stats)
     CODE
   ) %>
+
+  <p class="text-sm text-(--body-muted-content-color)">
+    If the host app defines <span class="font-mono">config/recording_studio_admin.yml</span>, the engine also loads and merges
+    that file at boot before request handling.
+  </p>
 
   <%= render FlatPack::SectionTitle::Component.new(
     title: "Registration lives elsewhere",

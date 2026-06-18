@@ -25,7 +25,7 @@ class InstallGeneratorTest < Minitest::Test
 
     assert_equal [
       'mount RecordingStudioAccessible::Engine, at: "/backoffice/access"',
-      'mount RecordingStudioAdmin::Engine, at: "/backoffice"'
+      'recording_studio_admin_for :admin, at: "/backoffice"'
     ], routes
   end
 
@@ -69,9 +69,11 @@ class InstallGeneratorTest < Minitest::Test
     install_guide = File.read(File.expand_path("../lib/generators/recording_studio_admin/install/INSTALL.md", __dir__))
 
     assert_includes install_guide, "recording_studio_admin:admin_root"
-    assert_includes install_guide, "Register class-based sections and screens"
+    assert_includes install_guide, "app/admin"
+    assert_includes install_guide, "capability folders"
     assert_includes install_guide, "authentication_method"
     assert_includes install_guide, "access_recording_resolver"
+    assert_includes install_guide, "recording_studio_admin_for"
     assert_includes install_guide, "RecordingStudioAccessible.authorized?"
   end
 end

@@ -2,16 +2,17 @@
 
 module RecordingStudioAdmin
   class Context
-    attr_reader :params, :current_actor, :controller, :routes, :view_context
+    attr_reader :params, :current_actor, :controller, :routes, :view_context, :surface
     attr_accessor :query_result, :table_result
 
     def initialize(params: {}, current_actor: nil, controller: nil, routes: nil, view_context: nil, filter_values: nil,
-                   widget_params: nil, query_result: nil, table_result: nil)
+                   widget_params: nil, query_result: nil, table_result: nil, surface: nil)
       @params = params || {}
       @current_actor = current_actor
       @controller = controller
       @routes = routes || controller
       @view_context = view_context
+      @surface = surface || RecordingStudioAdmin.configuration.default_surface
       @filter_values = (filter_values || {}).dup
       @widget_params = normalize_widget_params(widget_params)
       @query_result = query_result
@@ -38,7 +39,8 @@ module RecordingStudioAdmin
         filter_values: @filter_values,
         widget_params: merged_widget_params,
         query_result: query_result,
-        table_result: table_result
+        table_result: table_result,
+        surface: surface
       )
     end
 
@@ -161,6 +163,40 @@ module RecordingStudioAdmin
       "#{default_mount_path}/sections"
     end
 
+    def admin_action(resource_key, action_key, record)
+      action = RecordingStudioAdmin.resolve_resource_action(
+        key: resource_key,
+        action: action_key,
+        context: self,
+        record: record
+      )
+      action.resolve(record, self)
+    end
+
+    def admin_action_path(resource_key, action_key, record)
+      admin_action(resource_key, action_key, record)&.url
+    end
+
+    def admin_action_method(resource_key, action_key, record)
+      admin_action(resource_key, action_key, record)&.method
+    end
+
+    def admin_action_confirm(resource_key, action_key, record)
+      admin_action(resource_key, action_key, record)&.confirm
+    end
+
+    def admin_action_icon(resource_key, action_key, record)
+      admin_action(resource_key, action_key, record)&.icon
+    end
+
+    def admin_action_text(resource_key, action_key, record)
+      admin_action(resource_key, action_key, record)&.text
+    end
+
+    def root_admin_section_key
+      surface.root_section || "root"
+    end
+
     def available_admin_sections(recording: :__recording_studio_admin_default__, placement: :all)
       effective_recording = if recording == :__recording_studio_admin_default__
                               access_recording
@@ -188,12 +224,28 @@ module RecordingStudioAdmin
       )
     end
 
+    def available_admin_widgets(recording: :__recording_studio_admin_default__, placement: :all,
+                                include: %i[section_widgets linked_screen_widgets])
+      effective_recording = if recording == :__recording_studio_admin_default__
+                              access_recording
+                            else
+                              recording
+                            end
+
+      RecordingStudioAdmin.available_widgets(
+        context: self,
+        recording: effective_recording,
+        placement: placement,
+        include: include
+      )
+    end
+
     def access_recording
-      resolver = RecordingStudioAdmin.configuration.access_recording_resolver
+      resolver = surface.access_recording_resolver || RecordingStudioAdmin.configuration.access_recording_resolver
       resolved_recording = resolve_callable(resolver) if resolver
       return resolved_recording if resolved_recording
 
-      method_name = RecordingStudioAdmin.configuration.access_recording_method
+      method_name = surface.access_recording_method || RecordingStudioAdmin.configuration.access_recording_method
       return unless method_name && controller.respond_to?(method_name, true)
 
       controller.send(method_name)
@@ -201,6 +253,13 @@ module RecordingStudioAdmin
 
     def access_recordable
       access_recording&.recordable
+    end
+
+    def site_admin_recording
+      return @site_admin_recording if defined?(@site_admin_recording)
+
+      resolver = RecordingStudioAdmin.configuration.site_admin_recording_resolver
+      @site_admin_recording = resolve_callable(resolver) if resolver
     end
 
     def root_recording
@@ -214,7 +273,7 @@ module RecordingStudioAdmin
     private
 
     def default_mount_path
-      RecordingStudioAdmin.configuration.default_mount_path.to_s.chomp("/")
+      (surface.path || RecordingStudioAdmin.configuration.default_mount_path).to_s.chomp("/")
     end
 
     def current_time

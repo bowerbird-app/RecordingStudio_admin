@@ -17,6 +17,8 @@ module RecordingStudioAdmin
         raise DefinitionNotFound, "Section #{@key.inspect} is not registered" unless definition
 
         RecordingStudioAdmin::Authorization.authorize!(@context)
+  RecordingStudioAdmin::BlastRadius.authorize!(definition, context: @context, label: "Section #{definition.key.inspect}")
+        raise DefinitionNotFound, "Section #{@key.inspect} is not enabled for this root" unless enabled?(definition)
         raise DefinitionNotFound, "Section #{@key.inspect} is not visible" unless visible?(definition)
 
         section_recording = if definition.recordable_definition
@@ -30,7 +32,7 @@ module RecordingStudioAdmin
           subtitle: definition.evaluate(definition.subtitle, @context),
           icon: definition.evaluate(definition.icon, @context),
           links: definition.links.filter_map { |link| link.resolve(@context) },
-          widgets: definition.widget_usages.map { |widget_usage| resolve_widget_usage(definition, widget_usage) },
+          widgets: definition.widget_usages.filter_map { |widget_usage| resolve_widget_usage(definition, widget_usage) },
           recordable: section_recording&.recordable,
           recording: section_recording&.recording
         )
@@ -42,7 +44,20 @@ module RecordingStudioAdmin
         definition.visible_if.call(@context)
       end
 
+      def enabled?(definition)
+        RecordingStudioAdmin.section_enabled?(
+          key: definition.key,
+          recording: @context.access_recording,
+          context: @context
+        )
+      end
+
       def resolve_widget_usage(definition, widget_usage)
+        widget_definition = RecordingStudioAdmin.widget_for(widget_usage.key)
+        return unless widget_definition
+        widget_radius = widget_usage.effective_blast_radius(widget_definition)
+        return unless RecordingStudioAdmin::BlastRadius.allowed?(widget_radius, context: @context, container: definition)
+
         widget_context = build_widget_context(definition, widget_usage)
         widget = RecordingStudioAdmin.resolve_widget(key: widget_usage.key, context: widget_context)
 

@@ -1,16 +1,45 @@
-# RecordingStudioAdmin screens, sections, and widgets
+# RecordingStudioAdmin screens, sections, resources, and widgets
 
 This guide explains the practical host-app workflow for building admin UI with `RecordingStudioAdmin`.
 
 ## Mental model
 
-There are three main definition types:
+There are four main definition types:
 
 - `RecordingStudioAdmin::Screen`: a detailed analytics page with a query, filters, chart, table, summary, and optional screen-owned widgets
 - `RecordingStudioAdmin::Section`: an overview page with links plus widgets pulled from screens or standalone widget definitions
+- `RecordingStudioAdmin::Resource`: a registry for admin actions that are backed by host-app controllers and authorized through an owning admin section
 - `RecordingStudioAdmin::Widget`: a reusable card rendered inside a screen or section
 
-Think of a section as the landing page for an admin area, and a screen as the deeper analytical view behind that landing page.
+Think of a section as the landing page for an admin area, a screen as the deeper analytical view behind that landing page, and a resource as the action registry that lets rows link into host-owned mutation flows.
+
+## Blast radius
+
+Use `blast_radius` to make wide-scope admin behavior explicit in code review and enforceable at runtime. `RecordingStudioAccessible` still decides whether the actor can access the current recording; `blast_radius` describes how far the definition itself is allowed to reach.
+
+```ruby
+class Users < RecordingStudioAdmin::Screen
+  key "users"
+  blast_radius :site
+end
+
+class WorkspaceStats < RecordingStudioAdmin::Screen
+  key "workspace_stats"
+  blast_radius :root
+end
+```
+
+Supported values are `:recording`, `:root`, and `:site`. The default is `:recording`.
+
+`blast_radius :site` requires `config.site_admin_recording_resolver` to return the same recording as the current access recording. Site-wide widgets and admin actions are also blocked when they are accidentally placed inside recording- or root-scoped containers.
+
+```ruby
+action :flag_email,
+       text: "Flag email",
+       method: :post,
+       blast_radius: :site,
+       url: ->(row, context) { context.controller.main_app.flag_email_admin_user_path(row) }
+```
 
 ## Setup flow
 
@@ -19,8 +48,9 @@ A complete host-app integration usually looks like this:
 1. Mount the engine and configure access recording resolution
 2. Define one or more screen classes
 3. Define one or more section classes
-4. Register those classes from `Rails.application.config.to_prepare`
-5. Link between pages with `context.admin_screen_path` and `context.admin_section_path`
+4. Optionally define resource classes for registered admin actions
+5. Load the admin definition tree, then register capabilities from `Rails.application.config.to_prepare`
+6. Link between pages with `context.admin_screen_path`, `context.admin_section_path`, and registered admin actions
 
 When the host app uses the optional `recording_studio_admin:admin_root` generator, it can also build the landing page and
 search UI from `recording_studio_admin_context.available_admin_sections` and
@@ -122,19 +152,181 @@ module AdminScreens
 end
 ```
 
-## Registering definitions
+## Minimal registered action example
 
-Register every screen and section from `Rails.application.config.to_prepare`:
+Resources register host-owned admin actions. They must belong to a section; authorization is checked against that admin section/access recording and the action's required role, not against the record being edited. Read actions use the configured admin role by default; non-GET or destructive actions require `:admin` by default, and GET links that back a later mutation should declare `required_role: :admin`. The host app still owns the route, controller action, strong params, view, and tests for the edit.
 
 ```ruby
-Rails.application.config.to_prepare do
-  RecordingStudioAdmin.register_screen(AdminScreens::ApiRequests)
-  RecordingStudioAdmin.register_screen(AdminScreens::ApiErrors)
-  RecordingStudioAdmin.register_section(AdminScreens::RootSection)
+module AdminScreens
+  class UsersResource < RecordingStudioAdmin::Resource
+    key "users"
+    section "users"
+    title "Manage users"
+    subtitle "Edit user account details"
+
+    action :edit,
+           text: "Edit user",
+           icon: "pencil-square",
+           url: lambda { |row, context|
+             user = User.find_by(email: row.email)
+             context.controller.main_app.edit_admin_user_path(user) if user
+           },
+           required_role: :admin
+
+    action :flag_email,
+           text: "Flag email",
+           icon: "flag",
+           method: :post,
+           confirm: ->(row, _context) { "Flag #{row.email}?" },
+           url: lambda { |row, context|
+             user = User.find_by(email: row.email)
+             context.controller.main_app.flag_email_admin_user_path(user) if user
+           }
+    end
+  end
 end
 ```
 
-That pattern matters because Rails reloads app classes in development. `to_prepare` ensures the registry points at the current class objects.
+Link to the registered action from a screen table row:
+
+```ruby
+table do
+  column :email
+
+  admin_action "users.edit", as: :edit_user
+end
+```
+
+Authorize the host controller before mutating records:
+
+```ruby
+RecordingStudioAdmin.authorize_resource!(
+  key: "users",
+  action: :edit,
+  context: recording_studio_admin_context,
+  record: @user,
+  audit: true,
+  audit_action: :update
+)
+```
+
+Generated mutating controllers use `perform_recording_studio_admin_action!` so each admin CRUD/action request records one audit event with its final outcome:
+
+```ruby
+if perform_recording_studio_admin_action!("users", :edit, @user, audit_action: :update) { @user.update(user_params) }
+  redirect_to recording_studio_admin_context.admin_screen_path("users")
+else
+  render :edit, status: :unprocessable_entity
+end
+```
+
+Recording Studio events are optional. Add one inside the block when the changed recordable should receive domain history or revert support:
+
+```ruby
+perform_recording_studio_admin_action!("pages", :edit, @page, audit_action: :update) do |audit|
+  if @page.update(page_params)
+    audit.recording_studio_event(recordable: @page, action: "admin.updated")
+    true
+  else
+    false
+  end
+end
+```
+
+Generate the host-owned controller, views, resource definition, and test skeleton when you want a standard show/edit/update flow:
+
+```bash
+bin/rails generate recording_studio_admin:resource_form users \
+  --model=User \
+  --section=users \
+  --mount=admin \
+  --fields=email:email,name:string
+```
+
+That generator creates host-app files for the registered resource action flow while keeping ownership of routes, params, persistence, and authentication in the app:
+
+- `app/admin/users/users/resource.rb`
+- `app/controllers/admin/users_controller.rb`
+- `app/views/admin/users/show.html.erb`
+- `app/views/admin/users/edit.html.erb`
+- `test/controllers/admin/users_controller_test.rb`
+
+The generated controller uses the recommended authorization pattern so `update` maps back to the registered `:edit` resource action.
+
+After generating the host-owned files, link back to them from a screen table:
+
+```ruby
+table do
+  column :email
+
+  admin_action "users.show", as: :show_user
+  admin_action "users.edit", as: :edit_user
+end
+```
+
+When an existing resource needs custom member actions later, add a focused scaffold for the resource definition, host controller, route, and test skeleton:
+
+```bash
+bin/rails generate recording_studio_admin:resource_action users flag_email \
+  --model=User \
+  --section=users \
+  --confirm="Flag this email?"
+```
+
+That generator appends the new registered action to `app/admin/users/users/resource.rb`, adds the host controller method and a `perform_...!` placeholder hook, adds a focused member route block, and creates a skipped test skeleton for the new action.
+
+## Registering definitions
+
+Keep definitions in app-owned admin capability folders, then reload files from a top-level manifest and register each capability from `Rails.application.config.to_prepare`:
+
+```text
+app/admin/
+  manifest.rb
+  api/
+    manifest.rb
+    section.rb
+    api_requests/
+      screen.rb
+      chart.rb
+      table.rb
+      widgets/
+        api_activity.rb
+    api_errors/
+      screen.rb
+      chart.rb
+      table.rb
+      widgets/
+        recent_failures.rb
+  users/
+    manifest.rb
+    section.rb
+    users/
+      screen.rb
+      chart.rb
+      table.rb
+      widgets/
+        active_users.rb
+        review_completion.rb
+```
+
+```ruby
+Rails.application.config.to_prepare do
+  load Rails.root.join("app/admin/manifest.rb")
+
+  AdminScreens.load!
+  AdminScreens::Root.register!
+  AdminScreens::Api.register!
+  AdminScreens::UsersArea.register!
+end
+```
+
+That pattern matters because Rails reloads app classes in development. `to_prepare` ensures the registry points at the current class objects. The top-level manifest controls file reloading, while each capability manifest keeps its own `register!` list close to the screens and section it owns.
+
+If the files under `app/admin` are manifest-loaded instead of named for Zeitwerk constants, ignore that folder in `config/application.rb`:
+
+```ruby
+Rails.autoloaders.main.ignore(root.join("app/admin"))
+```
 
 ## Lookup and resolver methods
 
@@ -143,14 +335,17 @@ The top-level module exposes the runtime methods most apps and tests need:
 ```ruby
 RecordingStudioAdmin.register_screen(AdminScreens::ApiRequests)
 RecordingStudioAdmin.register_section(AdminScreens::RootSection)
+RecordingStudioAdmin.register_resource(AdminScreens::UsersResource)
 
 RecordingStudioAdmin.screen_for("api_requests")
 RecordingStudioAdmin.section_for("root")
+RecordingStudioAdmin.resource_for("users")
 RecordingStudioAdmin.widget_for("api_requests.widgets.api_activity")
 
 RecordingStudioAdmin.resolve_sections(context: context)
 RecordingStudioAdmin.resolve_section(key: "root", context: context)
 RecordingStudioAdmin.resolve_screen(key: "api_requests", context: context)
+RecordingStudioAdmin.authorize_resource!(key: "users", action: :edit, context: context, record: user)
 RecordingStudioAdmin.resolve_widget(key: "api_requests.widgets.api_activity", context: context)
 ```
 
@@ -217,6 +412,8 @@ Supported section widget view variants are:
 
 `params` become widget params on the derived context, which is how sections can request a different duration or grouping than the screen default.
 
+Other usage-level overrides are applied after the widget resolves, so sections can reuse a shared screen widget while changing only presentation details such as title, compact layout, or chart type.
+
 Those params pair with context helpers that preserve widget period semantics:
 
 ```ruby
@@ -235,7 +432,9 @@ class AdminRoot < ApplicationRecord
 
   recording_studio_admin_sections do
     section :root
+    section :api
     section :users
+    section :jobs
   end
 end
 ```
@@ -254,6 +453,12 @@ recordable "AdminSection",
 ```
 
 Use this when the section needs its own RecordingStudio object. This is separate from the access recording used for authorization.
+
+Keep that distinction explicit in app code:
+
+- the access recording gates entry to the mounted admin surface
+- `recording_studio_admin_sections` or `admin_sections_resolver` decides which registered sections are enabled
+- `Section.recordable` creates or resolves the section's own RecordingStudio-backed object after the page is opened
 
 ## Access and authorization
 
@@ -276,10 +481,18 @@ RecordingStudioAdmin.available_admin_items(
   parent: nil,
   include: %i[sections screens]
 )
+RecordingStudioAdmin.available_widgets(
+  context: context,
+  recording: recording,
+  placement: :root,
+  include: %i[section_widgets linked_screen_widgets]
+)
 RecordingStudioAdmin.enabled_admin_section_keys(recording: recording, context: context)
 ```
 
 `placement` accepts `:all`, `:root`, or `:descendant`. `parent` filters search results down to descendants of a specific available item key.
+`available_widgets` returns widget metadata from available sections and linked screens without resolving widget values,
+rows, list items, or chart series.
 
 ## Path helpers inside definitions
 
@@ -301,6 +514,45 @@ page_nav_anchor_url(default: "/")
 widget_link_url(widget.link_to)
 ```
 
+Widget rendering helpers accept already-resolved widgets and can be included in custom controllers when you want to
+reuse the visual widget views outside the mounted admin controller:
+
+```ruby
+widget = RecordingStudioAdmin.resolve_widget(key: "api_requests.widgets.api_activity", context: context)
+render_recording_studio_widget(widget)
+render_recording_studio_widget_body(widget)
+render_recording_studio_chart_widget(widget)
+```
+
+Use `render_recording_studio_widget` for the full card, `render_recording_studio_widget_body` for only the type-specific
+body partial, and `render_recording_studio_chart_widget` when a custom view only needs the chart visual. Widget
+resolution remains separate from rendering, so registered widgets still use the normal admin context and authorization
+rules.
+
+## Widget types and summary behavior
+
+The current widget DSL supports four types:
+
+- `:number`
+- `:chart`
+- `:list`
+- `:progress`
+
+`number` widgets require a `value`. `chart` widgets require both `chart_type` and `series`. `list` widgets require
+`items`. `progress` widgets require `metadata[:progress_value]` and accept `metadata[:progress_max]`,
+`metadata[:progress_label]`, and `metadata[:progress_variant]`.
+
+Widgets can also control header semantics independently of body content:
+
+- `subtitle` is descriptive copy
+- `change_good_when` controls positive/negative trend styling
+- `hide_metric`, `hide_change`, and `hide_period` suppress header fields
+- `metadata[:period_label]` and `metadata[:unit_label]` control period and unit copy used by the shared widget views
+
+Screen summaries are separate from widgets. Each screen resolves a summary from its filtered relation, and the summary
+DSL can override the label, value source, previous value source, or change semantics when the default count-based
+behavior is not the right user-facing summary.
+
 ## Resolver APIs
 
 The engine exposes resolver methods that return structured result objects:
@@ -318,16 +570,43 @@ That is the API to use in tests, future non-HTML integrations, or internal debug
 
 ```text
 app/
-  admin_screens/
-    api_requests.rb
-    api_errors.rb
-    root_section.rb
+  admin/
+    manifest.rb
+    api/
+      manifest.rb
+      section.rb
+      api_requests/
+        screen.rb
+        chart.rb
+        table.rb
+        widgets/
+          api_activity.rb
+          monthly_api_usage.rb
+      api_errors/
+        screen.rb
+        chart.rb
+        table.rb
+        widgets/
+          recent_failures.rb
+    users/
+      manifest.rb
+      section.rb
+      users/
+        screen.rb
+        chart.rb
+        table.rb
+        widgets/
+          active_users.rb
+          review_completion.rb
+    root/
+      manifest.rb
+      section.rb
 config/
   initializers/
     recording_studio_admin.rb
 ```
 
-Keep definitions in app-owned classes. Keep configuration and registration in the initializer.
+Keep definitions in app-owned classes grouped by admin capability. Keep configuration and the top-level manifest call in the initializer.
 
 ## Common mistakes
 
@@ -341,13 +620,18 @@ Keep definitions in app-owned classes. Keep configuration and registration in th
 
 ## Best reference in this repository
 
-The dummy app initializer is the best real example to copy from:
+The dummy app admin folders are the best real example to copy from:
 
+- `test/dummy/app/admin`
+- `test/dummy/app/admin/manifest.rb`
 - `test/dummy/config/initializers/recording_studio_admin.rb`
 
 It includes:
 
+- top-level manifest loading plus per-capability `register!` entrypoints
 - multiple screen types
+- screen-owned charts and tables split into per-screen `chart.rb` and `table.rb` files
+- screen-owned widgets split into per-screen `widgets/*.rb` files
 - reused widgets
 - section links
 - section recordables

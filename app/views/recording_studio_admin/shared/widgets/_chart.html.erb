@@ -1,10 +1,25 @@
 <% chart_options = {
      grid: { show: false }
    }.deep_merge(widget.chart_options || {}) %>
+<% presenter ||= recording_studio_widget_presenter(widget) %>
+<% chart_type = presenter.chart_type %>
 
-<%= render FlatPack::Chart::Component.new(
-  type: widget.chart_type,
-  series: widget.series,
-  options: chart_options,
-  card: false
-) %>
+<% if chart_type == :geo %>
+  <% RecordingStudioAdmin::FlatPackGeoChartSupport.install! %>
+  <% geo_height = chart_options.dig(:chart, :height) || 260 %>
+  <%= render FlatPack::Chart::Component.new(
+    type: :geo,
+    series: recording_studio_flatpack_geo_series(widget.series),
+    options: recording_studio_flatpack_geo_options(chart_options, marker_size: 6),
+    card: false,
+    height: geo_height,
+    style: recording_studio_flatpack_geo_container_style
+  ) %>
+<% else %>
+  <%= render FlatPack::Chart::Component.new(
+    type: chart_type,
+    series: widget.series,
+    options: chart_options,
+    card: false
+  ) %>
+<% end %>

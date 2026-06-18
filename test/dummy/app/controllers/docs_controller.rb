@@ -50,6 +50,9 @@ class DocsController < ApplicationController
   def helpers
   end
 
+  def blast_radius
+  end
+
   private
 
   def normalize_recordable_declaration(declaration)

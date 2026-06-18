@@ -25,6 +25,7 @@ class UrlSafetyTest < Minitest::Test
     assert_equal "#", RecordingStudioAdmin::UrlSafety.safe_href(" javascript:alert(1)")
     assert_equal "#", RecordingStudioAdmin::UrlSafety.safe_href("JAVASCRIPT:alert(1)", allow_external: true)
     assert_equal "#", RecordingStudioAdmin::UrlSafety.safe_href("//example.com")
+    assert_equal "#", RecordingStudioAdmin::UrlSafety.safe_href("https://[::1", allow_external: true)
     assert_nil RecordingStudioAdmin::UrlSafety.safe_href(nil)
   end
 end

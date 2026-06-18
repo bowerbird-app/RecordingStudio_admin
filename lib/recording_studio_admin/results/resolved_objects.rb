@@ -32,6 +32,21 @@ module RecordingStudioAdmin
       :show_change,
       :show_period
     )
+    ResolvedAvailableWidget = Data.define(
+      :key,
+      :title,
+      :description,
+      :type,
+      :chart_type,
+      :screen_key,
+      :section_key,
+      :source,
+      :recording,
+      :recordable,
+      :view_variant,
+      :params,
+      :surface_key
+    )
     ResolvedSectionRecording = Data.define(:recordable, :recording, :root_recording, :parent_recording)
     ResolvedAvailableAdminItem = Data.define(
       :type,

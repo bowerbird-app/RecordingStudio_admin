@@ -15,7 +15,7 @@
 <% if @screen.widgets.any? %>
   <%= render FlatPack::Grid::Component.new(cols: :auto, gap: :md, class: "mb-6") do %>
     <% @screen.widgets.each do |widget| %>
-      <%= render partial: "recording_studio_admin/shared/widget", locals: { widget: widget.with(view_variant: :compact) } %>
+      <%= render_recording_studio_widget(widget, variant: :compact) %>
     <% end %>
   <% end %>
 <% end %>

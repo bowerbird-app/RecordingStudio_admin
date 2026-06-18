@@ -17,6 +17,8 @@ module RecordingStudioAdmin
         raise DefinitionNotFound, "Screen #{@key.inspect} is not registered" unless definition
 
         RecordingStudioAdmin::Authorization.authorize!(@context)
+        RecordingStudioAdmin::BlastRadius.authorize!(definition, context: @context, label: "Screen #{definition.key.inspect}")
+        raise DefinitionNotFound, "Screen #{@key.inspect} is not enabled for this root" unless enabled?(definition)
         raise DefinitionNotFound, "Screen #{@key.inspect} is not visible" unless visible?(definition)
 
         base_relation = definition.query.call(@context)
@@ -27,7 +29,7 @@ module RecordingStudioAdmin
         query_result = Results::QueryResult.new(relation: relation, previous_count: previous_count)
         @context.query_result = query_result
 
-        table = resolve_table(definition.table_value, relation, filters: filters)
+        table = resolve_table(definition.table_value, relation, owner: definition, filters: filters)
         summary = resolve_summary(
           definition.summary_value || SummaryDefinition.new,
           query_result: query_result,
@@ -43,11 +45,19 @@ module RecordingStudioAdmin
           summary: summary,
           chart: resolve_chart(definition.chart_value),
           table: table,
-          widgets: definition.widgets.values.map { |widget| widget.resolve(@context) }
+          widgets: definition.widgets.values.filter_map { |widget| resolve_screen_widget(definition, widget) }
         )
       end
 
       private
+
+      def enabled?(definition)
+        RecordingStudioAdmin.screen_enabled?(
+          key: definition.key,
+          recording: @context.access_recording,
+          context: @context
+        )
+      end
 
       def combined_filters(definition)
         (Array(definition.filters) + Array(definition.table_value&.filters)).uniq(&:param_key)
@@ -87,7 +97,7 @@ module RecordingStudioAdmin
         )
       end
 
-      def resolve_table(definition, relation, filters: [])
+      def resolve_table(definition, relation, owner:, filters: [])
         return unless definition
 
         table_filter_keys = Array(definition.filters).map(&:param_key)
@@ -96,9 +106,19 @@ module RecordingStudioAdmin
         sorted_relation, sort, direction = sort_relation(definition, relation, columns: visible_columns)
         table_result = paginate(definition, sorted_relation, sort, direction)
         @context.table_result = table_result
+        actions = definition.actions.select do |action|
+          RecordingStudioAdmin::BlastRadius.allowed?(action, context: @context, container: owner)
+        end
+
         Results::ResolvedTable.new(visible_columns, table_filters.map do |entry|
           resolved_filter(entry)
-        end, table_result.rows, definition.actions, table_result, definition.columns, selected_column_keys)
+        end, table_result.rows, actions, table_result, definition.columns, selected_column_keys)
+      end
+
+      def resolve_screen_widget(screen_definition, widget)
+        return unless RecordingStudioAdmin::BlastRadius.allowed?(widget, context: @context, container: screen_definition)
+
+        widget.resolve(@context)
       end
 
       def resolve_summary(definition, query_result:, previous_count:)

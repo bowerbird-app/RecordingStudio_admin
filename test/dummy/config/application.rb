@@ -35,6 +35,7 @@ module Dummy
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+    Rails.autoloaders.main.ignore(root.join("app/admin"))
 
     # Configure generators to use UUID primary keys
     config.generators do |g|

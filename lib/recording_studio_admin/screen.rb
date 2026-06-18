@@ -34,8 +34,8 @@ module RecordingStudioAdmin
         @table_value
       end
 
-      def widget(name, &)
-        definition = Widget.new(name, screen_key: key, &)
+      def widget(name, blast_radius: nil, &)
+        definition = Widget.new(name, screen_key: key, blast_radius: blast_radius || self.blast_radius, &)
         @widgets_value[definition.key] = definition
       end
 
@@ -143,8 +143,30 @@ module RecordingStudioAdmin
       @default_column_keys = keys.flatten.map(&:to_sym).uniq
     end
 
-    def action(name, text:, url:, icon: nil, method: nil, confirm: nil, destructive: nil, visible_if: nil)
-      @actions << RowActionDefinition.new(name.to_sym, text, url, icon, method, confirm, destructive, visible_if)
+    def action(name, text:, url:, icon: nil, method: nil, confirm: nil, destructive: nil, visible_if: nil,
+               blast_radius: nil)
+      @actions << RowActionDefinition.new(
+        name.to_sym,
+        text,
+        url,
+        icon,
+        method,
+        confirm,
+        destructive,
+        visible_if,
+        RecordingStudioAdmin::BlastRadius.normalize(blast_radius, owner: "Table action #{name.inspect}")
+      )
+    end
+
+    def admin_action(resource_key, action_key = nil, as: nil)
+      resource_key, action_key = resource_key.to_s.split(".", 2) if action_key.nil?
+      raise InvalidDefinition, "admin_action requires a resource key and action key" if resource_key.blank? || action_key.blank?
+
+      @actions << ResourceRowActionDefinition.new(
+        (as || "#{resource_key}_#{action_key}").to_sym,
+        resource_key,
+        action_key.to_sym
+      )
     end
 
     def paginate(per_page: 50, mode: :infinite)
@@ -190,8 +212,10 @@ module RecordingStudioAdmin
     end
   end
 
-  RowActionDefinition = Data.define(:name, :text, :url, :icon, :method, :confirm, :destructive, :visible_if) do
+  RowActionDefinition = Data.define(:name, :text, :url, :icon, :method, :confirm, :destructive, :visible_if,
+                                    :blast_radius) do
     def resolve(row, context)
+      return unless RecordingStudioAdmin::BlastRadius.allowed?(self, context: context)
       return if visible_if && !resolve_value(visible_if, row, context)
 
       resolved_url = RecordingStudioAdmin::UrlSafety.safe_href(resolve_value(url, row, context))
@@ -236,6 +260,30 @@ module RecordingStudioAdmin
       when 1, -1 then value.call(row)
       else value.call(row, context)
       end
+    end
+  end
+
+  ResourceRowActionDefinition = Data.define(:name, :resource_key, :action_key) do
+    def blast_radius
+      action_definition&.blast_radius || RecordingStudioAdmin::BlastRadius::DEFAULT
+    end
+
+    def resolve(row, context)
+      action = RecordingStudioAdmin.authorize_resource!(
+        key: resource_key,
+        action: action_key,
+        context: context,
+        record: row
+      )
+      action.resolve(row, context)
+    rescue AuthorizationFailed, DefinitionNotFound
+      nil
+    end
+
+    private
+
+    def action_definition
+      RecordingStudioAdmin.resource_for(resource_key)&.action_for(action_key)
     end
   end
 end

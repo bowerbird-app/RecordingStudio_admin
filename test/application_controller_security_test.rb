@@ -17,20 +17,42 @@ class ApplicationControllerSecurityTest < Minitest::Test
   def setup
     @original_authentication_method = RecordingStudioAdmin.configuration.authentication_method
     @original_current_actor_method = RecordingStudioAdmin.configuration.current_actor_method
+    @original_engine_layout = RecordingStudioAdmin.configuration.engine_layout
+    @original_surfaces = RecordingStudioAdmin.configuration.surfaces.dup
   end
 
   def teardown
     RecordingStudioAdmin.configuration.authentication_method = @original_authentication_method
     RecordingStudioAdmin.configuration.current_actor_method = @original_current_actor_method
+    RecordingStudioAdmin.configuration.engine_layout = @original_engine_layout
+    RecordingStudioAdmin.configuration.surfaces.clear
+    @original_surfaces.each do |key, surface|
+      RecordingStudioAdmin.configuration.surfaces[key] = surface
+    end
   end
 
   def test_engine_controller_has_fail_closed_authentication_hook
     source = File.read(File.join(ROOT, "app/controllers/recording_studio_admin/application_controller.rb"))
 
+    assert_includes source, "layout :recording_studio_admin_layout"
     assert_includes source, "before_action :authenticate_recording_studio_admin!"
     assert_includes source, "head :unauthorized"
     assert_includes source, "head :forbidden"
     assert_includes source, "set_recording_studio_admin_current_actor"
+  end
+
+  def test_engine_layout_uses_configuration
+    controller = build_controller
+    RecordingStudioAdmin.configuration.engine_layout = "flat_pack_sidebar"
+
+    assert_equal "flat_pack_sidebar", controller.send(:recording_studio_admin_layout)
+  end
+
+  def test_engine_layout_can_be_overridden_by_surface
+    RecordingStudioAdmin.configuration.surface(:stats, path: "/stats", engine_layout: "stats_layout")
+    controller = build_controller(path: "/stats/sections/page_views", script_name: "/stats")
+
+    assert_equal "stats_layout", controller.send(:recording_studio_admin_layout)
   end
 
   def test_private_authentication_hook_is_supported
@@ -47,6 +69,21 @@ class ApplicationControllerSecurityTest < Minitest::Test
 
     assert controller.instance_variable_get(:@authenticated)
     assert_equal 200, controller.response.status
+  end
+
+  def test_authentication_hook_can_be_overridden_by_surface
+    RecordingStudioAdmin.configuration.surface(:stats, path: "/stats", authentication_method: :require_stats!)
+    controller = build_controller(path: "/stats", script_name: "/stats") do
+      private
+
+      def require_stats!
+        @authenticated_for_stats = true
+      end
+    end
+
+    controller.send(:authenticate_recording_studio_admin!)
+
+    assert controller.instance_variable_get(:@authenticated_for_stats)
   end
 
   def test_missing_authentication_hook_fails_closed
@@ -105,6 +142,16 @@ class ApplicationControllerSecurityTest < Minitest::Test
     assert_same controller, context.controller
     assert_same controller, context.routes
     assert_same view_context, context.view_context
+  end
+
+  def test_context_uses_request_surface
+    RecordingStudioAdmin.configuration.surface(:stats, path: "/stats", root_section: :page_views)
+    controller = build_controller(path: "/stats", script_name: "/stats")
+
+    context = controller.send(:recording_studio_admin_context)
+
+    assert_equal "stats", context.surface.key
+    assert_equal "page_views", context.root_admin_section_key
   end
 
   def test_page_nav_anchor_url_returns_default_for_blank_or_unsafe_values
@@ -185,10 +232,10 @@ class ApplicationControllerSecurityTest < Minitest::Test
     Object.const_set(:Current, original_current) if defined?(original_current)
   end
 
-  def build_controller(&)
+  def build_controller(path: "/admin", script_name: "", &)
     klass = Class.new(RecordingStudioAdmin::ApplicationController, &)
     klass.new.tap do |controller|
-      controller.set_request! ActionDispatch::TestRequest.create
+      controller.set_request! ActionDispatch::TestRequest.create("PATH_INFO" => path, "SCRIPT_NAME" => script_name)
       controller.set_response! ActionDispatch::TestResponse.new
     end
   end

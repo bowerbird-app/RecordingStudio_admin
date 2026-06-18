@@ -1,8 +1,17 @@
 # frozen_string_literal: true
 
+require_relative "../../helpers/recording_studio_admin/widget_rendering_helper"
+require_relative "../../helpers/recording_studio_admin/geo_chart_helper"
+
 module RecordingStudioAdmin
   class ApplicationController < ActionController::Base
-    layout "application"
+    include RecordingStudio::RootSwitchable::ControllerSupport if defined?(RecordingStudio::RootSwitchable::ControllerSupport)
+    include RecordingStudioAdmin::AdminActionAuditing
+
+    layout :recording_studio_admin_layout
+
+    helper RecordingStudioAdmin::WidgetRenderingHelper
+    helper RecordingStudioAdmin::GeoChartHelper
 
     rescue_from RecordingStudioAdmin::DefinitionNotFound, with: :render_not_found
     rescue_from RecordingStudioAdmin::AuthorizationFailed, with: :render_forbidden
@@ -10,12 +19,14 @@ module RecordingStudioAdmin
     before_action :authenticate_recording_studio_admin!
     before_action :set_recording_studio_admin_current_actor
 
-    helper_method :recording_studio_admin_context, :page_nav_anchor_url, :preserve_anchor_url, :widget_link_url
+    helper_method :recording_studio_admin_context, :recording_studio_admin_surface, :page_nav_anchor_url,
+            :preserve_anchor_url, :widget_link_url
 
     private
 
     def authenticate_recording_studio_admin!
-      method_name = RecordingStudioAdmin.configuration.authentication_method
+      method_name = recording_studio_admin_surface.authentication_method ||
+                    RecordingStudioAdmin.configuration.authentication_method
       return send(method_name) if method_name && respond_to?(method_name, true)
 
       head :unauthorized
@@ -33,8 +44,13 @@ module RecordingStudioAdmin
         current_actor: current_actor,
         controller: self,
         routes: self,
-        view_context: view_context
+        view_context: view_context,
+        surface: recording_studio_admin_surface
       )
+    end
+
+    def recording_studio_admin_surface
+      @recording_studio_admin_surface ||= RecordingStudioAdmin.configuration.surface_for_request(request)
     end
 
     def page_nav_anchor_url(default: nil)
@@ -91,8 +107,13 @@ module RecordingStudioAdmin
     end
 
     def configured_current_actor
-      method_name = RecordingStudioAdmin.configuration.current_actor_method
+      method_name = recording_studio_admin_surface.current_actor_method ||
+                    RecordingStudioAdmin.configuration.current_actor_method
       send(method_name) if method_name && respond_to?(method_name, true)
+    end
+
+    def recording_studio_admin_layout
+      recording_studio_admin_surface.engine_layout || RecordingStudioAdmin.configuration.engine_layout
     end
 
     def render_not_found

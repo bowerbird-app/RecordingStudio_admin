@@ -2,7 +2,11 @@
 
 module RecordingStudioAdmin
   SectionRecordableDefinition = Data.define(:class_name, :find_or_create_by, :parent, :parent_recording, :action)
-  SectionWidgetUsage = Data.define(:key, :view_variant, :title, :chart_type, :chart_options, :params)
+  SectionWidgetUsage = Data.define(:key, :view_variant, :title, :chart_type, :chart_options, :params, :blast_radius) do
+    def effective_blast_radius(widget_definition)
+      RecordingStudioAdmin::BlastRadius.max(widget_definition&.blast_radius, blast_radius)
+    end
+  end
   SECTION_WIDGET_VIEW_VARIANTS = %i[card compact].freeze
   SECTION_AVAILABILITY_SCOPES = %i[all root descendant].freeze
   DEFAULT_SECTION_AVAILABILITY_SCOPE = :root
@@ -23,15 +27,25 @@ module RecordingStudioAdmin
         @links_value << Definitions::ButtonDefinition.new(name.to_sym, text, url, style, visible_if)
       end
 
-      def widget(key, view_variant: nil, title: nil, chart_type: nil, chart_options: nil, params: nil)
+      def widget(key, view_variant: nil, title: nil, chart_type: nil, chart_options: nil, params: nil,
+                 blast_radius: nil)
         normalized_view_variant = view_variant.nil? ? nil : normalize_view_variant(view_variant)
+        normalized_blast_radius = if blast_radius.nil?
+                                    nil
+                                  else
+                                    RecordingStudioAdmin::BlastRadius.normalize(
+                                      blast_radius,
+                                      owner: "Section widget #{key.inspect}"
+                                    )
+                                  end
         @widget_keys_value << SectionWidgetUsage.new(
           key: key.to_s,
           view_variant: normalized_view_variant,
           title: title,
           chart_type: chart_type,
           chart_options: normalize_widget_usage_hash(chart_options, field_name: :chart_options),
-          params: normalize_widget_usage_hash(params, field_name: :params)
+          params: normalize_widget_usage_hash(params, field_name: :params),
+          blast_radius: normalized_blast_radius
         )
       end
 
@@ -65,8 +79,8 @@ module RecordingStudioAdmin
           if entry.is_a?(SectionWidgetUsage)
             entry
           else
-            SectionWidgetUsage.new(key: entry.to_s, view_variant: nil, title: nil, chart_type: nil,
-                                   chart_options: nil, params: nil)
+              SectionWidgetUsage.new(key: entry.to_s, view_variant: nil, title: nil, chart_type: nil,
+                                     chart_options: nil, params: nil, blast_radius: nil)
           end
         end
       end

@@ -9,6 +9,7 @@ module RecordingStudioAdmin
         return resolve_screen_widget(definition, context) if definition.screen_key
 
         RecordingStudioAdmin::Authorization.authorize!(context)
+        RecordingStudioAdmin::BlastRadius.authorize!(definition, context: context, label: "Widget #{definition.key.inspect}")
         definition.resolve(context)
       end
 

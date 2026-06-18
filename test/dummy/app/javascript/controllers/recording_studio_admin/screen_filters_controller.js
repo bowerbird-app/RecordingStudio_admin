@@ -1,9 +1,15 @@
 import { Controller } from "@hotwired/stimulus"
 
+const SCREEN_FRAME_IDS = new Set(["screen-chart", "screen-table"])
+
 export default class extends Controller {
   connect() {
     this.boundDocumentClick = this.queueDateRangeSubmit.bind(this)
+    this.boundTurboFrameLoad = this.handleTurboFrameLoad.bind(this)
     document.addEventListener("click", this.boundDocumentClick, true)
+    document.addEventListener("turbo:frame-load", this.boundTurboFrameLoad)
+
+    this.scheduleViewportCleanup()
 
     // Ensure the visible trigger reflects the explicit preset key when one is present.
     // This prevents overlap cases (for example this_week vs last_3_days) from
@@ -13,6 +19,15 @@ export default class extends Controller {
 
   disconnect() {
     document.removeEventListener("click", this.boundDocumentClick, true)
+    document.removeEventListener("turbo:frame-load", this.boundTurboFrameLoad)
+  }
+
+  handleTurboFrameLoad(event) {
+    if (!SCREEN_FRAME_IDS.has(event.target?.id)) {
+      return
+    }
+
+    this.scheduleViewportCleanup()
   }
 
   queueDateRangeSubmit(event) {
@@ -86,6 +101,44 @@ export default class extends Controller {
       if (pickerRoot) {
         pickerRoot.dataset.flatPackFlatpackDatePickerPresetKeyValue = presetKey
       }
+    })
+  }
+
+  scheduleViewportCleanup() {
+    requestAnimationFrame(() => {
+      this.restoreOrphanedBodyScrollLock()
+      this.removeDetachedDatePickerPanels()
+    })
+  }
+
+  restoreOrphanedBodyScrollLock() {
+    const lockCount = Number(document.body.dataset.flatPackModalLockCount || "0")
+    if (lockCount <= 0) {
+      return
+    }
+
+    const visibleModal = document.querySelector("[data-controller~='flat-pack--modal']:not(.hidden)")
+    if (visibleModal) {
+      return
+    }
+
+    document.body.style.removeProperty("overflow")
+    document.body.style.removeProperty("padding-right")
+    delete document.body.dataset.flatPackModalLockCount
+  }
+
+  removeDetachedDatePickerPanels() {
+    const panels = document.body.querySelectorAll(".flat-pack-date-picker-panel")
+
+    panels.forEach((panel) => {
+      const trigger = panel.id ? document.querySelector(`[aria-controls='${CSS.escape(panel.id)}']`) : null
+      const isOpen = panel.getAttribute("aria-hidden") === "false"
+
+      if (isOpen || trigger) {
+        return
+      }
+
+      panel.remove()
     })
   }
 }

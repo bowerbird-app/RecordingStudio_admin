@@ -38,7 +38,7 @@ module RecordingStudioAdmin
       def available_enabled_items(enabled_keys)
         enabled_sections = enabled_keys.filter_map do |key|
           definition = RecordingStudioAdmin.sections[key.to_s]
-          definition if definition && visible?(definition)
+          definition if definition && visible?(definition) && blast_radius_allowed?(definition)
         end
 
         items = []
@@ -66,6 +66,7 @@ module RecordingStudioAdmin
         return unless resolved_link
 
         screen_definition = screen_definition_for_link(resolved_link)
+        return if screen_definition && !blast_radius_allowed?(screen_definition, container: definition)
         title = link_item_title(resolved_link, screen_definition)
         return if title.blank?
 
@@ -134,6 +135,7 @@ module RecordingStudioAdmin
         RecordingStudioAdmin.sections.values.filter_map do |definition|
           next unless visible?(definition)
           next unless available_for_placement?(definition)
+          next unless blast_radius_allowed?(definition)
 
           build_item(definition, type: :section, url: @context.admin_section_path(definition.key))
         end
@@ -143,6 +145,7 @@ module RecordingStudioAdmin
         RecordingStudioAdmin.screens.values.filter_map do |definition|
           next unless visible?(definition)
           next unless available_for_placement?(definition)
+          next unless blast_radius_allowed?(definition)
 
           build_item(definition, type: :screen, url: @context.admin_screen_path(definition.key))
         end
@@ -195,6 +198,11 @@ module RecordingStudioAdmin
         return true unless definition.visible_if
 
         definition.visible_if.call(@context)
+      end
+
+      def blast_radius_allowed?(definition, container: nil)
+        RecordingStudioAdmin::BlastRadius.allowed?(definition, context: @context, recording: @recording,
+                                                             container: container)
       end
 
       def available_for_placement?(definition)

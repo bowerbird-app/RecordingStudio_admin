@@ -40,4 +40,5 @@ class AdminLayoutWidthConsistencyTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "mx-auto flex w-full flex-col gap-6"
     refute_includes response.body, "max-w-6xl"
   end
+
 end

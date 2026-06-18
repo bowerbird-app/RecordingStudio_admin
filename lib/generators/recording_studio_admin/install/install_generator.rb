@@ -13,7 +13,7 @@ module RecordingStudioAdmin
 
       def mount_engine
         route %(mount RecordingStudioAccessible::Engine, at: "#{mount_path}/access")
-        route %(mount RecordingStudioAdmin::Engine, at: #{mount_path.inspect})
+        route %(recording_studio_admin_for :admin, at: #{mount_path.inspect})
       end
 
       def copy_initializer

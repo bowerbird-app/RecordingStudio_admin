@@ -14,5 +14,17 @@ module RecordingStudioAdmin
       yaml = app.config_for(:recording_studio_admin)
       RecordingStudioAdmin.configuration.merge!(yaml) if yaml.respond_to?(:each)
     end
+
+    initializer "recording_studio_admin.routing" do
+      ActionDispatch::Routing::Mapper.include RecordingStudioAdmin::Routing
+    end
+
+    initializer "recording_studio_admin.built_in_admin_activity_logs" do |app|
+      app.config.to_prepare do
+        RecordingStudioAdmin.register_screen(RecordingStudioAdmin::AdminActivityLogsScreen)
+        RecordingStudioAdmin.register_section(RecordingStudioAdmin::AdminActivityLogsSection)
+        RecordingStudioAdmin.register_widget(RecordingStudioAdmin::AdminActivityLogsActivityOverview)
+      end
+    end
   end
 end

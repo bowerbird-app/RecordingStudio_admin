@@ -57,18 +57,17 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Admin section"
     refute_includes response.body, 'data-flat-pack--icon-name-value="folder"'
     assert_includes response.body, 'href="http://www.example.com/"'
-    assert_includes response.body, "View API requests"
-    assert_includes response.body, 'href="/admin/screens/api_requests?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    assert_includes response.body, "View API"
+    assert_includes response.body, 'href="/admin/sections/api?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, ">More<"
     assert_includes response.body, "mx-auto flex w-full flex-col gap-6"
     refute_includes response.body, "max-w-6xl"
     refute_includes response.body, "Admin menu"
-    assert_includes response.body, "View most common errors"
-    assert_includes response.body, 'href="/admin/screens/most_common_errors?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    assert_includes response.body, "Most common errors"
     assert_includes response.body, "View users"
-    assert_includes response.body, 'href="/admin/screens/users?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
-    assert_includes response.body, "View background jobs"
-    assert_includes response.body, 'href="/admin/screens/background_jobs?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    assert_includes response.body, 'href="/admin/sections/users?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    assert_includes response.body, "View jobs"
+    assert_includes response.body, 'href="/admin/sections/jobs?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, "API activity"
     assert_includes response.body, "Open API requests"
     assert_includes response.body, "Open Most common errors"
@@ -128,13 +127,135 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Monitor API traffic, users, jobs, and failures"
     assert_includes response.body, 'data-flat-pack--icon-name-value="folder"'
     assert_includes response.body, "Users"
-    assert_includes response.body, "Explore user activity, sign-ins, reviews, and invitations"
+    assert_includes response.body, "Manage users and review access activity"
     assert_includes response.body, 'data-flat-pack--icon-name-value="user-group"'
+    assert_includes response.body, "Admin activity logs"
+    assert_includes response.body, "Audit admin CRUD changes and resource actions"
+    assert_includes response.body, 'href="/admin/sections/admin_activity_logs?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'href="http://www.example.com/"'
     assert_includes response.body, 'href="/admin/sections/root?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'href="/admin/sections/users?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, "mx-auto flex w-full flex-col gap-6"
     refute_includes response.body, "max-w-6xl"
+  end
+
+  test "admin activity logs section and screen render audit events chronologically" do
+    sign_in_admin_user
+
+    AdminAuditLog.delete_all
+    AdminAuditLog.create!(
+      event_id: "event-older",
+      resource_key: "users",
+      action_key: "update",
+      outcome: "performed",
+      actor_type: "User",
+      actor_id: "1",
+      record_type: "User",
+      record_id: "24",
+      request_id: "req-older",
+      occurred_at: 2.hours.ago,
+      metadata: { changes: { "email" => ["before@example.com", "after@example.com"] } }
+    )
+    AdminAuditLog.create!(
+      event_id: "event-newer",
+      resource_key: "pages",
+      action_key: "destroy",
+      outcome: "failed",
+      actor_type: "User",
+      actor_id: "2",
+      record_type: "Page",
+      record_id: "88",
+      request_id: "req-newer",
+      error_message: "Cannot destroy published page",
+      occurred_at: 30.minutes.ago,
+      metadata: {}
+    )
+
+    get "/admin/sections/admin_activity_logs", params: { anchor_url: root_url }
+
+    assert_response :success
+    assert_includes response.body, "Admin activity logs"
+    assert_includes response.body, "View admin activity logs"
+    assert_includes response.body, "Admin activity overview"
+    assert_includes response.body, 'href="/admin/screens/admin_activity_logs?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    body = CGI.unescapeHTML(response.body)
+    assert_includes body, 'data-flat-pack--chart-type-value="area"'
+    assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Admin events"'
+
+    get "/admin/screens/admin_activity_logs", params: { anchor_url: root_url }
+
+    assert_response :success
+  table_headers = css_select("th").map { |header| header.text.squish.sub(/\s+[↑↓]\z/, "") }
+
+    assert_includes response.body, "Activity over time"
+    assert_includes response.body, "Admin events"
+    assert_includes response.body, "User #2"
+    assert_includes response.body, "Page #88"
+    assert_includes response.body, "pages.destroy"
+    assert_includes response.body, "users.update"
+    assert_includes response.body, "Cannot destroy published page"
+    refute_includes response.body, "Admin activity overview"
+    assert_operator response.body.index("pages.destroy"), :<, response.body.index("users.update")
+    assert_equal "Occurred at", table_headers[0]
+    assert_equal "Actor", table_headers[1]
+    assert_equal "Action", table_headers[2]
+    assert_equal "Outcome", table_headers[3]
+    assert_equal "Record", table_headers[4]
+    body = CGI.unescapeHTML(response.body)
+    assert_includes body, 'data-flat-pack--chart-type-value="area"'
+    assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Admin events"'
+  end
+
+  test "admin sections index renders built-in search results across sections and screens" do
+    sign_in_admin_user
+
+    get "/admin/sections", params: { anchor_url: root_url, q: "user" }
+
+    assert_response :success
+    assert_includes response.body, 'id="admin-sections-discovery"'
+    assert_includes response.body, 'data-controller="flat-pack--auto-submit"'
+    assert_includes response.body, 'data-turbo-frame="admin-sections-discovery"'
+    assert_includes response.body, 'flat-pack--auto-submit#queueSubmit'
+    assert_includes response.body, "Search screens and sections"
+    assert_includes response.body, 'type="search"'
+    assert_includes response.body, 'value="user"'
+    assert_includes response.body, 'name="anchor_url"'
+    assert_includes response.body, "Users"
+    assert_includes response.body, "User activity"
+    assert_includes response.body, "User geography"
+    assert_includes response.body, "View users"
+    assert_includes response.body, "User reviews"
+    assert_includes response.body, "User invitations"
+    assert_includes response.body, ">Screen<"
+    assert_includes response.body, ">Section<"
+    assert_includes response.body, 'href="/admin/sections/users?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    assert_includes response.body, 'href="/admin/screens/user_activity?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    assert_includes response.body, 'href="/admin/screens/user_geography?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    assert_includes response.body, 'href="/admin/screens/user_reviews?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    assert_includes response.body, 'href="/admin/screens/user_invitations?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    assert_includes response.body, 'href="/admin/sections?anchor_url=http%3A%2F%2Fwww.example.com%2F&amp;q=user"'
+    assert_includes response.body, 'href="/admin/sections?anchor_url=http%3A%2F%2Fwww.example.com%2F&amp;q=user&amp;type=sections"'
+    assert_includes response.body, 'href="/admin/sections?anchor_url=http%3A%2F%2Fwww.example.com%2F&amp;q=user&amp;type=screens"'
+    assert_includes response.body, 'data-turbo-frame="admin-sections-discovery"'
+    assert_includes response.body, "Sections"
+    assert_includes response.body, "In Users"
+  end
+
+  test "admin sections index can filter search results to sections or screens only" do
+    sign_in_admin_user
+
+    get "/admin/sections", params: { anchor_url: root_url, q: "user", type: "screens" }
+
+    assert_response :success
+    assert_includes response.body, 'value="user"'
+    assert_includes response.body, 'name="type"'
+    assert_includes response.body, 'value="screens"'
+    assert_includes response.body, "In Users"
+    assert_includes response.body, "User sign-ins"
+    assert_includes response.body, "User reviews"
+    assert_includes response.body, "User invitations"
+    assert_includes response.body, ">Screen<"
+    refute_includes response.body, ">Section<"
   end
 
   test "generated admin root view lists available root sections" do
@@ -155,7 +276,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Monitor API traffic, users, jobs, and failures"
     assert_includes response.body, 'data-flat-pack--icon-name-value="folder"'
     assert_includes response.body, "Users"
-    assert_includes response.body, "Explore user activity, sign-ins, reviews, and invitations"
+    assert_includes response.body, "Manage users and review access activity"
     assert_includes response.body, 'data-flat-pack--icon-name-value="user-group"'
     assert_includes response.body, 'href="/admin/sections/root?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'href="/admin/sections/users?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
@@ -205,12 +326,14 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Users"
   assert_includes response.body, %(/admin/access/recordings/#{admin_root_recording_for_test.id}/accesses)
   refute_includes response.body, ">+ Access<"
-    assert_includes response.body, "View users overview"
+    assert_includes response.body, "View users"
+    assert_includes response.body, "View user activity"
     assert_includes response.body, "View user sign-ins"
     assert_includes response.body, "View review queue"
     assert_includes response.body, "View invitations"
     assert_includes response.body, ">More<"
     assert_includes response.body, 'href="/admin/screens/users?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    assert_includes response.body, 'href="/admin/screens/user_activity?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'href="/admin/screens/user_sign_ins?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'href="/admin/screens/user_reviews?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'href="/admin/screens/user_invitations?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
@@ -222,8 +345,10 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Review completion"
     assert_includes response.body, "Most recent users"
     assert_includes response.body, "Recent invites"
+    assert_includes response.body, "User activity geography"
     assert_includes response.body, "2 / 4 reviewed"
     assert_includes response.body, 'role="progressbar"'
+    assert_includes response.body, 'data-flat-pack--chart-type-value="scatter"'
     assert_includes response.body, "member-3@example.com"
     assert_includes response.body, 'data-flat-pack--icon-name-value="user-plus"'
   end
@@ -337,6 +462,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     }, headers: { "Turbo-Frame" => "screen-table" }
 
     assert_response :success
+    assert_includes response.body, 'id="screen-table"'
 
     selected_headers = css_select("th").map { |header| header.text.squish.sub(/\s+[↑↓]\z/, "") }
 
@@ -353,6 +479,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     }, headers: { "Turbo-Frame" => "screen-table" }
 
     assert_response :success
+    assert_includes response.body, 'id="screen-table"'
 
     fallback_headers = css_select("th").map { |header| header.text.squish.sub(/\s+[↑↓]\z/, "") }
 
@@ -383,7 +510,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "/v1/beta"
   end
 
-  test "users screen uses infinite scroll by default for table pagination" do
+  test "user activity screen uses infinite scroll by default for table pagination" do
     sign_in_admin_user
     UserActivity.delete_all
 
@@ -397,10 +524,10 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
       )
     end
 
-    get "/admin/screens/users", params: { anchor_url: root_url }
+    get "/admin/screens/user_activity", params: { anchor_url: root_url }
 
     assert_response :success
-    assert_includes response.body, "Users"
+    assert_includes response.body, "User activity"
     assert_includes response.body, "+100%"
     assert_includes response.body, "text-[var(--color-success-background-color)]"
     assert_includes response.body, "Table data"
@@ -415,23 +542,26 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "/admin/screens/user_reviews"
     assert_includes response.body, 'data-pagination-content="true"'
     assert_includes response.body, 'data-controller="flat-pack--pagination-infinite"'
-    assert_includes response.body, 'data-flat-pack--pagination-infinite-url-value="/admin/screens/users?'
+    assert_includes response.body, 'data-flat-pack--pagination-infinite-url-value="/admin/screens/user_activity?'
     assert_includes response.body, '&amp;page=2"'
-    refute_includes response.body, 'href="/admin/screens/users?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
+    refute_includes response.body, 'href="/admin/screens/user_activity?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     refute_includes response.body, ">End<"
 
-    get "/admin/screens/users", params: { anchor_url: root_url, page: 2 }, headers: { "X-Requested-With" => "XMLHttpRequest" }
+    get "/admin/screens/user_activity", params: { anchor_url: root_url, page: 2 }, headers: { "X-Requested-With" => "XMLHttpRequest" }
 
     assert_response :success
-    assert_includes response.body, "Activity over time"
-    assert_includes response.body, 'data-controller="flat-pack--chart"'
+    assert_includes response.body, 'id="screen-table"'
+    assert_includes response.body, "Table data"
     assert_includes response.body, 'data-controller="flat-pack--pagination-infinite"'
     assert_includes response.body, '&amp;page=3"'
+    refute_includes response.body, 'data-controller="flat-pack--chart"'
+    refute_includes response.body, "Activity over time"
     refute_includes response.body, 'id="screen-filters-form"'
 
-    get "/admin/screens/users", params: { anchor_url: root_url, page: 3 }, headers: { "X-Requested-With" => "XMLHttpRequest" }
+    get "/admin/screens/user_activity", params: { anchor_url: root_url, page: 3 }, headers: { "X-Requested-With" => "XMLHttpRequest" }
 
     assert_response :success
+    assert_includes response.body, 'id="screen-table"'
     assert_includes response.body, ">End<"
     refute_includes response.body, 'data-controller="flat-pack--pagination-infinite"'
   end
@@ -527,6 +657,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     body = CGI.unescapeHTML(response.body)
+    assert_includes response.body, 'id="screen-chart"'
 
     assert_includes body, "+100%"
     assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Errors"'
@@ -541,6 +672,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     body = CGI.unescapeHTML(response.body)
+    assert_includes response.body, 'id="screen-chart"'
 
     assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Errors","data":[]}]"'
   end
@@ -555,6 +687,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     }, headers: { "Turbo-Frame" => "screen-table" }
 
     assert_response :success
+    assert_includes response.body, 'id="screen-table"'
     assert_includes response.body, "Table data"
     assert_includes response.body, 'data-turbo-frame="screen-table"'
     assert_includes response.body, "Created at ↑"

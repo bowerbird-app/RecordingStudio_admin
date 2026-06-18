@@ -16,6 +16,7 @@ module RecordingStudioAdmin
 
         RecordingStudioAdmin.sections.values.filter_map do |definition|
           next unless visible?(definition)
+          next unless RecordingStudioAdmin::BlastRadius.allowed?(definition, context: @context)
 
           Results::ResolvedSectionListItem.new(
             key: definition.key,

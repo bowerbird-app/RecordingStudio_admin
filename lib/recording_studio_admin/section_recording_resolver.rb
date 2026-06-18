@@ -70,6 +70,24 @@ module RecordingStudioAdmin
         root_recording,
         parent_recording
       )
+    rescue StandardError => e
+      raise unless unique_conflict_error?(e)
+
+      find_recording(recordable, root_recording, parent_recording) || raise
+    end
+
+    def unique_conflict_error?(error)
+      current_error = error
+      while current_error
+        return true if defined?(ActiveRecord::RecordNotUnique) && current_error.is_a?(ActiveRecord::RecordNotUnique)
+
+        message = current_error.message.to_s.downcase
+        return true if message.include?("duplicate key") || message.include?("unique constraint")
+
+        current_error = current_error.cause
+      end
+
+      false
     end
 
     def resolved_section_recording(recordable, recording, root_recording, parent_recording)

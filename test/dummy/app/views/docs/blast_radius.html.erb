@@ -1,0 +1,97 @@
+<div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+  <%= render FlatPack::PageTitle::Component.new(
+    title: "Blast radius",
+    subtitle: "Use blast_radius to mark data or mutation scope explicitly and block wide-scope admin behavior in narrow contexts.",
+    variant: :h1
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Why this exists",
+    subtitle: "RecordingStudioAccessible answers who can access a recording. Blast radius answers how wide a definition is allowed to reach once access is granted.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+    code: <<~'CODE'
+      # Authorization boundary (existing):
+      RecordingStudioAccessible.authorized?(
+        actor: current_user,
+        recording: recording_studio_admin_context.access_recording,
+        role: RecordingStudioAdmin.configuration.required_access_role
+      )
+
+      # Risk boundary (new):
+      class UsersScreen < RecordingStudioAdmin::Screen
+        key "users"
+        blast_radius :site
+      end
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Blast radius values",
+    subtitle: "Definitions default to :recording when blast_radius is omitted.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+    code: <<~'CODE'
+      # :recording  -> current access recording only
+      # :root       -> current root/workspace tree
+      # :site       -> site-wide / cross-root scope
+
+      class WorkspaceStats < RecordingStudioAdmin::Screen
+        key "workspace_stats"
+        blast_radius :root
+      end
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Site-wide safety check",
+    subtitle: "Site-wide definitions resolve only when the current access recording matches the configured site admin recording.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+    code: <<~'CODE'
+      RecordingStudioAdmin.configure do |config|
+        config.site_admin_recording_resolver = lambda do |_context|
+          admin_root = AdminRoot.find_by(name: "Admin")
+          next unless admin_root
+
+          RecordingStudio::Recording.find_by(recordable: admin_root, trashed_at: nil)
+        end
+      end
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Nested guardrails",
+    subtitle: "Nested definitions cannot be wider than their container. This helps prevent accidental placement of dangerous actions on normal stats pages.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+    code: <<~'CODE'
+      class WorkspaceStats < RecordingStudioAdmin::Screen
+        key "workspace_stats"
+        blast_radius :recording
+
+        table do
+          # Blocked in this container because :site is wider than :recording
+          action :flag_email,
+                 text: "Flag email",
+                 method: :post,
+                 blast_radius: :site,
+                 url: "/admin/users/1/flag"
+        end
+      end
+    CODE
+  ) %>
+
+  <p class="text-sm text-(--body-muted-content-color)">
+    In short: blast radius is a defense-in-depth contract. It does not replace authorization. It prevents wide-scope
+    screens, widgets, and admin actions from resolving in contexts that should remain recording- or root-scoped.
+  </p>
+</div>

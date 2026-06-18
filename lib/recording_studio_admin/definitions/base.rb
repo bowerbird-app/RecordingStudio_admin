@@ -4,11 +4,13 @@ module RecordingStudioAdmin
   module Definitions
     class Base
       class << self
-        attr_reader :key_value, :title_value, :subtitle_value, :icon_value, :buttons_value, :visible_if_value
+        attr_reader :key_value, :title_value, :subtitle_value, :icon_value, :buttons_value, :visible_if_value,
+              :blast_radius_value
 
         def inherited(subclass)
           super
           subclass.instance_variable_set(:@buttons_value, [])
+          subclass.instance_variable_set(:@blast_radius_value, @blast_radius_value)
         end
 
         def key(value = nil)
@@ -38,6 +40,11 @@ module RecordingStudioAdmin
         def visible_if(callable = nil, &block)
           @visible_if_value = callable || block if callable || block
           @visible_if_value
+        end
+
+        def blast_radius(value = nil)
+          @blast_radius_value = RecordingStudioAdmin::BlastRadius.normalize(value, owner: name || "Definition") if value
+          @blast_radius_value || RecordingStudioAdmin::BlastRadius::DEFAULT
         end
 
         def evaluate(value, context, *)

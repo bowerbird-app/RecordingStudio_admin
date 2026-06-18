@@ -45,6 +45,23 @@ class RegistryTest < Minitest::Test
     end
   end
 
+  def test_register_screen_replaces_reloaded_definition_with_same_name
+    reloaded_screen = Class.new(RecordingStudioAdmin::Screen) do
+      key "example"
+      widget :summary do
+        title "Reloaded summary"
+        value { 2 }
+      end
+    end
+    reloaded_screen.define_singleton_method(:name) { "RegistryTest::ExampleScreen" }
+
+    @registry.register_screen(ExampleScreen)
+    @registry.register_screen(reloaded_screen)
+
+    assert_equal reloaded_screen, @registry.screen_for("example")
+    assert_equal reloaded_screen.widgets.fetch("example.widgets.summary"), @registry.widget_for("example.widgets.summary")
+  end
+
   def test_register_section
     @registry.register_section(RootSection)
 
@@ -57,6 +74,18 @@ class RegistryTest < Minitest::Test
     assert_raises(RecordingStudioAdmin::RegistryConflict) do
       @registry.register_section(DuplicateSection)
     end
+  end
+
+  def test_register_section_replaces_reloaded_definition_with_same_name
+    reloaded_section = Class.new(RecordingStudioAdmin::Section) do
+      key "root"
+    end
+    reloaded_section.define_singleton_method(:name) { "RegistryTest::RootSection" }
+
+    @registry.register_section(RootSection)
+    @registry.register_section(reloaded_section)
+
+    assert_equal reloaded_section, @registry.section_for("root")
   end
 
   def test_register_widget_conflict_raises_registry_conflict

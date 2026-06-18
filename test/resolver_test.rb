@@ -298,20 +298,22 @@ class ResolverTest < Minitest::Test
   def teardown
     RecordingStudioAdmin.instance_variable_set(:@registry, @original_registry)
     RecordingStudioAdmin.configuration.admin_sections_resolver = @original_admin_sections_resolver
+    RecordingStudioAdmin.configuration.surfaces.clear
   end
 
-  def allowed_context(params: {}, recording: nil)
+  def allowed_context(params: {}, recording: nil, current_root_recording: nil)
     RecordingStudioAdmin::Context.new(
       params: params,
       current_actor: :actor,
-      controller: allowed_context_controller(recording: recording)
+      controller: allowed_context_controller(recording: recording, current_root_recording: current_root_recording)
     )
   end
 
-  def allowed_context_controller(recording: nil)
+  def allowed_context_controller(recording: nil, current_root_recording: nil)
     recording ||= Object.new
     Class.new do
       define_method(:recording_studio_admin_access_recording) { recording }
+      define_method(:current_root_recording) { current_root_recording } unless current_root_recording.nil?
     end.new
   end
 
@@ -331,6 +333,42 @@ class ResolverTest < Minitest::Test
     assert_equal expected_recording, context.access_recording
   ensure
     RecordingStudioAdmin.configuration.access_recording_resolver = original_resolver
+  end
+
+  def test_context_access_recording_prefers_surface_resolver
+    original_resolver = RecordingStudioAdmin.configuration.access_recording_resolver
+    global_recording = Object.new
+    surface_recording = Object.new
+    RecordingStudioAdmin.configuration.access_recording_resolver = ->(_context) { global_recording }
+    surface = RecordingStudioAdmin.configuration.surface(:stats, path: "/stats") do |configured_surface|
+      configured_surface.access_recording_resolver = ->(_context) { surface_recording }
+    end
+
+    context = RecordingStudioAdmin::Context.new(surface: surface)
+
+    assert_equal surface_recording, context.access_recording
+  ensure
+    RecordingStudioAdmin.configuration.access_recording_resolver = original_resolver
+  end
+
+  def test_section_resolver_rejects_non_hash_widget_usage_values
+    context = allowed_context
+    resolver = RecordingStudioAdmin::Resolvers::SectionResolver.new("root", context)
+
+    error = assert_raises(RecordingStudioAdmin::InvalidDefinition) do
+      resolver.resolve_usage_hash(RootSection, "invalid", context, field_name: :params)
+    end
+
+    assert_includes error.message, "must resolve to a Hash"
+  end
+
+  def test_context_paths_fall_back_to_surface_path
+    surface = RecordingStudioAdmin.configuration.surface(:stats, path: "/stats")
+    context = RecordingStudioAdmin::Context.new(routes: Object.new, surface: surface)
+
+    assert_equal "/stats/sections/page_views", context.admin_section_path("page_views")
+    assert_equal "/stats/screens/page_views", context.admin_screen_path("page_views")
+    assert_equal "/stats/sections", context.admin_sections_path
   end
 
   def test_screen_resolution_fails_closed_without_access_recording
@@ -359,6 +397,20 @@ class ResolverTest < Minitest::Test
         RecordingStudioAdmin.resolve_screen(key: "requests", context: context)
       end
     end
+  end
+
+  def test_screen_resolution_fails_closed_when_current_root_does_not_match_access_root
+    access_root_recording = Struct.new(:root_recording).new(nil)
+    current_root_recording = Object.new
+    context = allowed_context(recording: access_root_recording, current_root_recording: current_root_recording)
+
+    error = assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
+      with_singleton_stub(RecordingStudioAccessible, :authorized?, ->(**) { flunk "access check should not run" }) do
+        RecordingStudioAdmin.resolve_screen(key: "requests", context: context)
+      end
+    end
+
+    assert_includes error.message, "Current root does not match"
   end
 
   def test_available_sections_authorizes_explicit_recording
@@ -898,6 +950,81 @@ class ResolverTest < Minitest::Test
     refute_includes items.map(&:key), "metadata_only"
   end
 
+  def test_available_widgets_requires_authorization
+    assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
+      RecordingStudioAdmin.available_widgets(context: RecordingStudioAdmin::Context.new)
+    end
+  end
+
+  def test_available_widgets_returns_section_widget_metadata_without_resolving_widget_data
+    root_recording = TestRecording.new(nil)
+
+    widgets = with_access_allowed do
+      RecordingStudioAdmin.available_widgets(
+        context: allowed_context(recording: root_recording),
+        recording: root_recording,
+        placement: :root,
+        include: :section_widgets
+      )
+    end
+
+    assert_equal %w[requests.widgets.total requests.widgets.traffic_preview], widgets.map(&:key)
+    assert_equal [:section_widget, :section_widget], widgets.map(&:source)
+    assert_equal ["root", "root"], widgets.map(&:section_key)
+    assert_equal ["requests", "requests"], widgets.map(&:screen_key)
+    assert_equal [:compact, nil], widgets.map(&:view_variant)
+    assert_equal({}, widgets.first.params)
+
+    traffic_preview = widgets.last
+    assert_equal "Weekly traffic", traffic_preview.title
+    assert_equal :chart, traffic_preview.type
+    assert_equal :area, traffic_preview.chart_type
+    assert_equal({ duration: 3.days, group_by: :week, limit: 5 }, traffic_preview.params)
+    assert_equal root_recording, traffic_preview.recording
+    assert_nil traffic_preview.recordable
+    assert_equal "default", traffic_preview.surface_key
+  end
+
+  def test_available_widgets_can_include_linked_screen_widgets
+    root_recording = TestRecording.new(nil)
+
+    widgets = with_access_allowed do
+      RecordingStudioAdmin.available_widgets(
+        context: allowed_context(recording: root_recording),
+        recording: root_recording,
+        placement: :root,
+        include: :linked_screen_widgets
+      )
+    end
+
+    assert_includes widgets.map(&:key), "requests.widgets.total"
+    assert_includes widgets.map(&:key), "requests.widgets.recent_statuses"
+    assert_equal [:linked_screen_widget], widgets.map(&:source).uniq
+    assert_equal ["root"], widgets.map(&:section_key).uniq
+  end
+
+  def test_available_widgets_prefers_recordable_enabled_admin_sections
+    recording = TestRecordingWithRecordable.new(AdminSectionEnabledRecordable.new, nil)
+
+    widgets = with_access_allowed do
+      RecordingStudioAdmin.available_widgets(context: allowed_context(recording: recording), recording: recording)
+    end
+
+    assert_includes widgets.map(&:key), "requests.widgets.total"
+    assert_equal ["root"], widgets.map(&:section_key).uniq
+    refute_includes widgets.map(&:section_key), "everywhere"
+  end
+
+  def test_context_available_admin_widgets_uses_context_access_recording
+    root_recording = TestRecording.new(nil)
+    context = allowed_context(recording: root_recording)
+
+    widgets = with_access_allowed { context.available_admin_widgets(placement: :root, include: :section_widgets) }
+
+    assert_equal %w[requests.widgets.total requests.widgets.traffic_preview], widgets.map(&:key)
+    assert_equal [root_recording], widgets.map(&:recording).uniq
+  end
+
   def test_configured_admin_sections_resolver_replaces_recordable_declarations
     recording = TestRecordingWithRecordable.new(AdminSectionEnabledRecordable.new, nil)
     RecordingStudioAdmin.configuration.admin_sections_resolver = lambda do |recording:, recordable:, context:|
@@ -1091,6 +1218,57 @@ class ResolverTest < Minitest::Test
           assert_equal 1, recorded_events.size
           assert_equal root_recording, recorded_events.first.fetch(:root_recording)
           assert_equal root_recording, recorded_events.first.fetch(:parent_recording)
+        end
+      end
+    end
+  ensure
+    RecordingStudio.__send__(:remove_const, :Recording) if RecordingStudio.const_defined?(:Recording, false)
+    RecordingStudio.const_set(:Recording, previous_recording_constant) if previous_recording_constant_defined
+  end
+
+  def test_backed_section_recovers_when_recording_insert_conflicts
+    parent_recordable = Object.new
+    root_recording = Object.new
+    child_recording = Object.new
+    record_attempts = 0
+    stored_recording = nil
+    previous_recording_constant_defined = RecordingStudio.const_defined?(:Recording, false)
+    previous_recording_constant = RecordingStudio.const_get(:Recording) if previous_recording_constant_defined
+    recording_class = Class.new do
+      define_singleton_method(:unscoped) { self }
+      define_singleton_method(:find_by) { |_attributes| stored_recording }
+    end
+
+    backed_section = Class.new(RecordingStudioAdmin::Section) do
+      key "backed_insert_conflict"
+      title "Backed insert conflict"
+      recordable FakeRecordable,
+                 find_or_create_by: -> { { name: "Section Area" } },
+                 parent: -> { parent_recordable }
+    end
+
+    RecordingStudioAdmin.register_section(backed_section)
+    RecordingStudio.const_set(:Recording, recording_class)
+
+    root_recording_for = lambda do |recordable|
+      root_recording if recordable.equal?(parent_recordable)
+    end
+
+    with_singleton_stub(RecordingStudio, :root_recording_for, root_recording_for) do
+      with_singleton_stub(RecordingStudio, :root_recording_or_self, ->(recording) { recording }) do
+        with_singleton_stub(RecordingStudio, :record!, lambda { |**_attributes|
+          record_attempts += 1
+          stored_recording = child_recording
+          raise "duplicate key value violates unique constraint"
+        }) do
+          context = allowed_context
+
+          result = with_access_allowed do
+            RecordingStudioAdmin.resolve_section(key: "backed_insert_conflict", context: context)
+          end
+
+          assert_equal child_recording, result.recording
+          assert_equal 1, record_attempts
         end
       end
     end

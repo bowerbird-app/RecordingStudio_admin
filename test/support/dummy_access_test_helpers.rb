@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 module DummyAccessTestHelpers
-  def grant_admin_access_for_test!(recording:, actor:)
+  def grant_admin_access_for_test!(recording:, actor:, role: :admin)
     previous_access_authorizer = RecordingStudioAccessible.configuration.access_management_authorizer
     RecordingStudioAccessible.configuration.access_management_authorizer = ->(recording:, **) { recording.present? }
 
     result = RecordingStudioAccessible.grant_access(
       recording: recording,
       actor: actor,
-      role: :admin,
+      role: role,
       manager_actor: actor
     )
 

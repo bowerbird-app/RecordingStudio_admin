@@ -16,5 +16,6 @@ class RecordingStudioAdminTest < Minitest::Test
     assert_respond_to RecordingStudioAdmin, :register_section
     assert_respond_to RecordingStudioAdmin, :resolve_screen
     assert_respond_to RecordingStudioAdmin, :resolve_widget
+    assert_respond_to RecordingStudioAdmin, :available_widgets
   end
 end

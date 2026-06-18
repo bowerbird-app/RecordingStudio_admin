@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Admin::BaseController < ApplicationController
+  include RecordingStudioAdmin::AdminActionAuditing
+
   layout "admin"
 
   before_action :authenticate_admin_user!

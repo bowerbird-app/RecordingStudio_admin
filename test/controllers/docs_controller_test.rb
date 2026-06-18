@@ -37,6 +37,8 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "bin/rails generate recording_studio_admin:install"
     assert_includes response.body, "RecordingStudioAdmin.configure do |config|"
     assert_includes response.body, "/admin/sections/:key"
+    assert_includes response.body, "admin_activity_logs"
+    assert_includes response.body, "AdminAuditLog"
   end
 
   test "admin access page renders successfully" do
@@ -197,7 +199,20 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "widget_link_url"
   end
 
+  test "blast radius page renders successfully" do
+    get docs_blast_radius_path
+
+    assert_response :success
+    assert_select "h1", text: "Blast radius"
+    assert_includes response.body, "blast_radius :site"
+    assert_includes response.body, "config.site_admin_recording_resolver"
+    assert_includes response.body, "Nested guardrails"
+    assert_includes response.body, "RecordingStudioAccessible.authorized?"
+  end
+
   test "generators page renders successfully" do
+    switch_to_root!(RecordingStudio.root_recording_for(AdminRoot.find_or_create_by!(name: "Admin")))
+
     get admin_generators_path
 
     assert_response :success
@@ -210,22 +225,29 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Generated files"
     assert_includes response.body, "config/initializers/recording_studio_admin.rb"
     assert_includes response.body, "app/views/admin/root/show.html.erb"
+    assert_includes response.body, "app/models/admin_audit_log.rb"
+    assert_includes response.body, "create_admin_audit_logs"
     assert_select "div.fp-section-title-anchor", minimum: 2
   end
 
-  test "sidebar includes documentation links" do
+  test "sidebar links match mounted surfaces and docs destinations" do
     get docs_install_path
 
-    assert_select %(a[href="#{docs_install_path}"]), text: /Install/
-    assert_select %(a[href="#{docs_admin_access_path}"]), text: /Admin access/
-    assert_select %(a[href="#{docs_admin_root_path}"]), text: /Admin root/
-    assert_select %(a[href="#{docs_admin_section_path}"]), text: /Admin section/
-    assert_select %(a[href="#{docs_config_path}"]), text: /Config/
+    assert_select %(a[href="#{root_path}"]), text: /Workspace home/
+    assert_select %(a[href="#{admin_root_path}"]), text: /Admin root page/
+    assert_select 'a[href="/admin"]', text: /Mounted admin/
+    assert_select %(a[href="#{stats_root_path}"]), text: /Stats root/
+    assert_select %(a[href="#{docs_install_path}"]), text: /Install guide/
+    assert_select %(a[href="#{docs_admin_access_path}"]), text: /Access flow/
+    assert_select %(a[href="#{docs_admin_root_path}"]), text: /AdminRoot recordable/
+    assert_select %(a[href="#{docs_admin_section_path}"]), text: /Admin sections/
+    assert_select %(a[href="#{docs_config_path}"]), text: /Configuration/
     assert_select %(a[href="#{docs_recordable_types_path}"]), text: /Recordable types/
     assert_select %(a[href="#{docs_recordings_tree_path}"]), text: /Recordings tree/
-    assert_select %(a[href="#{docs_gem_views_path}"]), text: /Gem Views/
-    assert_select %(a[href="#{docs_methods_path}"]), text: /Methods/
-    assert_select %(a[href="#{docs_helpers_path}"]), text: /Helpers/
+    assert_select %(a[href="#{docs_gem_views_path}"]), text: /Engine views/
+    assert_select %(a[href="#{docs_methods_path}"]), text: /Public API/
+    assert_select %(a[href="#{docs_helpers_path}"]), text: /View helpers/
+    assert_select %(a[href="#{docs_blast_radius_path}"]), text: /Blast radius/
     assert_select %(a[href="#{admin_generators_path}"]), text: /Generators/
   end
 
@@ -265,6 +287,17 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
   def recordable_type_summary(recording_count, recordable_count, _recording_label, _recordable_label)
     "#{recording_count} #{'recording'.pluralize(recording_count)} #{recordable_count} " \
       "#{'recordable'.pluralize(recordable_count)}"
+  end
+
+  def switch_to_root!(root_recording)
+    patch "/recording_studio_root_switchable/v1/root_switch", params: {
+      scope: "all_workspaces",
+      root_switch: {
+        root_recording_id: root_recording.id,
+        return_to: "/"
+      }
+    }
+    follow_redirect!
   end
 
   def record_child(recordable, root_recording, parent_recording)

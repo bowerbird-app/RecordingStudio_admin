@@ -35,12 +35,21 @@ class AdminRootGeneratorTest < Minitest::Test
 
   def test_generated_admin_root_includes_accessible_children
     template = File.read(generator_template_path("app/models/admin_root.rb"))
+    admin_audit_log_template = File.read(generator_template_path("app/models/admin_audit_log.rb"))
+    audit_migration_template = File.read(generator_template_path("db/migrate/create_admin_audit_logs.rb"))
+    generator_source = File.read(File.join(ROOT, "lib/generators/recording_studio_admin/admin_root/admin_root_generator.rb"))
 
     assert_includes template, "include RecordingStudioAccessible::AllowsAccessibleChildren"
     assert_includes template, "include RecordingStudioAdmin::AllowsAdminSections"
     assert_includes template, "recording_studio_accessible_children :access"
     assert_includes template, "recording_studio_admin_sections do"
     assert_includes template, "section :root"
+    assert_includes template, "section :admin_activity_logs"
+    assert_includes admin_audit_log_template, "class AdminAuditLog < ApplicationRecord"
+    assert_includes admin_audit_log_template, "def self.record_admin_action!(event)"
+    assert_includes audit_migration_template, "create_table :admin_audit_logs"
+    refute_includes generator_source, 'template "app/admin/admin_activity_logs/admin_activity_logs/screen.rb"'
+    refute_includes generator_source, 'template "app/admin/admin_activity_logs/section.rb"'
   end
 
   def test_admin_root_route_does_not_conflict_with_default_engine_mount

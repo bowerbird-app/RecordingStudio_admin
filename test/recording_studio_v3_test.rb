@@ -89,6 +89,9 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
     workspace_name = unique_name("Section Parent Workspace")
     folder_name = unique_name("Section Folder")
     original_registry = RecordingStudioAdmin.instance_variable_get(:@registry)
+    original_workspace_sections_definition = Workspace.instance_variable_get(
+      :@recording_studio_admin_sections_definition
+    )
     parent_workspace = Workspace.find_or_create_by!(name: workspace_name)
     parent_recording = RecordingStudio.root_recording_for(parent_workspace)
     actor = User.find_or_create_by!(email: "backed-section-#{SecureRandom.hex(4)}@example.com") do |record|
@@ -96,6 +99,11 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
       record.password_confirmation = "Password123!"
     end
     grant_admin_access_for_test!(recording: parent_recording, actor: actor)
+
+    Workspace.recording_studio_admin_sections do
+      section :stats
+      section section_key.to_sym
+    end
 
     section_class = Class.new(RecordingStudioAdmin::Section) do
       key section_key
@@ -124,6 +132,10 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
     assert_equal parent_recording, first_result.recording.parent_recording
     assert_equal 1, RecordingStudio::Recording.where(recordable: first_result.recordable, trashed_at: nil).count
   ensure
+    Workspace.instance_variable_set(
+      :@recording_studio_admin_sections_definition,
+      original_workspace_sections_definition
+    )
     RecordingStudioAdmin.instance_variable_set(:@registry, original_registry)
   end
 

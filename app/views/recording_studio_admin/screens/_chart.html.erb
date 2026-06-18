@@ -51,12 +51,27 @@
 
         <% screen_chart_options = (screen.chart.options || {}) %>
 
-        <%= render FlatPack::Chart::Component.new(
-          type: screen.chart.type,
-          series: screen.chart.series,
-          options: screen_chart_options,
-          card: false
-        ) %>
+        <% screen_chart_type = RecordingStudioAdmin::Widgets::Presenter.renderable_chart_type(screen.chart.type, default: :line) %>
+
+        <% if screen_chart_type == :geo %>
+          <% RecordingStudioAdmin::FlatPackGeoChartSupport.install! %>
+          <% geo_height = screen_chart_options.dig(:chart, :height) || 320 %>
+          <%= render FlatPack::Chart::Component.new(
+            type: :geo,
+            series: recording_studio_flatpack_geo_series(screen.chart.series),
+            options: recording_studio_flatpack_geo_options(screen_chart_options, marker_size: 8),
+            card: false,
+            height: geo_height,
+            style: recording_studio_flatpack_geo_container_style
+          ) %>
+        <% else %>
+          <%= render FlatPack::Chart::Component.new(
+            type: screen_chart_type,
+            series: screen.chart.series,
+            options: screen_chart_options,
+            card: false
+          ) %>
+        <% end %>
       <% end %>
     <% end %>
 <% end %>

@@ -32,7 +32,7 @@ bin/rails generate recording_studio_admin:install
 By default the generator:
 
 1. Mounts `RecordingStudioAccessible::Engine` at `/admin/access`
-2. Mounts `RecordingStudioAdmin::Engine` at `/admin`
+2. Mounts a named `RecordingStudioAdmin` surface at `/admin`
 3. Creates `config/initializers/recording_studio_admin.rb`
 4. Adds Tailwind `@source` entries for RecordingStudioAdmin and FlatPack, when Tailwind is present
 
@@ -50,12 +50,14 @@ bin/rails generate recording_studio_admin:install --mount_path=/reporting/admin
 
 ### Routes
 
-The generator adds explicit mounts:
+The generator adds explicit mounts. The `recording_studio_admin_for` helper mounts the engine and registers the route as a named admin surface:
 
 ```ruby
 mount RecordingStudioAccessible::Engine, at: "/admin/access"
-mount RecordingStudioAdmin::Engine, at: "/admin"
+recording_studio_admin_for :admin, at: "/admin"
 ```
+
+That exact route output relies on the surface default `root_section` of `:root`. Pass `root_section:` yourself only when you want a different surface root.
 
 ### Initializer
 
@@ -79,24 +81,54 @@ end
 
 That split is deliberate: configuration belongs in `RecordingStudioAdmin.configure`, while screen and section registration should happen inside `Rails.application.config.to_prepare` so development reloads remain safe.
 
+`recording_studio_admin_for` does two things at once:
+
+1. mounts `RecordingStudioAdmin::Engine` at the given path
+2. registers a named surface with that path and root section
+
+Per-surface overrides then belong in `config.surface` blocks, not in separate route declarations.
+
+Additional surfaces can be mounted for other recordables without defining routes for each section:
+
+```ruby
+recording_studio_admin_for :stats, at: "/stats", root_section: :page_views
+
+RecordingStudioAdmin.configure do |config|
+  config.surface :stats do |surface|
+    surface.access_recording_resolver = ->(context) { context.controller.current_user_recording }
+  end
+end
+```
+
+The `/stats` surface then exposes whatever sections are enabled on the resolved recording's recordable type.
+
 ### Tailwind
 
 When `app/assets/tailwind/application.css` exists, the generator injects sources for the engine and FlatPack components:
 
 ```css
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-primary-hover: var(--color-primary-hover);
+  --color-primary-text: var(--color-primary-text);
+  --color-danger-background-color: var(--color-danger-background-color);
+  --color-danger-text-color: var(--color-danger-text-color);
+}
+
 @source "../../vendor/bundle/**/recording_studio_admin/app/views/**/*.erb";
 @source "../../vendor/bundle/**/recording_studio_admin/app/components/**/*.{rb,erb}";
 @source "../../vendor/bundle/**/flat_pack/app/components/**/*.{rb,erb}";
+@source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/flatpack-*/app/components/**/*.{rb,erb}";
 ```
 
-These are required so Tailwind can see classes used by the engine and FlatPack.
+The `@theme inline` bridge lets Tailwind semantic utilities reuse FlatPack theme tokens, and the extra `/usr/local/bundle` source covers bundled gem paths in containerized installs.
 
 ## Manual installation
 
 If you do not want to run the generator, the minimum host-app setup is:
 
 1. Mount `RecordingStudioAccessible::Engine`
-2. Mount `RecordingStudioAdmin::Engine`
+2. Mount a `RecordingStudioAdmin` surface
 3. Add a `RecordingStudioAdmin.configure` block
 4. Register at least one screen or section from `Rails.application.config.to_prepare`
 
@@ -105,7 +137,7 @@ Example:
 ```ruby
 Rails.application.routes.draw do
   mount RecordingStudioAccessible::Engine, at: "/admin/access"
-  mount RecordingStudioAdmin::Engine, at: "/admin"
+  recording_studio_admin_for :admin, at: "/admin"
 end
 ```
 
@@ -117,10 +149,15 @@ RecordingStudioAdmin.configure do |config|
 end
 
 Rails.application.config.to_prepare do
-  RecordingStudioAdmin.register_screen(AdminScreens::ApiRequests)
-  RecordingStudioAdmin.register_section(AdminScreens::RootSection)
+  load Rails.root.join("app/admin/manifest.rb")
+
+  AdminScreens.load!
+  AdminScreens::Root.register!
+  AdminScreens::Api.register!
 end
 ```
+
+If your app follows the generated initializer template more closely, keep the `to_prepare` block in `config/initializers/recording_studio_admin.rb` instead of introducing a second registration entrypoint.
 
 ## Register definitions safely
 
@@ -128,9 +165,12 @@ Always register screens and sections from a `to_prepare` block:
 
 ```ruby
 Rails.application.config.to_prepare do
-  RecordingStudioAdmin.register_screen(AdminScreens::ApiRequests)
-  RecordingStudioAdmin.register_screen(AdminScreens::Users)
-  RecordingStudioAdmin.register_section(AdminScreens::RootSection)
+  load Rails.root.join("app/admin/manifest.rb")
+
+  AdminScreens.load!
+  AdminScreens::Root.register!
+  AdminScreens::Api.register!
+  AdminScreens::UsersArea.register!
 end
 ```
 
@@ -139,6 +179,7 @@ Why this matters:
 - Rails reloads app classes in development
 - the registry keeps object identity and key conflict checks
 - `to_prepare` ensures the current class objects are registered after reload
+- manifest loading keeps per-screen files, widgets, and capability-specific `register!` calls organized together
 
 ## Validate the install
 
@@ -163,6 +204,8 @@ bin/rails generate recording_studio_admin:admin_root
 
 This generator creates app-owned scaffolding such as `AdminRoot`, `Admin::BaseController`, admin layout files, and the related migration.
 
+It also creates `AdminAuditLog` storage plus the `admin_audit_logs` migration, and enables the built-in `admin_activity_logs` section on `AdminRoot`. The section, screen, and widget definitions for Admin activity logs stay gem-owned so gem upgrades can update that UI without regenerating host-app files.
+
 Use it when the host app needs a real admin root recordable. Do not use it just to define screens; screen and section DSL classes work without the admin root generator.
 
 ## Recommended file layout
@@ -171,27 +214,57 @@ A practical host-app layout is:
 
 ```text
 app/
-  admin_screens/
-    api_requests.rb
-    users.rb
-    root_section.rb
+  admin/
+    manifest.rb
+    api/
+      manifest.rb
+      section.rb
+      api_requests/
+        screen.rb
+        chart.rb
+        table.rb
+        widgets/
+          api_activity.rb
+          monthly_api_usage.rb
+      api_errors/
+        screen.rb
+        chart.rb
+        table.rb
+        widgets/
+          recent_failures.rb
+    users/
+      manifest.rb
+      section.rb
+      users/
+        screen.rb
+        chart.rb
+        table.rb
+        widgets/
+          active_users.rb
+          review_completion.rb
+    root/
+      manifest.rb
+      section.rb
 config/
   initializers/
     recording_studio_admin.rb
 ```
 
-Keep screen and section definitions in app-owned files. Keep registration in the initializer.
+Keep admin definitions in app-owned capability folders. Use the top-level manifest to reload files, and keep the `to_prepare` registration entrypoint in the initializer.
 
 ## Reference implementation
 
 The dummy app is the best full-stack example in this repository:
 
+- `test/dummy/app/admin/manifest.rb`
 - `test/dummy/config/initializers/recording_studio_admin.rb`
 - `test/dummy/config/routes.rb`
 
 It demonstrates:
 
 - access recording resolution
+- manifest-based file loading
+- per-capability `register!` entrypoints
 - multiple screen definitions
 - section-backed recordables
 - generated admin-root search over sections and screens

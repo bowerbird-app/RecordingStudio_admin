@@ -19,10 +19,11 @@ module RecordingStudioAdmin
 
     attr_reader :key, :local_key, :screen_key
 
-    def initialize(local_key = nil, screen_key: nil, registry_prefix: nil, &block)
+    def initialize(local_key = nil, screen_key: nil, registry_prefix: nil, blast_radius: nil, &block)
       @local_key = local_key&.to_s
       @screen_key = screen_key&.to_s
       @key = registry_prefix || [@screen_key, "widgets", @local_key].compact.join(".")
+      @blast_radius = RecordingStudioAdmin::BlastRadius.normalize(blast_radius, owner: "Widget #{key.inspect}") if blast_radius
       @type = :number
       @show_metric = true
       @show_change = true
@@ -36,6 +37,11 @@ module RecordingStudioAdmin
         instance_variable_set("@#{name}", block || value) if value || block
         instance_variable_get("@#{name}")
       end
+    end
+
+    def blast_radius(value = nil)
+      @blast_radius = RecordingStudioAdmin::BlastRadius.normalize(value, owner: "Widget #{key.inspect}") if value
+      @blast_radius || RecordingStudioAdmin::BlastRadius::DEFAULT
     end
 
     def resolve(context)
