@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "digest"
+
 module RecordingStudioAdmin
   module WidgetRenderingHelper
     def recording_studio_widget_presenter(widget, link_policy: nil)
@@ -15,6 +17,45 @@ module RecordingStudioAdmin
 
       render partial: "recording_studio_admin/shared/widget",
              locals: { widget: renderable_widget, presenter: presenter }
+    end
+
+    def render_recording_studio_async_widget_frame(widget, parent:, parent_key:)
+      render partial: "recording_studio_admin/shared/widget_async_frame",
+             locals: { widget: widget, parent: parent, parent_key: parent_key }
+    end
+
+    def recording_studio_widget_frame_id(parent:, parent_key:, widget:)
+      digest = Digest::SHA256.hexdigest([
+        parent,
+        parent_key,
+        widget.key,
+        recording_studio_widget_usage_variant_param(widget)
+      ].join(":"))[0, 16]
+      "recording-studio-admin-widget-#{parent}-#{digest}"
+    end
+
+    def recording_studio_widget_frame_src(parent:, parent_key:, widget:)
+      query = request.query_parameters.except(:controller, :action, "controller", "action")
+      query[:widget_view_variant] = recording_studio_widget_usage_variant_param(widget)
+
+      if parent.to_sym == :section
+        section_widget_path(parent_key, widget.key, query)
+      else
+        screen_widget_path(parent_key, widget.key, query)
+      end
+    end
+
+    def recording_studio_widget_usage_variant_param(widget)
+      widget.view_variant.presence || "__default__"
+    end
+
+    def recording_studio_async_widgets_data
+      async_widgets = RecordingStudioAdmin.configuration.async_widgets
+      {
+        controller: "recording-studio-admin--async-widgets",
+        recording_studio_admin__async_widgets_max_concurrent_value: async_widgets.max_concurrent_requests,
+        recording_studio_admin__async_widgets_retry_count_value: async_widgets.retry_count
+      }
     end
 
     def render_recording_studio_widget_body(widget)

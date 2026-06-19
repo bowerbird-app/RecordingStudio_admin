@@ -5,6 +5,14 @@ RecordingStudioAdmin.configure do |config|
   config.engine_layout = "application"
   config.authentication_method = :authenticate_user!
   config.current_actor_method = :current_user
+
+  # Progressive widget loading keeps the page shell fast and lets widgets load
+  # through engine-owned endpoints with bounded browser concurrency. It is on by
+  # default; uncomment the next line only if you need synchronous widget renders.
+  # config.async_widgets.enabled = false
+  # config.async_widgets.max_concurrent_requests = 4
+  # config.async_widgets.retry_count = 1
+
   config.access_recording_resolver = lambda do |context|
     # Must return the RecordingStudio::Recording that owns the current admin screen context.
     # Example: context.controller.current_root_recording if your app exposes one.

@@ -33,6 +33,10 @@ module AdminScreens
     api/api_requests/chart
     api/api_requests/table
     api/api_requests/widgets/api_activity
+    api/api_requests/widgets/api_activity_column
+    api/api_requests/widgets/api_activity_donut
+    api/api_requests/widgets/api_activity_radar
+    api/api_requests/widgets/api_activity_gauge
     api/api_requests/widgets/monthly_api_usage
     api/api_errors/screen
     api/api_errors/chart
@@ -47,10 +51,15 @@ module AdminScreens
     users/users/screen
     users/users/resource
     users/users/table
+    users/users/chart
+    users/users/widgets/active_users
+    users/users/widgets/review_completion
+    users/users/widgets/most_recent_users
     users/user_activity/screen
     users/user_activity/chart
     users/user_activity/table
     users/user_activity/widgets/active_users
+    users/user_activity/widgets/total_activities
     users/user_activity/widgets/review_completion
     users/user_activity/widgets/most_recent_users
     users/user_sign_ins/screen

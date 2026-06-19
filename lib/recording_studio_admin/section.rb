@@ -79,8 +79,8 @@ module RecordingStudioAdmin
           if entry.is_a?(SectionWidgetUsage)
             entry
           else
-              SectionWidgetUsage.new(key: entry.to_s, view_variant: nil, title: nil, chart_type: nil,
-                                     chart_options: nil, params: nil, blast_radius: nil)
+            SectionWidgetUsage.new(key: entry.to_s, view_variant: nil, title: nil, chart_type: nil,
+                                   chart_options: nil, params: nil, blast_radius: nil)
           end
         end
       end

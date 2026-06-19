@@ -45,7 +45,11 @@ module RecordingStudioAdmin
 
         unknown_actions = route_actions - %w[show edit update]
         raise ArgumentError, "unsupported actions: #{unknown_actions.join(', ')}" if unknown_actions.any?
-        raise ArgumentError, "update requires edit authorization" if route_actions.include?("update") && !route_actions.include?("edit")
+
+        return unless route_actions.include?("update") && !route_actions.include?("edit")
+
+        raise ArgumentError,
+              "update requires edit authorization"
       end
 
       def copy_resource_definition
@@ -53,7 +57,8 @@ module RecordingStudioAdmin
       end
 
       def copy_controller
-        template "app/controllers/resource_controller.rb", "app/controllers/#{namespace_name}/#{controller_file_name}_controller.rb"
+        template "app/controllers/resource_controller.rb",
+                 "app/controllers/#{namespace_name}/#{controller_file_name}_controller.rb"
       end
 
       def copy_views
@@ -62,7 +67,11 @@ module RecordingStudioAdmin
       end
 
       def add_route
-        route %(namespace :#{namespace_name} do\n    resources :#{route_resource_name}, only: %i[#{route_actions.join(' ')}]\n  end)
+        route <<~RUBY.chomp
+          namespace :#{namespace_name} do
+            resources :#{route_resource_name}, only: %i[#{route_actions.join(' ')}]
+          end
+        RUBY
       end
 
       def show_table_snippet
@@ -146,11 +155,11 @@ module RecordingStudioAdmin
       end
 
       def safe_identifier?(value)
-        value.to_s.match?(%r{\A[a-z][a-z0-9_]*\z})
+        value.to_s.match?(/\A[a-z][a-z0-9_]*\z/)
       end
 
       def safe_key?(value)
-        value.to_s.match?(%r{\A[a-z0-9_]+\z})
+        value.to_s.match?(/\A[a-z0-9_]+\z/)
       end
     end
   end

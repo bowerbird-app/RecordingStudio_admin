@@ -24,6 +24,7 @@ class DummyAppAdminTest < Minitest::Test
     api_manifest = File.read(File.join(ROOT, "test/dummy/app/admin/api/manifest.rb"))
     jobs_manifest = File.read(File.join(ROOT, "test/dummy/app/admin/jobs/manifest.rb"))
     root_manifest = File.read(File.join(ROOT, "test/dummy/app/admin/root/manifest.rb"))
+    stats_manifest = File.read(File.join(ROOT, "test/dummy/app/admin/stats/manifest.rb"))
     screen_files = Dir[File.join(ROOT, "test/dummy/app/admin/**/screen.rb")]
     chart_files = Dir[File.join(ROOT, "test/dummy/app/admin/**/chart.rb")]
     table_files = Dir[File.join(ROOT, "test/dummy/app/admin/**/table.rb")]
@@ -31,7 +32,8 @@ class DummyAppAdminTest < Minitest::Test
     api_requests_chart = File.read(File.join(ROOT, "test/dummy/app/admin/api/api_requests/chart.rb"))
     api_requests_table = File.read(File.join(ROOT, "test/dummy/app/admin/api/api_requests/table.rb"))
     api_activity_widget = File.read(File.join(ROOT, "test/dummy/app/admin/api/api_requests/widgets/api_activity.rb"))
-    review_volume_widget = File.read(File.join(ROOT, "test/dummy/app/admin/users/user_reviews/widgets/review_volume.rb"))
+    review_volume_widget = File.read(File.join(ROOT,
+                                               "test/dummy/app/admin/users/user_reviews/widgets/review_volume.rb"))
 
     assert_includes initializer, "AdminScreens.load!"
     assert_includes initializer, "AdminScreens::Root.register!"
@@ -51,11 +53,17 @@ class DummyAppAdminTest < Minitest::Test
     assert_equal 11, screen_files.size
     assert_equal 11, chart_files.size
     assert_equal 11, table_files.size
-    assert_equal 19, widget_files.size
-    assert_empty screen_files.select { |path| File.read(path).match?(/^\s+widget :/) }
-    assert_empty screen_files.select { |path| File.read(path).match?(/^\s+(chart|table) do/) }
-    assert_equal 11, [ api_manifest, users_manifest, jobs_manifest, root_manifest, File.read(File.join(ROOT, "test/dummy/app/admin/stats/manifest.rb")) ].sum { |source| source.scan("RecordingStudioAdmin.register_screen").size }
-    assert_equal 5, [ api_manifest, users_manifest, jobs_manifest, root_manifest, File.read(File.join(ROOT, "test/dummy/app/admin/stats/manifest.rb")) ].sum { |source| source.scan("RecordingStudioAdmin.register_section").size }
+    assert_equal 24, widget_files.size
+    assert_empty(screen_files.select { |path| File.read(path).match?(/^\s+widget :/) })
+    assert_empty(screen_files.select { |path| File.read(path).match?(/^\s+(chart|table) do/) })
+    manifests = [api_manifest, users_manifest, jobs_manifest, root_manifest, stats_manifest]
+
+    assert_equal(11, manifests.sum do |source|
+      source.scan("RecordingStudioAdmin.register_screen").size
+    end)
+    assert_equal(5, manifests.sum do |source|
+      source.scan("RecordingStudioAdmin.register_section").size
+    end)
     assert_includes root_section, 'context.admin_section_path("api")'
     assert_includes root_section, 'context.admin_section_path("users")'
     assert_includes root_section, 'context.admin_section_path("jobs")'
@@ -71,8 +79,9 @@ class DummyAppAdminTest < Minitest::Test
     assert_includes users_section, 'widget "user_sign_ins.widgets.sign_in_activity",'
     assert_includes users_section, 'widget "user_reviews.widgets.review_volume",'
     assert_includes users_section, 'link :geography, text: "View user geography"'
-    assert_includes users_section, 'widget "user_geography.widgets.activity_geo_map", params: { preset_key: :this_week }'
-    assert_includes users_section, 'widget "user_invitations.widgets.recent_invites"'
+    assert_includes users_section,
+                    'widget "user_geography.widgets.activity_geo_map", params: { preset_key: :this_week }'
+    refute_includes users_section, 'widget "user_invitations.widgets.recent_invites"'
     assert_includes api_requests_chart, "class ApiRequests"
     assert_includes api_requests_chart, "chart do"
     assert_includes api_requests_table, "class ApiRequests"
@@ -86,7 +95,7 @@ class DummyAppAdminTest < Minitest::Test
   def test_dummy_app_includes_admin_root_live_search_controller
     controller = File.read(File.join(ROOT, "test/dummy/app/javascript/controllers/admin/root_search_controller.js"))
 
-    assert_includes controller, 'static targets = ["input", "results", "emptyState", "item"]'
+    assert_includes controller, 'static targets = ["form", "input", "results", "emptyState", "item"]'
     assert_includes controller, "const matches = query.length > 0 && searchText.includes(query)"
     assert_includes controller, "this.emptyStateTarget.hidden = query.length === 0 || visibleCount > 0"
   end

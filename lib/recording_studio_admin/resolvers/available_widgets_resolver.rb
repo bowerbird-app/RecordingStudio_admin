@@ -22,12 +22,14 @@ module RecordingStudioAdmin
       def call
         RecordingStudioAdmin::Authorization.authorize!(@context, recording: @recording)
 
-        available_section_definitions.flat_map do |section_definition|
+        widgets = available_section_definitions.flat_map do |section_definition|
           widgets = []
           widgets.concat(section_widgets_for(section_definition)) if @include.include?(:section_widgets)
           widgets.concat(linked_screen_widgets_for(section_definition)) if @include.include?(:linked_screen_widgets)
           widgets
-        end.compact.uniq do |widget|
+        end
+
+        widgets.compact.uniq do |widget|
           [widget.key, widget.section_key, widget.screen_key, widget.source, widget.params]
         end.sort_by do |widget|
           [widget.section_key.to_s, widget.screen_key.to_s, widget.key.to_s, widget.source.to_s]
@@ -64,6 +66,7 @@ module RecordingStudioAdmin
         section_definition.widget_usages.filter_map do |widget_usage|
           widget_definition = RecordingStudioAdmin.widget_for(widget_usage.key)
           next unless widget_definition
+
           widget_radius = widget_usage.effective_blast_radius(widget_definition)
           next unless blast_radius_allowed?(widget_radius, container: section_definition)
 
@@ -200,7 +203,7 @@ module RecordingStudioAdmin
 
       def blast_radius_allowed?(definition, container: nil)
         RecordingStudioAdmin::BlastRadius.allowed?(definition, context: @context, recording: @recording,
-                                                             container: container)
+                                                               container: container)
       end
 
       def available_for_placement?(definition)

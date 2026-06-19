@@ -43,6 +43,16 @@ module RecordingStudioAdmin
         end
       end
 
+      def add_importmap_source
+        importmap_path = Rails.root.join("config/importmap.rb")
+        return show_missing_importmap_notice unless File.exist?(importmap_path)
+
+        content = File.read(importmap_path)
+        return say("Importmap already pins RecordingStudioAdmin controllers.", :green) if content.include?(recording_studio_admin_importmap_pin)
+
+        append_to_file importmap_path, "\n#{recording_studio_admin_importmap_pin}\n"
+      end
+
       def show_readme
         readme "INSTALL.md" if behavior == :invoke
       end
@@ -62,6 +72,15 @@ module RecordingStudioAdmin
       def show_missing_tailwind_notice
         say "Tailwind CSS not detected. Skipping Tailwind configuration.", :yellow
         tailwind_source_lines.each { |line| say "  #{line}", :yellow }
+      end
+
+      def show_missing_importmap_notice
+        say "Importmap not detected. Add this line to config/importmap.rb if you use importmap-rails:", :yellow
+        say "  #{recording_studio_admin_importmap_pin}", :yellow
+      end
+
+      def recording_studio_admin_importmap_pin
+        'pin_all_from RecordingStudioAdmin::Engine.root.join("app/javascript/recording_studio_admin/controllers"), under: "controllers/recording_studio_admin", to: "recording_studio_admin/controllers", preload: false'
       end
 
       def tailwind_source_lines

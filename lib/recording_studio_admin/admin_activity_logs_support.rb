@@ -75,7 +75,7 @@ module RecordingStudioAdmin
       when :hour
         timestamp.strftime("%-l%P").strip
       when :week
-        "Week of #{timestamp.strftime("%b %-d") }"
+        "Week of #{timestamp.strftime('%b %-d')}"
       when :month
         timestamp.strftime("%b")
       when :year

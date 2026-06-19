@@ -41,7 +41,7 @@ module RecordingStudioAdmin
               id: SecureRandom.uuid, recording_studio_event: nil)
       action_definition ||= RecordingStudioAdmin.resource_for(resource_key)&.action_for(action_key)
       controller = context.controller
-      request = controller.request if controller&.respond_to?(:request)
+      request = controller.request if controller.respond_to?(:request)
 
       AdminActionAuditEvent.new(
         id,
@@ -167,8 +167,8 @@ module RecordingStudioAdmin
       result
     rescue RecordingStudioAdmin::AuthorizationFailed, RecordingStudioAdmin::DefinitionNotFound
       raise
-    rescue StandardError => error
-      tracker&.record(outcome: :failed, error: error)
+    rescue StandardError => e
+      tracker&.record(outcome: :failed, error: e)
       raise
     end
   end

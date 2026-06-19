@@ -118,13 +118,16 @@ module RecordingStudioAdmin
   end
 
   class TableDefinition
-    attr_reader :columns, :filters, :actions, :pagination_options, :default_sort_key, :default_direction
+    attr_reader :columns, :filters, :actions, :pagination_options, :default_sort_key, :default_direction,
+                :export_key, :export_options
 
     def initialize(&block)
       @columns = []
       @filters = []
       @actions = []
       @default_column_keys = nil
+      @export_key = nil
+      @export_options = {}
       @pagination_options = { per_page: 50, mode: :infinite }
       instance_eval(&block) if block
     end
@@ -141,6 +144,14 @@ module RecordingStudioAdmin
 
     def default_columns(*keys)
       @default_column_keys = keys.flatten.map(&:to_sym).uniq
+    end
+
+    def export(key = nil, **options)
+      export_key = key || options.delete(:key)
+      raise InvalidDefinition, "table export requires an export key" if export_key.blank?
+
+      @export_key = export_key.to_s
+      @export_options = options.symbolize_keys
     end
 
     def action(name, text:, url:, icon: nil, method: nil, confirm: nil, destructive: nil, visible_if: nil,
@@ -160,7 +171,10 @@ module RecordingStudioAdmin
 
     def admin_action(resource_key, action_key = nil, as: nil)
       resource_key, action_key = resource_key.to_s.split(".", 2) if action_key.nil?
-      raise InvalidDefinition, "admin_action requires a resource key and action key" if resource_key.blank? || action_key.blank?
+      if resource_key.blank? || action_key.blank?
+        raise InvalidDefinition,
+              "admin_action requires a resource key and action key"
+      end
 
       @actions << ResourceRowActionDefinition.new(
         (as || "#{resource_key}_#{action_key}").to_sym,
@@ -268,6 +282,18 @@ module RecordingStudioAdmin
       action_definition&.blast_radius || RecordingStudioAdmin::BlastRadius::DEFAULT
     end
 
+    def authorize_for_table(context)
+      action = RecordingStudioAdmin.resolve_table_resource_action(
+        key: resource_key,
+        action: action_key,
+        context: context
+      )
+
+      AuthorizedResourceRowActionDefinition.new(name, action)
+    rescue AuthorizationFailed, DefinitionNotFound
+      nil
+    end
+
     def resolve(row, context)
       action = RecordingStudioAdmin.authorize_resource!(
         key: resource_key,
@@ -284,6 +310,14 @@ module RecordingStudioAdmin
 
     def action_definition
       RecordingStudioAdmin.resource_for(resource_key)&.action_for(action_key)
+    end
+  end
+
+  AuthorizedResourceRowActionDefinition = Data.define(:name, :action_definition) do
+    def blast_radius = action_definition.blast_radius
+
+    def resolve(row, context)
+      action_definition.resolve(row, context)
     end
   end
 end

@@ -126,7 +126,8 @@ module RecordingStudioAdmin
       end
 
       enabled_sections.any? do |definition|
-        linked_screen_key_for(definition, context) == key.to_s || linked_screen_keys_for(definition, context).include?(key.to_s)
+        linked_screen_key_for(definition,
+                              context) == key.to_s || linked_screen_keys_for(definition, context).include?(key.to_s)
       end
     end
 
@@ -138,22 +139,50 @@ module RecordingStudioAdmin
     def widget_for(key) = registry.widget_for(key)
 
     def resolve_sections(context:) = Resolvers::SectionsResolver.call(context: context)
-    def resolve_screen(key:, context:) = Resolvers::ScreenResolver.call(key: key, context: context)
-    def resolve_section(key:, context:) = Resolvers::SectionResolver.call(key: key, context: context)
+
+    def resolve_screen(key:, context:, resolve_widgets: true, resolve_summary: true, resolve_chart: true,
+                       resolve_table: true, resolve_table_rows: true, resolve_table_count: true)
+      Resolvers::ScreenResolver.call(
+        key: key,
+        context: context,
+        resolve_widgets: resolve_widgets,
+        resolve_summary: resolve_summary,
+        resolve_chart: resolve_chart,
+        resolve_table: resolve_table,
+        resolve_table_rows: resolve_table_rows,
+        resolve_table_count: resolve_table_count
+      )
+    end
+
+    def resolve_section(key:, context:, resolve_widgets: true)
+      Resolvers::SectionResolver.call(key: key, context: context, resolve_widgets: resolve_widgets)
+    end
+
     def authorize_resource!(key:, context:, action:, record: nil, audit: false, audit_action: nil)
       Resolvers::ResourceResolver.call(key: key, context: context, action: action, record: record)
-    rescue AuthorizationFailed, DefinitionNotFound => error
-      AdminActionAudit.record(
-        resource_key: key,
-        action_key: audit_action || action,
-        context: context,
-        record: record,
-        outcome: :denied,
-        error: error
-      ) if audit
+    rescue AuthorizationFailed, DefinitionNotFound => e
+      if audit
+        AdminActionAudit.record(
+          resource_key: key,
+          action_key: audit_action || action,
+          context: context,
+          record: record,
+          outcome: :denied,
+          error: e
+        )
+      end
       raise
     end
     alias resolve_resource_action authorize_resource!
+
+    def resolve_table_resource_action(key:, context:, action:)
+      Resolvers::ResourceResolver.call(
+        key: key,
+        context: context,
+        action: action,
+        enforce_record_visibility: false
+      )
+    end
 
     def resolve_widget(key:, context:) = Resolvers::WidgetResolver.call(key: key, context: context)
 

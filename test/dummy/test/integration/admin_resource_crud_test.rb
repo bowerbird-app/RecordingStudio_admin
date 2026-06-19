@@ -32,6 +32,14 @@ class AdminRegisteredActionsTest < ActionDispatch::IntegrationTest
 
     get "/admin/screens/users"
     assert_response :success
+    assert_includes response.body, 'id="screen-chart" src="/admin/screens/users/chart'
+
+    get "/admin/screens/users/chart", params: { anchor_url: root_url }
+    assert_response :success
+    assert_includes response.body, 'data-controller="flat-pack--chart"'
+
+    get "/admin/screens/users/table", params: { anchor_url: root_url }
+    assert_response :success
     assert_includes response.body, managed_user.email
     assert_includes response.body, "Show"
     assert_includes response.body, "Edit user"
@@ -115,6 +123,14 @@ class AdminRegisteredActionsTest < ActionDispatch::IntegrationTest
     )
 
     get "/admin/screens/users"
+    assert_response :success
+    assert_includes response.body, 'id="screen-chart" src="/admin/screens/users/chart'
+
+    get "/admin/screens/users/chart", params: { anchor_url: root_url }
+    assert_response :success
+    assert_includes response.body, 'data-controller="flat-pack--chart"'
+
+    get "/admin/screens/users/table", params: { anchor_url: root_url }
     assert_response :success
     assert_includes response.body, managed_user.email
     assert_includes response.body, "Show"

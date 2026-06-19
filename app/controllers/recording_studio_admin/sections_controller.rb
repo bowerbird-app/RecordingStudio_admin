@@ -19,7 +19,11 @@ module RecordingStudioAdmin
     end
 
     def show
-      @section = RecordingStudioAdmin.resolve_section(key: section_key, context: recording_studio_admin_context)
+      @section = RecordingStudioAdmin.resolve_section(
+        key: section_key,
+        context: recording_studio_admin_context,
+        resolve_widgets: !RecordingStudioAdmin.configuration.async_widgets.enabled
+      )
     end
 
     private
@@ -48,9 +52,13 @@ module RecordingStudioAdmin
       groups << { title: "Sections", items: section_items } if section_items.any?
 
       grouped_screen_items = items.select { |item| item.type == :screen && item.parent_key.present? }
-                                 .group_by { |item| item.parent_key.to_s }
+                                  .group_by { |item| item.parent_key.to_s }
 
-      grouped_screen_items.sort_by { |parent_key, _| section_lookup[parent_key] || parent_key }.each do |parent_key, grouped_items|
+      sorted_grouped_screen_items = grouped_screen_items.sort_by do |parent_key, _|
+        section_lookup[parent_key] || parent_key
+      end
+
+      sorted_grouped_screen_items.each do |parent_key, grouped_items|
         parent_title = section_lookup[parent_key] || parent_key.humanize
         groups << { title: "In #{parent_title}", items: grouped_items }
       end

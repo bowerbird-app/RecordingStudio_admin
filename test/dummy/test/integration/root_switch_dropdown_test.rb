@@ -52,8 +52,8 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Admin Root Home"
     assert_includes response.body, "You are viewing admin-root specific controls and navigation."
-    assert_includes response.body, ">Admin root<"
-    assert_includes response.body, ">Manage admin sections<"
+    assert_includes response.body, ">Admin<"
+    refute_includes response.body, ">Manage admin sections<"
     refute_includes response.body, ">Stats<"
     refute_includes response.body, "Workspace Home"
     refute_includes response.body, ">Admin section dashboard<"

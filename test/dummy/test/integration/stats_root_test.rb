@@ -120,7 +120,17 @@ class StatsRootTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Workspace stats"
     assert_includes response.body, "Review folders, pages, and recording activity for the current workspace"
+    assert_includes response.body, 'id="screen-chart" src="/stats/screens/workspace_stats/chart?anchor_url='
+
+    get "/stats/screens/workspace_stats/chart", params: { anchor_url: root_url }
+
+    assert_response :success
     assert_includes response.body, "Content created over time"
+    assert_includes response.body, 'data-controller="flat-pack--chart"'
+
+    get "/stats/screens/workspace_stats/table", params: { anchor_url: root_url }
+
+    assert_response :success
     assert_includes response.body, "Demo Analytics"
     assert_includes response.body, "Demo Onboarding"
     assert_includes response.body, "Demo KPI Dashboard"

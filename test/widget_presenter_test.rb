@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "ostruct"
 require_relative "../app/helpers/recording_studio_admin/widget_rendering_helper"
 
 class WidgetPresenterTest < Minitest::Test
@@ -38,6 +39,48 @@ class WidgetPresenterTest < Minitest::Test
     assert_equal 12, string_presenter.progress_max
   end
 
+  def test_compact_list_preview_uses_count_period_and_text_summary
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(
+        type: :list,
+        value: nil,
+        subtitle: "Latest five users",
+        list_options: { compact_preview: :text_summary },
+        items: [
+          { text: "one@example.com" },
+          { label: "two@example.com" },
+          { text: "three@example.com" }
+        ]
+      )
+    )
+
+    assert_equal 3, presenter.compact_metric_value
+    assert_nil presenter.compact_unit_label
+    assert_nil presenter.compact_period_label
+    assert_equal :text_summary, presenter.compact_list_preview_mode
+    assert_equal "one@example.com, two@example.com +1", presenter.compact_list_text_summary
+  end
+
+  def test_compact_list_preview_prefers_metadata_period_and_avatar_names
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(
+        type: :list,
+        value: nil,
+        metadata: { period_label: "This week" },
+        list_options: { compact_preview: :visual_stack },
+        items: [
+          { text: "Ada", avatar: { name: "Ada Lovelace" } },
+          { text: "Grace" }
+        ]
+      )
+    )
+
+    assert_equal "This week", presenter.compact_period_label
+    assert presenter.compact_list_visual_stack?
+    assert_equal "Ada Lovelace", presenter.list_item_avatar_name(presenter.compact_list_visual_items.first)
+    assert_equal "Grace", presenter.list_item_avatar_name(presenter.compact_list_visual_items.last)
+  end
+
   def test_builds_mini_chart_options_without_overwriting_custom_options
     presenter = RecordingStudioAdmin::Widgets::Presenter.new(
       resolved_widget(chart_options: { chart: { height: 96 }, colors: ["#123456"] })
@@ -50,6 +93,45 @@ class WidgetPresenterTest < Minitest::Test
     assert_equal ["#123456"], options[:colors]
   end
 
+  def test_compact_geo_mini_chart_options_hide_legend_scale
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(
+        chart_type: :geo,
+        chart_options: { geo: { map: "world", key_field: "iso2" }, chart: { height: 260 } }
+      )
+    )
+    options = presenter.mini_chart_options
+
+    assert_equal({ map: "world", key_field: "iso2" }, options[:geo])
+    assert_equal "none", options[:legend]
+    assert_nil options.dig(:chart, :sparkline, :enabled)
+    assert_equal 260, options.dig(:chart, :height)
+  end
+
+  def test_full_size_geo_mini_chart_options_keep_legend_config
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(
+        chart_type: :geo,
+        chart_options: { geo: { map: "world", key_field: "iso2" }, legend: { textStyle: { color: "#000" } } },
+        view_variant: nil
+      )
+    )
+    options = presenter.mini_chart_options
+
+    assert_equal({ map: "world", key_field: "iso2" }, options[:geo])
+    assert_equal({ textStyle: { color: "#000" } }, options[:legend])
+    assert_nil options.dig(:chart, :sparkline, :enabled)
+  end
+
+  def test_maps_legacy_geo_chart_type_to_flat_pack_geochart
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(chart_type: :geo)
+    )
+
+    assert_equal :geochart, presenter.chart_type
+    assert_equal :geochart, presenter.mini_chart_type
+  end
+
   def test_helper_renders_full_widget_body_and_chart_with_custom_safe_link_policy
     view = FakeWidgetView.new
     widget = resolved_widget(link_to: "/reports", view_variant: nil)
@@ -58,11 +140,23 @@ class WidgetPresenterTest < Minitest::Test
     assert_equal "recording_studio_admin/shared/widget", view.rendered_partial
     assert_equal "/reports", view.rendered_locals.fetch(:presenter).href
 
-    assert_equal "rendered recording_studio_admin/shared/widgets/chart", view.render_recording_studio_chart_widget(widget)
+    assert_equal "rendered recording_studio_admin/shared/widgets/chart",
+                 view.render_recording_studio_chart_widget(widget)
     assert_equal "recording_studio_admin/shared/widgets/chart", view.rendered_partial
 
-    assert_equal "rendered recording_studio_admin/shared/widgets/chart", view.render_recording_studio_widget_body(widget)
+    assert_equal "rendered recording_studio_admin/shared/widgets/chart",
+                 view.render_recording_studio_widget_body(widget)
     assert_equal "recording_studio_admin/shared/widgets/chart", view.rendered_partial
+  end
+
+  def test_helper_builds_async_widget_frame_src_from_current_query
+    view = FakeWidgetView.new
+    widget = resolved_widget(key: "users.widgets.total")
+
+    assert_equal "/admin/sections/users/widgets/users.widgets.total?anchor_url=%2Froot&widget_view_variant=compact",
+                 view.recording_studio_widget_frame_src(parent: :section, parent_key: "users", widget: widget)
+    assert_equal ["users", "users.widgets.total", { "anchor_url" => "/root", widget_view_variant: :compact }],
+                 view.section_widget_path_args
   end
 
   private
@@ -92,18 +186,31 @@ class WidgetPresenterTest < Minitest::Test
       show_period: true
     }
 
-    RecordingStudioAdmin::Results::ResolvedWidget.new(**defaults.merge(overrides))
+    RecordingStudioAdmin::Results::ResolvedWidget.new(**defaults, **overrides)
   end
 
   class FakeWidgetView
     include RecordingStudioAdmin::WidgetRenderingHelper
 
-    attr_reader :rendered_partial, :rendered_locals
+    attr_reader :rendered_partial, :rendered_locals, :section_widget_path_args
 
     def render(partial:, locals:)
       @rendered_partial = partial
       @rendered_locals = locals
       "rendered #{partial}"
+    end
+
+    def request
+      OpenStruct.new(query_parameters: { "anchor_url" => "/root", "controller" => "ignored", "action" => "show" })
+    end
+
+    def section_widget_path(parent_key, widget_key, query)
+      @section_widget_path_args = [parent_key, widget_key, query]
+      "/admin/sections/#{parent_key}/widgets/#{widget_key}?#{query.to_query}"
+    end
+
+    def screen_widget_path(parent_key, widget_key, query)
+      "/admin/screens/#{parent_key}/widgets/#{widget_key}?#{query.to_query}"
     end
   end
 end

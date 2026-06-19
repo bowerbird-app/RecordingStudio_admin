@@ -18,8 +18,7 @@
     <% page_title.slot do %>
       <%= render FlatPack::ButtonGroup::Component.new do |group| %>
         <% if @admin_root_home %>
-          <% group.button(render(FlatPack::Button::Component.new(text: "Admin root", url: "#{request.base_url}/admin/root?anchor_url=#{ERB::Util.url_encode(root_url)}", style: :primary))) %>
-          <% group.button(render(FlatPack::Button::Component.new(text: "Manage admin sections", url: "#{request.base_url}/admin?anchor_url=#{ERB::Util.url_encode(root_url)}", style: :secondary))) %>
+          <% group.button(render(FlatPack::Button::Component.new(text: "Admin", url: "#{request.base_url}/admin/root?anchor_url=#{ERB::Util.url_encode(root_url)}", style: :primary))) %>
         <% else %>
           <% group.button(render(FlatPack::Button::Component.new(text: "Stats", url: "#{request.base_url}/stats/root?anchor_url=#{ERB::Util.url_encode(root_url)}", style: :primary))) %>
         <% end %>

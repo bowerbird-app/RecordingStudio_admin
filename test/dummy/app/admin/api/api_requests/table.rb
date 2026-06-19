@@ -3,6 +3,7 @@
 module AdminScreens
   class ApiRequests
     table do
+      export "admin.api_requests", text: "Export"
       filter :search, apply: ->(relation, value, _context) { value.present? ? relation.where("path ILIKE ?", AdminScreens::Base.safe_like(value)) : relation }
       column :created_at
       column :method

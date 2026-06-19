@@ -39,14 +39,14 @@ module RecordingStudioAdmin
         context,
         preset_key: :this_week
       )
-      [ {
+      [{
         name: "Admin events",
         data: RecordingStudioAdmin::AdminActivityLogsSupport.date_series(
           RecordingStudioAdmin::AdminActivityLogsScreen.audit_log_model.where(occurred_at: range).reorder(nil),
           field: :occurred_at,
           bucket: context.widget_group_by(default: :day)
         )
-      } ]
+      }]
     end
     chart_options { { height: 220 } }
     link_to do |context|

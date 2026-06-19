@@ -6,7 +6,8 @@ module RecordingStudioAdmin
     ResolvedRowAction = Data.define(:name, :text, :url, :icon, :method, :confirm, :destructive)
     ResolvedFilter = Data.define(:key, :type, :value, :options, :param_key, :start_param, :end_param, :preset_param)
     ResolvedChart = Data.define(:title, :subtitle, :type, :series, :options)
-    ResolvedTable = Data.define(:columns, :filters, :rows, :actions, :result, :available_columns, :selected_column_keys)
+    ResolvedTable = Data.define(:columns, :filters, :rows, :actions, :result, :available_columns,
+                  :selected_column_keys, :export_key, :export_options)
     ResolvedSummary = Data.define(:label, :value, :change, :change_good_when, :period_label, :show_metric,
                                   :show_change, :show_period)
     ResolvedWidget = Data.define(
@@ -72,7 +73,9 @@ module RecordingStudioAdmin
       :summary,
       :chart,
       :table,
-      :widgets
+      :widgets,
+      :has_chart,
+      :has_table
     )
   end
 end

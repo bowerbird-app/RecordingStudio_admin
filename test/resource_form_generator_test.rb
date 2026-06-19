@@ -48,7 +48,7 @@ class ResourceFormGeneratorTest < Minitest::Test
       assert_includes controller, 'resource_action = action_name == "update" ? :edit : action_name'
       assert_includes controller, "RecordingStudioAdmin.authorize_resource!("
       assert_includes controller, 'key: "users"'
-      assert_includes controller, 'audit_action: action_name'
+      assert_includes controller, "audit_action: action_name"
       assert_includes controller, 'perform_recording_studio_admin_action!("users", :edit, @user, audit_action: :update)'
       assert_includes controller, "head :forbidden"
       assert_includes controller, "params.require(:user).permit(:email, :role, :active)"
@@ -72,7 +72,7 @@ class ResourceFormGeneratorTest < Minitest::Test
 
     with_singleton_stub(generator, :route, ->(value) { routes << value }) { generator.add_route }
 
-    assert_equal ["namespace :admin do\n    resources :users, only: %i[show edit update]\n  end"], routes
+    assert_equal ["namespace :admin do\n  resources :users, only: %i[show edit update]\nend"], routes
   end
 
   def test_validates_required_options_and_unsafe_names

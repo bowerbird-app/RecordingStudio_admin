@@ -1,4 +1,5 @@
 <% list_options = (widget.list_options || {}).dup %>
+<% list_options.delete(:compact_preview) %>
 <% default_hover = list_options.delete(:hover) %>
 <%= render FlatPack::List::Component.new(**list_options) do %>
   <% Array(widget.items).each do |item| %>

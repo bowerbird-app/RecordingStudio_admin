@@ -7,6 +7,12 @@ module RecordingStudioAdmin
   class Engine < ::Rails::Engine
     isolate_namespace RecordingStudioAdmin
 
+    initializer "recording_studio_admin.assets" do |app|
+      if app.config.respond_to?(:assets)
+        app.config.assets.paths << root.join("app/javascript")
+      end
+    end
+
     initializer "recording_studio_admin.load_config" do |app|
       next unless app.respond_to?(:config_for)
       next unless app.root.join("config/recording_studio_admin.yml").exist?

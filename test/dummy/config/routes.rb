@@ -7,6 +7,7 @@ Rails.application.routes.draw do
   mount RecordingStudio::Engine, at: "/recording_studio"
   mount RecordingStudioRootSwitchable::Engine, at: "/recording_studio_root_switchable"
   mount RecordingStudioAccessible::Engine, at: "/admin/access"
+  mount RecordingStudioExportable::Engine, at: "/recording_studio_exportable" if defined?(RecordingStudioExportable::Engine)
   namespace :admin do
     get "root", to: "root#show"
     get "generators", to: "generators#index"

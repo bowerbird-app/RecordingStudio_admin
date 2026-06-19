@@ -178,7 +178,10 @@ module RecordingStudioAdmin
     end
 
     def admin_action_method(resource_key, action_key, record)
-      admin_action(resource_key, action_key, record)&.method
+      action = admin_action(resource_key, action_key, record)
+      return action.http_method if action.respond_to?(:http_method)
+
+      action&.method
     end
 
     def admin_action_confirm(resource_key, action_key, record)

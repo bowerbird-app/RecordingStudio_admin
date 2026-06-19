@@ -13,7 +13,7 @@ module AdminScreens
 
         sql_group_expression = Arel.sql(group_expression)
 
-        relation.group(sql_group_expression).order(sql_group_expression).count.map do |date, count|
+        chart_relation(relation).group(sql_group_expression).order(sql_group_expression).count.map do |date, count|
           { x: bucket_label(date, bucket), y: count }
         end
       end
@@ -25,7 +25,7 @@ module AdminScreens
         sql_group_expression = Arel.sql(group_expression)
         distinct_expression = Arel.sql("COUNT(DISTINCT #{distinct_field})")
 
-        relation.group(sql_group_expression).order(sql_group_expression).pluck(sql_group_expression, distinct_expression).map do |date, count|
+        chart_relation(relation).group(sql_group_expression).order(sql_group_expression).pluck(sql_group_expression, distinct_expression).map do |date, count|
           { x: bucket_label(date, bucket), y: count }
         end
       end
@@ -110,6 +110,12 @@ module AdminScreens
         return scoped_relation.distinct.count(distinct_field) if distinct_field
 
         scoped_relation.count
+      end
+
+      def chart_relation(relation)
+        return relation.except(:order) if relation.respond_to?(:except)
+
+        relation
       end
 
       def percent_change_label(current_count:, previous_count:)

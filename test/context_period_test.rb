@@ -145,7 +145,7 @@ class ContextPeriodTest < Minitest::Test
       end
     end
 
-    resolved_action = Struct.new(:url, :method, :confirm, :icon, :text).new(
+    resolved_action = Struct.new(:url, :http_method, :confirm, :icon, :text).new(
       "/admin/users/1/edit",
       :patch,
       "Are you sure?",
@@ -154,7 +154,9 @@ class ContextPeriodTest < Minitest::Test
     )
     context = RecordingStudioAdmin::Context.new
 
-    with_singleton_stub(RecordingStudioAdmin, :resolve_resource_action, ->(**) { action_definition.new(resolved_action) }) do
+    with_singleton_stub(RecordingStudioAdmin, :resolve_resource_action, lambda { |**|
+      action_definition.new(resolved_action)
+    }) do
       assert_equal "/admin/users/1/edit", context.admin_action_path("users", :edit, Object.new)
       assert_equal :patch, context.admin_action_method("users", :edit, Object.new)
       assert_equal "Are you sure?", context.admin_action_confirm("users", :edit, Object.new)
@@ -228,7 +230,7 @@ class ContextPeriodTest < Minitest::Test
     assert context.send(:current_time).is_a?(Time)
     assert_equal :zero, context.send(:resolve_callable, -> { :zero })
     assert_same context, context.send(:resolve_callable, ->(value) { value })
-    assert_nil context.send(:resolve_callable, ->(_ctx, _controller) { nil })
+    assert_nil context.send(:resolve_callable, ->(_ctx, _controller) {})
 
     context.set_filter_value(
       :date_range,

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_18_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_19_044341) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -150,6 +150,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_000000) do
     t.index ["recording_id"], name: "index_recording_studio_events_on_recording_id"
   end
 
+  create_table "recording_studio_exportable_export_logs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "actor_id"
+    t.string "actor_type"
+    t.integer "byte_size", default: 0, null: false
+    t.datetime "completed_at"
+    t.string "content_type", null: false
+    t.uuid "context_recordable_id"
+    t.string "context_recordable_type"
+    t.uuid "context_recording_id", null: false
+    t.datetime "created_at", null: false
+    t.string "error_class"
+    t.text "error_message"
+    t.string "export_key", null: false
+    t.datetime "failed_at"
+    t.string "filename"
+    t.json "filters", default: {}, null: false
+    t.string "format", default: "csv", null: false
+    t.uuid "impersonator_id"
+    t.string "impersonator_type"
+    t.json "metadata", default: {}, null: false
+    t.integer "row_count", default: 0, null: false
+    t.string "screen_key"
+    t.datetime "started_at"
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actor_type", "actor_id"], name: "idx_rs_exportable_logs_on_actor"
+    t.index ["context_recordable_type", "context_recordable_id"], name: "idx_rs_exportable_logs_on_context_recordable"
+    t.index ["context_recording_id"], name: "idx_rs_exportable_logs_on_context_recording_id"
+    t.index ["created_at"], name: "idx_rs_exportable_logs_on_created_at"
+    t.index ["export_key", "status"], name: "idx_rs_exportable_logs_on_export_key_and_status"
+    t.index ["impersonator_type", "impersonator_id"], name: "idx_rs_exportable_logs_on_impersonator"
+    t.index ["status"], name: "idx_rs_exportable_logs_on_status"
+  end
+
   create_table "recording_studio_recordings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.uuid "parent_recording_id"
@@ -210,6 +244,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_000000) do
   end
 
   add_foreign_key "recording_studio_events", "recording_studio_recordings", column: "recording_id"
+  add_foreign_key "recording_studio_exportable_export_logs", "recording_studio_recordings", column: "context_recording_id"
   add_foreign_key "recording_studio_recordings", "recording_studio_recordings", column: "parent_recording_id"
   add_foreign_key "recording_studio_recordings", "recording_studio_recordings", column: "root_recording_id"
 end

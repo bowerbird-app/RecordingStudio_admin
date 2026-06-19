@@ -69,6 +69,7 @@ class ResolverTest < Minitest::Test
     end
 
     table do
+      export "admin.requests", text: "Export requests"
       filter :search, apply: lambda { |relation, value, _context|
         next relation unless value.present?
 
@@ -215,6 +216,53 @@ class ResolverTest < Minitest::Test
     query { |_context| flunk "search metadata helper should not resolve screen queries" }
   end
 
+  class InstrumentedRelation < ArrayRelation
+    attr_reader :events
+
+    def initialize(rows, events)
+      super(rows)
+      @events = events
+    end
+
+    def count
+      events[:count] += 1
+      super
+    end
+
+    def limit(value) = self.class.new(rows.first(value), events)
+    def offset(value) = self.class.new(rows.drop(value), events)
+
+    def order(order_hash)
+      ordered = rows.sort_by { |row| row.public_send(order_hash.keys.first) }
+      ordered.reverse! if order_hash.values.first.to_s == "desc"
+      self.class.new(ordered, events)
+    end
+  end
+
+  class InstrumentedScreen < RecordingStudioAdmin::Screen
+    key "instrumented"
+    query do |context|
+      InstrumentedRelation.new(
+        [Row.new(Time.now, 200, "a"), Row.new(Time.now - 1.minute, 200, "b")],
+        context.params.fetch(:events)
+      )
+    end
+
+    chart do
+      title "Instrumented chart"
+      series do |context|
+        context.params.fetch(:events)[:chart] += 1
+        []
+      end
+    end
+
+    table do
+      column :created_at
+      column :name
+      paginate per_page: 1
+    end
+  end
+
   class ChildScreen < RecordingStudioAdmin::Screen
     key "child_screen"
     title "Child screen"
@@ -288,6 +336,7 @@ class ResolverTest < Minitest::Test
     RecordingStudioAdmin.register_screen(HiddenScreen)
     RecordingStudioAdmin.register_screen(HiddenSummaryScreen)
     RecordingStudioAdmin.register_screen(MetadataOnlyScreen)
+    RecordingStudioAdmin.register_screen(InstrumentedScreen)
     RecordingStudioAdmin.register_screen(ChildScreen)
     RecordingStudioAdmin.register_section(RootSection)
     RecordingStudioAdmin.register_section(HiddenSection)
@@ -451,6 +500,8 @@ class ResolverTest < Minitest::Test
     assert_equal %i[name status], result.table.columns.map(&:key)
     assert_equal %i[created_at name status], result.table.available_columns.map(&:key)
     assert_equal %w[name status], result.table.selected_column_keys
+    assert_equal "admin.requests", result.table.export_key
+    assert_equal({ text: "Export requests" }, result.table.export_options)
     assert_equal :day, context.filter_value(:group_by)
     assert_equal 2, result.widgets.first.value
     assert_equal :number, result.widgets.first.type
@@ -492,6 +543,32 @@ class ResolverTest < Minitest::Test
       { text: "500", style: :danger, size: :sm },
       status_column.display_options_for(result.table.rows.first, context, 500)
     )
+  end
+
+  def test_table_only_resolution_can_skip_chart_and_exact_counts
+    events = { chart: 0, count: 0 }
+    context = allowed_context(params: { events: events })
+
+    result = with_access_allowed do
+      RecordingStudioAdmin.resolve_screen(
+        key: "instrumented",
+        context: context,
+        resolve_summary: false,
+        resolve_chart: false,
+        resolve_table: true,
+        resolve_table_count: false,
+        resolve_widgets: false
+      )
+    end
+
+    assert_nil result.summary
+    assert_nil result.chart
+    assert_equal 1, result.table.rows.size
+    assert_nil result.table.result.total_count
+    assert_nil result.table.result.total_pages
+    assert result.table.result.has_more
+    assert result.table.result.count_pending
+    assert_equal({ chart: 0, count: 0 }, events)
   end
 
   def test_screen_summary_visibility_can_hide_metric_change_and_period
@@ -604,6 +681,34 @@ class ResolverTest < Minitest::Test
     refute widget.show_period
   end
 
+  def test_geo_chart_widgets_show_change_by_default
+    widget = RecordingStudioAdmin::Widget.new("geo-default-change") do
+      type :chart
+      chart_type :geo
+      series []
+      change "+20%"
+    end
+
+    resolved = widget.resolve(RecordingStudioAdmin::Context.new)
+
+    assert resolved.show_change
+    assert_equal "+20%", resolved.change
+  end
+
+  def test_geo_chart_widgets_allow_explicitly_hiding_change
+    widget = RecordingStudioAdmin::Widget.new("geo-explicit-change") do
+      type :chart
+      chart_type :geo
+      series []
+      change "+20%"
+      hide_change
+    end
+
+    resolved = widget.resolve(RecordingStudioAdmin::Context.new)
+
+    refute resolved.show_change
+  end
+
   def test_standalone_widget_resolution_fails_authorization_before_resolving
     widget = RecordingStudioAdmin::Widget.new("standalone_health") do
       title "Standalone health"
@@ -678,12 +783,26 @@ class ResolverTest < Minitest::Test
     widget = RecordingStudioAdmin::Widget.new("hover-list-options") do
       type :list
       items ["one"]
-      list_options divider: true, hover: true
+      list_options divider: true, hover: true, compact_preview: "visual_stack"
     end
 
     resolved = widget.resolve(RecordingStudioAdmin::Context.new)
 
-    assert_equal({ divider: true, hover: true }, resolved.list_options)
+    assert_equal({ divider: true, hover: true, compact_preview: :visual_stack }, resolved.list_options)
+  end
+
+  def test_list_widget_rejects_unknown_compact_preview
+    widget = RecordingStudioAdmin::Widget.new("bad-compact-preview") do
+      type :list
+      items ["one"]
+      list_options compact_preview: :timeline
+    end
+
+    error = assert_raises(RecordingStudioAdmin::InvalidDefinition) do
+      widget.resolve(RecordingStudioAdmin::Context.new)
+    end
+
+    assert_includes error.message, "unsupported compact_preview"
   end
 
   def test_list_widget_rejects_hash_items_without_text_or_label
@@ -969,9 +1088,9 @@ class ResolverTest < Minitest::Test
     end
 
     assert_equal %w[requests.widgets.total requests.widgets.traffic_preview], widgets.map(&:key)
-    assert_equal [:section_widget, :section_widget], widgets.map(&:source)
-    assert_equal ["root", "root"], widgets.map(&:section_key)
-    assert_equal ["requests", "requests"], widgets.map(&:screen_key)
+    assert_equal %i[section_widget section_widget], widgets.map(&:source)
+    assert_equal %w[root root], widgets.map(&:section_key)
+    assert_equal %w[requests requests], widgets.map(&:screen_key)
     assert_equal [:compact, nil], widgets.map(&:view_variant)
     assert_equal({}, widgets.first.params)
 
@@ -1102,6 +1221,37 @@ class ResolverTest < Minitest::Test
     assert_equal 5, traffic_preview.value
     assert_nil section.recordable
     assert_nil section.recording
+  end
+
+  def test_resolve_section_can_defer_widget_values_for_async_loading
+    context = allowed_context
+    section = with_access_allowed do
+      RecordingStudioAdmin.resolve_section(key: "root", context: context, resolve_widgets: false)
+    end
+
+    traffic_preview = section.widgets.find { |widget| widget.key == "requests.widgets.traffic_preview" }
+
+    assert_equal "Weekly traffic", traffic_preview.title
+    assert_equal :chart, traffic_preview.type
+    assert_equal :area, traffic_preview.chart_type
+    assert_nil traffic_preview.value
+    assert_nil traffic_preview.series
+  end
+
+  def test_section_resolver_resolves_one_widget_through_parent_section
+    context = allowed_context
+
+    widget = with_access_allowed do
+      RecordingStudioAdmin::Resolvers::SectionResolver.resolve_widget(
+        key: "root",
+        widget_key: "requests.widgets.traffic_preview",
+        context: context
+      )
+    end
+
+    assert_equal "requests.widgets.traffic_preview", widget.key
+    assert_equal "Weekly traffic", widget.title
+    assert_equal [{ name: "week", data: [{ x: "Last 3 days", y: 5 }] }], widget.series
   end
 
   def test_section_widget_chart_options_reject_non_hash_values

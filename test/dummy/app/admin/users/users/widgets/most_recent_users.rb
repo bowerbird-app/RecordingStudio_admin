@@ -7,7 +7,7 @@ module AdminScreens
       title "Most recent users"
       description "The five most recent users seen by the dummy app."
       subtitle "Latest five users"
-      list_options divider: true, hover: true
+      list_options divider: true, hover: true, compact_preview: :text_summary
       items do |_context|
         UserActivity.order(created_at: :desc).limit(5).pluck(:email).map do |email|
           {

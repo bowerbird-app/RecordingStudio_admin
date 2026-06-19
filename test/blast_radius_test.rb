@@ -168,7 +168,8 @@ class BlastRadiusTest < Minitest::Test
 
   def test_site_widget_is_filtered_from_recording_scoped_section
     with_singleton_stub(RecordingStudioAccessible, :authorized?, true) do
-      section = RecordingStudioAdmin.resolve_section(key: "blast_recording_section", context: context_for(@workspace_recording))
+      section = RecordingStudioAdmin.resolve_section(key: "blast_recording_section",
+                                                     context: context_for(@workspace_recording))
       assert_empty section.widgets
     end
   end

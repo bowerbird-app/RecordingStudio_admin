@@ -67,6 +67,7 @@ module RecordingStudioAdmin
 
         screen_definition = screen_definition_for_link(resolved_link)
         return if screen_definition && !blast_radius_allowed?(screen_definition, container: definition)
+
         title = link_item_title(resolved_link, screen_definition)
         return if title.blank?
 
@@ -202,7 +203,7 @@ module RecordingStudioAdmin
 
       def blast_radius_allowed?(definition, container: nil)
         RecordingStudioAdmin::BlastRadius.allowed?(definition, context: @context, recording: @recording,
-                                                             container: container)
+                                                               container: container)
       end
 
       def available_for_placement?(definition)

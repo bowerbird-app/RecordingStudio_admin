@@ -68,9 +68,7 @@ module RecordingStudioAdmin
     def root_recording?(recording)
       return false unless recording
       return recording.parent_recording.nil? if recording.respond_to?(:parent_recording)
-      if recording.respond_to?(:root_recording) && recording.root_recording
-        return recording.root_recording == recording
-      end
+      return recording.root_recording == recording if recording.respond_to?(:root_recording) && recording.root_recording
 
       RecordingStudioAdmin::Authorization.resolve_root_recording(recording) == recording
     end

@@ -22,6 +22,9 @@ module AdminScreens
     widget "workspace_stats.widgets.total_folders",
       view_variant: :compact,
       params: { preset_key: :this_week }
+    widget "workspace_stats.widgets.total_items", params: { preset_key: :this_week }
+    widget "workspace_stats.widgets.total_pages", params: { preset_key: :this_week }
+    widget "workspace_stats.widgets.total_folders", params: { preset_key: :this_week }
     widget "workspace_stats.widgets.content_activity", params: { preset_key: :this_week }
   end
 end

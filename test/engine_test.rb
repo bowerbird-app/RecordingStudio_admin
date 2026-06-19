@@ -20,7 +20,7 @@ class EngineTest < Minitest::Test
     assert_includes content, 'get "sections", to: "sections#index", as: :sections'
     assert_includes content, 'get "sections/:key"'
     assert_includes content, 'get "screens/:key"'
-    refute_includes content, 'resources/:key'
+    refute_includes content, "resources/:key"
     refute_match(/\*path|\*key/, content)
   end
 
@@ -67,6 +67,18 @@ class EngineTest < Minitest::Test
     ensure
       RecordingStudioAdmin.configuration.engine_layout = original_layout
     end
+  end
+
+  def test_engine_assets_initializer_adds_javascript_path
+    initializer = RecordingStudioAdmin::Engine.initializers.find { |entry| entry.name == "recording_studio_admin.assets" }
+    refute_nil initializer
+
+    assets = Struct.new(:paths).new([])
+    app = Struct.new(:config).new(Struct.new(:assets).new(assets))
+
+    initializer.block.call(app)
+
+    assert_includes assets.paths, RecordingStudioAdmin::Engine.root.join("app/javascript")
   end
 
   def test_engine_routing_initializer_includes_routing_module

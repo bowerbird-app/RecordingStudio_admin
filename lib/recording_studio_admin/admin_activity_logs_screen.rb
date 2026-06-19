@@ -23,22 +23,27 @@ module RecordingStudioAdmin
       title "Activity over time"
       type :area
       series do |context|
-        [ {
+        [{
           name: "Admin events",
           data: RecordingStudioAdmin::AdminActivityLogsSupport.date_series(
             context.query_result.relation,
             field: :occurred_at,
             bucket: context.filter_value(:group_by) || :day
           )
-        } ]
+        }]
       end
     end
 
     table do
       filter :search, apply: lambda { |relation, value, _context|
         if value.present?
+          query = [
+            "resource_key ILIKE :q OR action_key ILIKE :q OR outcome ILIKE :q",
+            "actor_type ILIKE :q OR record_type ILIKE :q OR request_id ILIKE :q"
+          ].join(" OR ")
+
           relation.where(
-            "resource_key ILIKE :q OR action_key ILIKE :q OR outcome ILIKE :q OR actor_type ILIKE :q OR record_type ILIKE :q OR request_id ILIKE :q",
+            query,
             q: RecordingStudioAdmin::AdminActivityLogsSupport.safe_like(value)
           )
         else
@@ -54,6 +59,10 @@ module RecordingStudioAdmin
              title: "Action",
              sortable: false,
              value: ->(row, _context) { RecordingStudioAdmin::AdminActivityLogsScreen.action_label(row) }
+      column :record,
+             sortable: false,
+             value: ->(row, _context) { RecordingStudioAdmin::AdminActivityLogsScreen.record_label(row) }
+      column :error_message, title: "Error", sortable: false
       column :outcome,
              display: :badge,
              display_options: lambda { |_row, _context, value|
@@ -63,10 +72,6 @@ module RecordingStudioAdmin
                  size: :sm
                }
              }
-      column :record,
-             sortable: false,
-             value: ->(row, _context) { RecordingStudioAdmin::AdminActivityLogsScreen.record_label(row) }
-      column :error_message, title: "Error", sortable: false
 
       default_sort :occurred_at, direction: :desc
       paginate per_page: 25

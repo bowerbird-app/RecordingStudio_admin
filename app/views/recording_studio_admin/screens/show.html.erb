@@ -13,10 +13,24 @@
 <% end %>
 
 <% if @screen.widgets.any? %>
-  <%= render FlatPack::Grid::Component.new(cols: :auto, gap: :md, class: "mb-6") do %>
-    <% @screen.widgets.each do |widget| %>
-      <%= render_recording_studio_widget(widget, variant: :compact) %>
+  <% if RecordingStudioAdmin.configuration.async_widgets.enabled %>
+    <div data-controller="recording-studio-admin--async-widgets"
+         data-recording-studio-admin--async-widgets-max-concurrent-value="<%= RecordingStudioAdmin.configuration.async_widgets.max_concurrent_requests %>"
+         data-recording-studio-admin--async-widgets-retry-count-value="<%= RecordingStudioAdmin.configuration.async_widgets.retry_count %>">
+  <% end %>
+
+    <%= render FlatPack::Grid::Component.new(cols: :auto, gap: :md, class: "mb-6") do %>
+      <% @screen.widgets.each do |widget| %>
+        <% if RecordingStudioAdmin.configuration.async_widgets.enabled %>
+          <%= render_recording_studio_async_widget_frame(widget.with(view_variant: :compact), parent: :screen, parent_key: @screen.key) %>
+        <% else %>
+          <%= render_recording_studio_widget(widget, variant: :compact) %>
+        <% end %>
+      <% end %>
     <% end %>
+
+  <% if RecordingStudioAdmin.configuration.async_widgets.enabled %>
+    </div>
   <% end %>
 <% end %>
 
@@ -33,7 +47,7 @@
   <%= form_with url: request.path, method: :get, id: "screen-filters-form", data: {
     controller: "flat-pack--auto-submit recording-studio-admin--screen-filters",
     turbo_frame: "screen-chart",
-    action: "change->flat-pack--auto-submit#queueSubmit input->flat-pack--auto-submit#queueSubmit click->recording-studio-admin--screen-filters#queueDateRangeSubmit"
+    action: "change->recording-studio-admin--screen-filters#showTableSkeletons change->flat-pack--auto-submit#queueSubmit input->recording-studio-admin--screen-filters#showTableSkeletons input->flat-pack--auto-submit#queueSubmit submit->recording-studio-admin--screen-filters#showTableSkeletons submit->recording-studio-admin--screen-filters#refreshTableFrame click->recording-studio-admin--screen-filters#queueDateRangeSubmit"
   } do %>
     <% hidden_query.each do |key, value| %>
       <% if value.is_a?(Array) %>
@@ -79,7 +93,22 @@
   <% end %>
 <% end %>
 
-<%= turbo_frame_tag "screen-chart" do %>
-  <%= render "chart", screen: @screen %>
+<% if @screen.has_chart %>
+  <%= turbo_frame_tag "screen-chart", src: recording_studio_admin_screen_region_path(@screen.key, :chart) do %>
+    <%= render FlatPack::Card::Component.new(style: :outlined, class: "mb-6") do |card| %>
+      <% card.body do %>
+        <div class="space-y-4">
+          <%= render FlatPack::Skeleton::Component.new(variant: :text, width: "12rem", shimmer: true) %>
+          <%= render FlatPack::Skeleton::Component.new(variant: :rectangle, height: "18rem", shimmer: true) %>
+        </div>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% if @screen.has_table %>
+  <%= turbo_frame_tag "screen-table", src: recording_studio_admin_screen_region_path(@screen.key, :table) do %>
+    <%= render "table_placeholder", screen: @screen %>
+  <% end %>
 <% end %>
 

@@ -5,7 +5,7 @@ module RecordingStudioAdmin
     class Base
       class << self
         attr_reader :key_value, :title_value, :subtitle_value, :icon_value, :buttons_value, :visible_if_value,
-              :blast_radius_value
+                    :blast_radius_value
 
         def inherited(subclass)
           super

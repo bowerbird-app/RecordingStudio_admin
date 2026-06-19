@@ -6,20 +6,20 @@ export default class extends Controller {
   connect() {
     this.boundDocumentClick = this.queueDateRangeSubmit.bind(this)
     this.boundTurboFrameLoad = this.handleTurboFrameLoad.bind(this)
+    this.boundTurboFetchError = this.handleTurboFetchError.bind(this)
     document.addEventListener("click", this.boundDocumentClick, true)
     document.addEventListener("turbo:frame-load", this.boundTurboFrameLoad)
+    document.addEventListener("turbo:fetch-request-error", this.boundTurboFetchError)
 
     this.scheduleViewportCleanup()
 
-    // Ensure the visible trigger reflects the explicit preset key when one is present.
-    // This prevents overlap cases (for example this_week vs last_3_days) from
-    // showing the wrong preset label after navigation.
     requestAnimationFrame(() => this.syncPresetLabelsFromHiddenFields())
   }
 
   disconnect() {
     document.removeEventListener("click", this.boundDocumentClick, true)
     document.removeEventListener("turbo:frame-load", this.boundTurboFrameLoad)
+    document.removeEventListener("turbo:fetch-request-error", this.boundTurboFetchError)
   }
 
   handleTurboFrameLoad(event) {
@@ -28,6 +28,58 @@ export default class extends Controller {
     }
 
     this.scheduleViewportCleanup()
+  }
+
+  handleTurboFetchError() {
+    this.hideTableSkeletons()
+  }
+
+  showTableSkeletons() {
+    const tableFrame = document.getElementById("screen-table")
+    if (!tableFrame) {
+      return
+    }
+
+    tableFrame.setAttribute("aria-busy", "true")
+
+    tableFrame.querySelectorAll("[data-recording-studio-admin-table-cell-content]").forEach((content) => {
+      content.style.visibility = "hidden"
+    })
+
+    tableFrame.querySelectorAll("[data-recording-studio-admin-table-cell-skeleton]").forEach((skeleton) => {
+      skeleton.classList.remove("hidden")
+      skeleton.classList.add("flex")
+    })
+  }
+
+  hideTableSkeletons() {
+    const tableFrame = document.getElementById("screen-table")
+    if (!tableFrame) {
+      return
+    }
+
+    tableFrame.removeAttribute("aria-busy")
+
+    tableFrame.querySelectorAll("[data-recording-studio-admin-table-cell-content]").forEach((content) => {
+      content.style.removeProperty("visibility")
+    })
+
+    tableFrame.querySelectorAll("[data-recording-studio-admin-table-cell-skeleton]").forEach((skeleton) => {
+      skeleton.classList.add("hidden")
+      skeleton.classList.remove("flex")
+    })
+  }
+
+  refreshTableFrame() {
+    const tableFrame = document.getElementById("screen-table")
+    const tableSrc = tableFrame?.getAttribute("src")
+    if (!tableFrame || !tableSrc) {
+      return
+    }
+
+    const url = new URL(tableSrc, window.location.href)
+    url.search = new URLSearchParams(new FormData(this.element)).toString()
+    tableFrame.src = url.toString()
   }
 
   queueDateRangeSubmit(event) {
@@ -46,6 +98,8 @@ export default class extends Controller {
     if (!this.element.querySelector(triggerSelector)) {
       return
     }
+
+    this.showTableSkeletons()
 
     const autoSubmit = this.application.getControllerForElementAndIdentifier(
       this.element,
@@ -102,6 +156,8 @@ export default class extends Controller {
         pickerRoot.dataset.flatPackFlatpackDatePickerPresetKeyValue = presetKey
       }
     })
+      this.refreshTableFrame()
+
   }
 
   scheduleViewportCleanup() {

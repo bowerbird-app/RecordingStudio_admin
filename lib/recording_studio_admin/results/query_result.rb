@@ -5,9 +5,9 @@ module RecordingStudioAdmin
     class QueryResult
       attr_reader :relation, :count, :previous_count, :change_percent, :change_direction
 
-      def initialize(relation:, previous_count: nil)
+      def initialize(relation:, previous_count: nil, resolve_count: true)
         @relation = relation
-        @count = relation_count(relation)
+        @count = relation_count(relation) if resolve_count
         @previous_count = previous_count
         @change_percent = percent_change(@count, previous_count)
         @change_direction = direction(@count, previous_count)
@@ -47,6 +47,7 @@ module RecordingStudioAdmin
       end
 
       def percent_change(current, previous)
+        return if current.nil?
         return if previous.nil?
         return 0 if previous.zero? && current.zero?
         return 100 if previous.zero? && current.positive?
@@ -55,6 +56,7 @@ module RecordingStudioAdmin
       end
 
       def direction(current, previous)
+        return if current.nil?
         return if previous.nil?
         return :up if current > previous
         return :down if current < previous

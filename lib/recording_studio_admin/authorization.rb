@@ -4,7 +4,8 @@ module RecordingStudioAdmin
   module Authorization
     module_function
 
-    def authorize!(context, recording: context.access_recording, role: RecordingStudioAdmin.configuration.required_access_role)
+    def authorize!(context, recording: context.access_recording,
+                   role: RecordingStudioAdmin.configuration.required_access_role)
       ensure_recording_studio_accessible_available!
       raise AuthorizationFailed, "RecordingStudioAdmin access recording is not configured" unless recording
 
@@ -41,7 +42,8 @@ module RecordingStudioAdmin
 
     def resolve_current_root_recording(context)
       controller = context.controller
-      return controller.send(:current_root_recording) if controller && controller.respond_to?(:current_root_recording, true)
+      return controller.send(:current_root_recording) if controller.respond_to?(:current_root_recording,
+                                                                                true)
 
       return ::RecordingStudio::RootSwitchable.current_root_recording if defined?(::RecordingStudio::RootSwitchable)
 
@@ -50,7 +52,9 @@ module RecordingStudioAdmin
 
     def resolve_root_recording(recording)
       return recording.root_recording if recording.respond_to?(:root_recording) && recording.root_recording
-      return ::RecordingStudio.root_recording_or_self(recording) if defined?(::RecordingStudio) && recording.respond_to?(:root_recording)
+      if defined?(::RecordingStudio) && recording.respond_to?(:root_recording)
+        return ::RecordingStudio.root_recording_or_self(recording)
+      end
 
       recording
     end

@@ -21,6 +21,9 @@ module AdminScreens
     widget "api_errors.widgets.recent_failures",
            view_variant: :compact,
            params: { preset_key: :this_week }
+        widget "most_common_errors.widgets.error_distribution_chart",
+          view_variant: :compact,
+          params: { preset_key: :this_week }
     widget "most_common_errors.widgets.error_distribution_chart", params: { preset_key: :this_week }
   end
 end

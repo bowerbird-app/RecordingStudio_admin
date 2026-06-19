@@ -18,7 +18,8 @@ module RecordingStudioAdmin
       class_option :icon, type: :string, desc: "FlatPack icon name for the row action"
       class_option :confirm, type: :string, desc: "Optional confirmation message for mutating actions"
       class_option :destructive, type: :boolean, default: false, desc: "Mark the action as destructive in the dropdown"
-      class_option :required_role, type: :string, desc: "Override the required resource role. Defaults to :admin for non-GET actions"
+      class_option :required_role, type: :string,
+                                   desc: "Override the required resource role. Defaults to :admin for non-GET actions"
 
       def validate_options
         raise ArgumentError, "resource name must be a safe Ruby identifier" unless safe_identifier?(resource_key)
@@ -28,7 +29,11 @@ module RecordingStudioAdmin
         raise ArgumentError, "--screen-key must be a safe admin key" unless safe_key?(screen_key)
         raise ArgumentError, "--model is required" if model_class_name.blank?
         raise ArgumentError, "unsupported method: #{http_method}" unless supported_http_methods.include?(http_method)
-        raise ArgumentError, "--required-role must be a safe role key" if required_role_option.present? && !safe_key?(required_role_option)
+
+        return unless required_role_option.present? && !safe_key?(required_role_option)
+
+        raise ArgumentError,
+              "--required-role must be a safe role key"
       end
 
       def update_resource_definition
@@ -47,7 +52,13 @@ module RecordingStudioAdmin
       end
 
       def add_route
-        route %(namespace :#{namespace_name} do\n    resources :#{route_resource_name}, only: [] do\n      #{http_method} :#{normalized_action_name}, on: :member\n    end\n  end)
+        route <<~RUBY.chomp
+          namespace :#{namespace_name} do
+            resources :#{route_resource_name}, only: [] do
+              #{http_method} :#{normalized_action_name}, on: :member
+            end
+          end
+        RUBY
       end
 
       def show_table_snippet
@@ -182,29 +193,31 @@ module RecordingStudioAdmin
       def controller_action_block
         <<~RUBY
 
-            def #{normalized_action_name}
-              perform_recording_studio_admin_action!(#{resource_key.inspect}, :#{normalized_action_name}, @#{singular_name}) do
-                perform_#{resource_key}_#{normalized_action_name}!(@#{singular_name})
-              end
-
-              redirect_to recording_studio_admin_context.admin_screen_path(#{screen_key.inspect})
+          def #{normalized_action_name}
+            perform_recording_studio_admin_action!(#{resource_key.inspect}, :#{normalized_action_name}, @#{singular_name}) do
+              perform_#{resource_key}_#{normalized_action_name}!(@#{singular_name})
             end
+
+            redirect_to recording_studio_admin_context.admin_screen_path(#{screen_key.inspect})
+          end
         RUBY
       end
 
       def controller_handler_block
         <<~RUBY
 
-            def perform_#{resource_key}_#{normalized_action_name}!(record)
-              raise NotImplementedError, "Replace perform_#{resource_key}_#{normalized_action_name}! with the app-specific mutation for \#{record.class.name}"
-            end
+          def perform_#{resource_key}_#{normalized_action_name}!(record)
+            raise NotImplementedError, "Replace perform_#{resource_key}_#{normalized_action_name}! with the app-specific mutation for \#{record.class.name}"
+          end
         RUBY
       end
 
       def ensure_file_exists(path)
         return if File.exist?(File.join(destination_root, path))
 
-        raise ArgumentError, "Expected #{path} to exist. Generate the resource form first or create the host files before adding a custom action."
+        raise ArgumentError,
+              "Expected #{path} to exist. Generate the resource form first or create the host files " \
+              "before adding a custom action."
       end
 
       def inject_before_anchor(path, anchor, content)
@@ -220,11 +233,11 @@ module RecordingStudioAdmin
       end
 
       def safe_identifier?(value)
-        value.to_s.match?(%r{\A[a-z][a-z0-9_]*\z})
+        value.to_s.match?(/\A[a-z][a-z0-9_]*\z/)
       end
 
       def safe_key?(value)
-        value.to_s.match?(%r{\A[a-z0-9_]+\z})
+        value.to_s.match?(/\A[a-z0-9_]+\z/)
       end
     end
   end

@@ -42,12 +42,17 @@ class AdminActionAuditTest < Minitest::Test
   end
 
   def test_performed_admin_action_records_one_event_with_changes
-    record = AuditedRecord.new(id: 1, previous_changes: { "name" => ["Old", "New"], "updated_at" => [1, 2] })
+    record = AuditedRecord.new(id: 1, previous_changes: { "name" => %w[Old New], "updated_at" => [1, 2] })
     notifications = []
 
     with_singleton_stub(RecordingStudioAccessible, :authorized?, true) do
-      ActiveSupport::Notifications.subscribed(->(*args) { notifications << ActiveSupport::Notifications::Event.new(*args) }, RecordingStudioAdmin::AdminActionAudit::NOTIFICATION_NAME) do
-        result = controller_for(record).send(:perform_recording_studio_admin_action!, "audited", :edit, record, audit_action: :update) { true }
+      ActiveSupport::Notifications.subscribed(lambda { |*args|
+        notifications << ActiveSupport::Notifications::Event.new(*args)
+      }, RecordingStudioAdmin::AdminActionAudit::NOTIFICATION_NAME) do
+        result = controller_for(record).send(:perform_recording_studio_admin_action!, "audited", :edit, record,
+                                             audit_action: :update) do
+          true
+        end
 
         assert_equal true, result
       end
@@ -60,14 +65,17 @@ class AdminActionAuditTest < Minitest::Test
     assert_equal "update", event.action_key
     assert_equal "performed", event.outcome
     assert_equal :admin, event.required_role
-    assert_equal({ changes: { "name" => ["Old", "New"] } }, event.metadata)
+    assert_equal({ changes: { "name" => %w[Old New] } }, event.metadata)
   end
 
   def test_validation_failure_records_validation_failed_outcome
     record = AuditedRecord.new(id: 1, previous_changes: {})
 
     with_singleton_stub(RecordingStudioAccessible, :authorized?, true) do
-      result = controller_for(record).send(:perform_recording_studio_admin_action!, "audited", :edit, record, audit_action: :update) { false }
+      result = controller_for(record).send(:perform_recording_studio_admin_action!, "audited", :edit, record,
+                                           audit_action: :update) do
+        false
+      end
 
       assert_equal false, result
     end

@@ -14,8 +14,10 @@ module RecordingStudioAdmin
       orderable_method
       param_uuid_name
       param_target_position_name
+      compact_preview
     ].freeze
-    LIST_ITEM_KEYS = %i[text label icon leading trailing href hover active link_arguments].freeze
+    LIST_ITEM_KEYS = %i[text label icon avatar leading trailing href hover active link_arguments].freeze
+    COMPACT_LIST_PREVIEW_TYPES = %i[visual_stack text_summary].freeze
 
     attr_reader :key, :local_key, :screen_key
 
@@ -23,10 +25,14 @@ module RecordingStudioAdmin
       @local_key = local_key&.to_s
       @screen_key = screen_key&.to_s
       @key = registry_prefix || [@screen_key, "widgets", @local_key].compact.join(".")
-      @blast_radius = RecordingStudioAdmin::BlastRadius.normalize(blast_radius, owner: "Widget #{key.inspect}") if blast_radius
+      if blast_radius
+        @blast_radius = RecordingStudioAdmin::BlastRadius.normalize(blast_radius,
+                                                                    owner: "Widget #{key.inspect}")
+      end
       @type = :number
       @show_metric = true
       @show_change = true
+      @show_change_explicit = false
       @show_period = true
       instance_eval(&block) if block
     end
@@ -61,15 +67,18 @@ module RecordingStudioAdmin
     private
 
     def resolved_attributes(context)
+      resolved_type = normalize_type(evaluate(@type, context))
+      resolved_chart_type = evaluate(@chart_type, context)
+
       {
-        type: normalize_type(evaluate(@type, context)),
+        type: resolved_type,
         value: evaluate(@value, context),
         change: evaluate(@change, context),
         change_good_when: normalize_change_good_when(evaluate(@change_good_when, context)),
         link_to: RecordingStudioAdmin::UrlSafety.safe_href(evaluate(@link_to, context)),
         link_label: resolve_link_label(context),
         series: evaluate(@series, context),
-        chart_type: evaluate(@chart_type, context),
+        chart_type: resolved_chart_type,
         chart_options: evaluate(@chart_options, context) || {},
         list_options: normalize_list_options(evaluate(@list_options, context)),
         items: normalize_list_items(evaluate(@items, context)),
@@ -77,17 +86,23 @@ module RecordingStudioAdmin
         metadata: normalize_hash(evaluate(@metadata, context), field_name: :metadata),
         view_variant: nil,
         show_metric: @show_metric,
-        show_change: @show_change,
+        show_change: resolved_show_change,
         show_period: @show_period
       }
     end
 
     def hide_metric = @show_metric = false
-    def hide_change = @show_change = false
+    def hide_change
+      @show_change = false
+      @show_change_explicit = true
+    end
     def hide_period = @show_period = false
 
     def show_metric(value = true) = @show_metric = value
-    def show_change(value = true) = @show_change = value
+    def show_change(value = true)
+      @show_change = value
+      @show_change_explicit = true
+    end
     def show_period(value = true) = @show_period = value
 
     def evaluate(value, context)
@@ -146,6 +161,10 @@ module RecordingStudioAdmin
       raise InvalidDefinition, "Widget #{key.inspect} has unsupported change_good_when #{value.inspect}"
     end
 
+    def resolved_show_change
+      @show_change
+    end
+
     def validate_number_widget!(value)
       return unless value.nil?
 
@@ -176,9 +195,21 @@ module RecordingStudioAdmin
       return {} if options.empty?
 
       unknown_keys = options.keys - LIST_OPTION_KEYS
-      return options if unknown_keys.empty?
+      raise InvalidDefinition, "Widget #{key.inspect} has unsupported list_options keys #{unknown_keys.inspect}" unless unknown_keys.empty?
 
-      raise InvalidDefinition, "Widget #{key.inspect} has unsupported list_options keys #{unknown_keys.inspect}"
+      normalize_compact_list_preview!(options)
+      options
+    end
+
+    def normalize_compact_list_preview!(options)
+      return unless options.key?(:compact_preview)
+
+      compact_preview = options[:compact_preview].to_s.downcase.to_sym
+      unless COMPACT_LIST_PREVIEW_TYPES.include?(compact_preview)
+        raise InvalidDefinition, "Widget #{key.inspect} has unsupported compact_preview #{options[:compact_preview].inspect}"
+      end
+
+      options[:compact_preview] = compact_preview
     end
 
     def normalize_list_items(value)

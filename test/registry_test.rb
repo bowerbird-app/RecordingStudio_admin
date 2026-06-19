@@ -59,7 +59,8 @@ class RegistryTest < Minitest::Test
     @registry.register_screen(reloaded_screen)
 
     assert_equal reloaded_screen, @registry.screen_for("example")
-    assert_equal reloaded_screen.widgets.fetch("example.widgets.summary"), @registry.widget_for("example.widgets.summary")
+    assert_equal reloaded_screen.widgets.fetch("example.widgets.summary"),
+                 @registry.widget_for("example.widgets.summary")
   end
 
   def test_register_section

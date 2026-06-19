@@ -15,6 +15,9 @@ class ConfigurationTest < Minitest::Test
     assert_nil config.site_admin_recording_resolver
     assert_equal :view, config.required_access_role
     assert_equal 1_000, config.max_page
+    assert_equal true, config.async_widgets.enabled
+    assert_equal 4, config.async_widgets.max_concurrent_requests
+    assert_equal 1, config.async_widgets.retry_count
     assert_empty config.surfaces
   end
 
@@ -25,6 +28,21 @@ class ConfigurationTest < Minitest::Test
 
     assert_equal "/backoffice", config.default_mount_path
     assert_equal "flat_pack_sidebar", config.engine_layout
+  end
+
+  def test_merge_updates_async_widget_configuration
+    config = RecordingStudioAdmin::Configuration.new
+
+    config.merge!("async_widgets" => {
+                    "enabled" => true,
+                    "max_concurrent_requests" => 2,
+                    "retry_count" => 0,
+                    "unknown" => true
+                  })
+
+    assert_equal true, config.async_widgets.enabled
+    assert_equal 2, config.async_widgets.max_concurrent_requests
+    assert_equal 0, config.async_widgets.retry_count
   end
 
   def test_surface_configures_named_entrypoint

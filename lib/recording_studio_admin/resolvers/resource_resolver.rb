@@ -3,35 +3,48 @@
 module RecordingStudioAdmin
   module Resolvers
     class ResourceResolver
-      def self.call(key:, context:, action:, record: nil)
-        new(key, context, action, record).call
+      def self.call(key:, context:, action:, record: nil, enforce_record_visibility: true)
+        new(key, context, action, record, enforce_record_visibility: enforce_record_visibility).call
       end
 
-      def initialize(key, context, action, record)
+      def initialize(key, context, action, record, enforce_record_visibility: true)
         @key = key.to_s
         @context = context
         @action = action.to_s.downcase.to_sym
         @record = record
+        @enforce_record_visibility = enforce_record_visibility
       end
 
       def call
         definition = RecordingStudioAdmin.resource_for(@key)
         raise DefinitionNotFound, "Resource #{@key.inspect} is not registered" unless definition
+
         action_definition = definition.action_for(@action)
         raise AuthorizationFailed, "Resource #{@key.inspect} does not define action #{@action}" unless action_definition
 
         section = RecordingStudioAdmin.section_for(definition.section_key!)
-        raise DefinitionNotFound, "Resource #{@key.inspect} references unknown section #{definition.section_key.inspect}" unless section
+        unless section
+          raise DefinitionNotFound,
+                "Resource #{@key.inspect} references unknown section #{definition.section_key.inspect}"
+        end
 
         authorize_section!(section, role: action_definition.required_access_role)
-  RecordingStudioAdmin::BlastRadius.authorize!(section, context: @context, label: "Section #{section.key.inspect}")
-  RecordingStudioAdmin::BlastRadius.authorize!(definition, context: @context, container: section,
-                 label: "Resource #{definition.key.inspect}")
-  RecordingStudioAdmin::BlastRadius.authorize!(action_definition, context: @context, container: definition,
-                       label: "Resource #{definition.key}.#{@action}")
+        RecordingStudioAdmin::BlastRadius.authorize!(section, context: @context,
+                                                              label: "Section #{section.key.inspect}")
+        RecordingStudioAdmin::BlastRadius.authorize!(definition, context: @context, container: section,
+                                                                 label: "Resource #{definition.key.inspect}")
+        RecordingStudioAdmin::BlastRadius.authorize!(action_definition, context: @context, container: definition,
+                                                                        label: "Resource #{definition.key}.#{@action}")
         raise DefinitionNotFound, "Resource #{@key.inspect} is not enabled for this root" unless enabled?(section)
-        raise DefinitionNotFound, "Resource #{@key.inspect} is not visible" unless visible?(definition) && visible?(section)
-        raise AuthorizationFailed, "Resource #{@key.inspect} action #{@action} is not visible" unless action_definition.visible?(@record, @context)
+
+        unless visible?(definition) && visible?(section)
+          raise DefinitionNotFound,
+                "Resource #{@key.inspect} is not visible"
+        end
+        unless !@enforce_record_visibility || action_definition.visible?(@record, @context)
+          raise AuthorizationFailed,
+                "Resource #{@key.inspect} action #{@action} is not visible"
+        end
 
         action_definition
       end

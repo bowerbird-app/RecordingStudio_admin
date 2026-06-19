@@ -28,11 +28,32 @@ module AdminScreens
            view_variant: :compact,
            params: { preset_key: :this_week }
     widget "api_errors.widgets.recent_failures", params: { preset_key: :this_week }
+    widget "most_common_errors.widgets.error_distribution_chart",
+           view_variant: :compact,
+           params: { preset_key: :this_week }
     widget "most_common_errors.widgets.error_distribution_chart", params: { preset_key: :this_week }
+    widget "api_requests.widgets.api_activity_column",
+           view_variant: :compact,
+           params: { preset_key: :this_week }
+    widget "api_requests.widgets.api_activity_column", params: { preset_key: :this_week }
+    widget "api_requests.widgets.api_activity_donut",
+           view_variant: :compact,
+           params: { preset_key: :this_week }
+    widget "api_requests.widgets.api_activity_donut", params: { preset_key: :this_week }
+    widget "api_requests.widgets.api_activity_radar",
+           view_variant: :compact,
+           params: { preset_key: :this_week }
+    widget "api_requests.widgets.api_activity_radar", params: { preset_key: :this_week }
+    widget "api_requests.widgets.api_activity_gauge",
+           view_variant: :compact,
+           params: { preset_key: :this_week }
+    widget "api_requests.widgets.api_activity_gauge", params: { preset_key: :this_week }
     widget "user_activity.widgets.review_completion",
            view_variant: :compact,
            params: { preset_key: :this_week }
     widget "user_activity.widgets.active_users", params: { preset_key: :this_week }
+    widget "user_activity.widgets.most_recent_users",
+           view_variant: :compact
     widget "user_activity.widgets.most_recent_users"
     widget "background_jobs.widgets.job_throughput",
            view_variant: :compact,

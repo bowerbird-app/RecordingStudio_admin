@@ -19,7 +19,8 @@ class ResourceActionGeneratorTest < Minitest::Test
   end
 
   def build_action_generator(destination_root, options = {})
-    RecordingStudioAdmin::Generators::ResourceActionGenerator.new(["users", "flag_email"], options, destination_root: destination_root)
+    RecordingStudioAdmin::Generators::ResourceActionGenerator.new(%w[users flag_email], options,
+                                                                  destination_root: destination_root)
   end
 
   def test_generator_appends_custom_member_action_to_existing_resource_and_controller
@@ -49,10 +50,10 @@ class ResourceActionGeneratorTest < Minitest::Test
       assert_includes resource, "action :flag_email"
       assert_includes resource, 'text: "Flag email"'
       assert_includes resource, 'icon: "flag"'
-      assert_includes resource, 'method: :post'
+      assert_includes resource, "method: :post"
       assert_includes resource, 'confirm: "Flag this email?"'
-      assert_includes resource, 'context.controller.main_app.flag_email_admin_user_path(record) if record'
-      assert_includes resource, 'required_role: :admin'
+      assert_includes resource, "context.controller.main_app.flag_email_admin_user_path(record) if record"
+      assert_includes resource, "required_role: :admin"
 
       assert_includes controller, "def flag_email"
       assert_includes controller, 'perform_recording_studio_admin_action!("users", :flag_email, @user)'
@@ -69,10 +70,13 @@ class ResourceActionGeneratorTest < Minitest::Test
   def test_add_route_creates_a_focused_member_route_block
     generator = build_action_generator("/tmp", model: "User", section: "users")
     routes = []
+    expected_route = [
+      "namespace :admin do\n  resources :users, only: [] do\n    post :flag_email, on: :member\n  end\nend"
+    ]
 
     with_singleton_stub(generator, :route, ->(value) { routes << value }) { generator.add_route }
 
-    assert_equal ["namespace :admin do\n    resources :users, only: [] do\n      post :flag_email, on: :member\n    end\n  end"], routes
+    assert_equal expected_route, routes
   end
 
   def test_rejects_missing_host_files_and_unsafe_names

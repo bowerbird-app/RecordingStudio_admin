@@ -17,22 +17,37 @@ class ResourceTest < Minitest::Test
     section "users"
     title "Managed users"
     subtitle "Edit users"
-      action :show,
-        text: "Show",
-        icon: "eye",
-        url: ->(record, context) { context.controller.admin_user_path(record) }
-      action :edit,
-        text: "Edit",
-        icon: "pencil-square",
-        url: ->(record, context) { context.controller.edit_admin_user_path(record) },
-        required_role: :admin
-      action :suspend,
-        text: "Suspend",
-        icon: "flag",
-        method: :post,
-        confirm: ->(record, _context) { "Suspend #{record.email}?" },
-        url: ->(record, context) { context.controller.suspend_admin_user_path(record) },
-        visible_if: ->(record, _context) { record.status != "disabled" }
+    action :show,
+           text: "Show",
+           icon: "eye",
+           url: ->(record, context) { context.controller.admin_user_path(record) }
+    action :edit,
+           text: "Edit",
+           icon: "pencil-square",
+           url: ->(record, context) { context.controller.edit_admin_user_path(record) },
+           required_role: :admin
+    action :suspend,
+           text: "Suspend",
+           icon: "flag",
+           method: :post,
+           confirm: ->(record, _context) { "Suspend #{record.email}?" },
+           url: ->(record, context) { context.controller.suspend_admin_user_path(record) },
+           visible_if: ->(record, _context) { record.status != "disabled" }
+  end
+
+  class UsersScreen < RecordingStudioAdmin::Screen
+    key "users"
+    title "Users"
+    query do |_context|
+      [
+        ResourceRecord.new(id: 1, email: "first@example.com", status: "active"),
+        ResourceRecord.new(id: 2, email: "second@example.com", status: "disabled")
+      ]
+    end
+    table do
+      column :email
+      admin_action "users.suspend"
+    end
   end
 
   class HiddenSection < RecordingStudioAdmin::Section
@@ -53,6 +68,7 @@ class ResourceTest < Minitest::Test
     RecordingStudioAdmin.register_section(HiddenSection)
     RecordingStudioAdmin.register_resource(UsersResource)
     RecordingStudioAdmin.register_resource(HiddenResource)
+    RecordingStudioAdmin.register_screen(UsersScreen)
   end
 
   def teardown
@@ -110,7 +126,8 @@ class ResourceTest < Minitest::Test
 
     assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
       with_singleton_stub(RecordingStudioAccessible, :authorized?, authorizer) do
-        RecordingStudioAdmin.resolve_resource_action(key: "users", action: :edit, context: allowed_context, record: record)
+        RecordingStudioAdmin.resolve_resource_action(key: "users", action: :edit, context: allowed_context,
+                                                     record: record)
       end
     end
   end
@@ -144,7 +161,8 @@ class ResourceTest < Minitest::Test
 
     error = assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
       with_singleton_stub(RecordingStudioAccessible, :authorized?, true) do
-        RecordingStudioAdmin.resolve_resource_action(key: "users", action: :suspend, context: allowed_context, record: record)
+        RecordingStudioAdmin.resolve_resource_action(key: "users", action: :suspend, context: allowed_context,
+                                                     record: record)
       end
     end
 
@@ -175,6 +193,39 @@ class ResourceTest < Minitest::Test
 
     with_singleton_stub(RecordingStudioAccessible, :authorized?, authorizer) do
       assert_nil table.actions.first.resolve(record, allowed_context)
+    end
+  end
+
+  def test_screen_table_admin_action_authorizes_once_and_preserves_row_visibility
+    context = allowed_context
+    authorized_roles = []
+    authorizer = lambda do |actor:, recording:, role:|
+      assert_equal :actor, actor
+      assert_same context.access_recording, recording
+      authorized_roles << role
+      true
+    end
+
+    screen = with_singleton_stub(RecordingStudioAccessible, :authorized?, authorizer) do
+      RecordingStudioAdmin.resolve_screen(
+        key: "users",
+        context: context,
+        resolve_summary: false,
+        resolve_chart: false,
+        resolve_widgets: false
+      )
+    end
+
+    assert_equal %i[view admin], authorized_roles
+    action = screen.table.actions.first
+
+    repeated_authorizer = ->(**) { raise "unexpected repeated authorization" }
+
+    with_singleton_stub(RecordingStudioAccessible, :authorized?, repeated_authorizer) do
+      active_action = action.resolve(screen.table.rows.first, context)
+      assert_equal "Suspend", active_action.text
+      assert_equal "/admin/users/1/suspend", active_action.url
+      assert_nil action.resolve(screen.table.rows.second, context)
     end
   end
 

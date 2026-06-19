@@ -41,6 +41,26 @@ end
 | `required_access_role` | `:view` | Role passed into `RecordingStudioAccessible.authorized?` |
 | `max_page` | `1000` | Hard ceiling for table pagination page numbers |
 
+Async widget loading is configured under `config.async_widgets`:
+
+| Async widget option | Default | Purpose |
+|--------|---------|---------|
+| `enabled` | `true` | Render section/screen widget placeholders on the page request and load each widget through an engine-owned endpoint |
+| `max_concurrent_requests` | `4` | Maximum widget frame requests the bundled scheduler starts at once per page |
+| `retry_count` | `1` | Reserved retry budget for the scheduler when a widget load fails |
+
+By default, widgets still resolve through their parent section or screen but do so from bounded async frame requests. That keeps authorization, visibility, blast-radius checks, widget usage params, filters, and access recording context centralized while allowing faster widgets to render before slower widgets finish.
+
+```ruby
+RecordingStudioAdmin.configure do |config|
+  config.async_widgets.enabled = true
+  config.async_widgets.max_concurrent_requests = 4
+  config.async_widgets.retry_count = 1
+end
+```
+
+Set `config.async_widgets.enabled = false` only when you need the older behavior where every widget resolves during the initial page response.
+
 Per-surface overrides live under `config.surface(:name)` and support these request-time keys:
 
 | Surface option | Inherits from | Purpose |

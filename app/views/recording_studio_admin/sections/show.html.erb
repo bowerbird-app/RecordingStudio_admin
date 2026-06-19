@@ -16,20 +16,18 @@
       <% overflow_links = action_links.drop(3) %>
       <% if action_links.any? %>
       <% page_title.slot do %>
-        <%= render FlatPack::ButtonGroup::Component.new do |group| %>
-          <% visible_links.each do |link| %>
-            <% group.button(render(FlatPack::Button::Component.new(text: link.text, url: preserve_anchor_url(link.url), style: link.style))) %>
+        <% visible_links.each do |link| %>
+          <%= render FlatPack::Button::Component.new(text: link.text, url: preserve_anchor_url(link.url), style: link.style) %>
+        <% end %>
+
+        <% if overflow_links.any? %>
+          <% dropdown = FlatPack::Button::Dropdown::Component.new(text: "More", style: :secondary) %>
+
+          <% overflow_links.each do |link| %>
+            <% dropdown.menu_item(text: link.text, href: preserve_anchor_url(link.url)) %>
           <% end %>
 
-          <% if overflow_links.any? %>
-            <% dropdown = FlatPack::Button::Dropdown::Component.new(text: "More", style: :secondary) %>
-
-            <% overflow_links.each do |link| %>
-              <% dropdown.menu_item(text: link.text, href: preserve_anchor_url(link.url)) %>
-            <% end %>
-
-            <% group.button(render(dropdown)) %>
-          <% end %>
+          <%= render dropdown %>
         <% end %>
       <% end %>
       <% end %>
@@ -40,10 +38,20 @@
     <% compact_widgets, full_widgets = @section.widgets.partition { |widget| widget.view_variant == :compact } %>
     <% widget_grid_gap = :md %>
 
+    <% if RecordingStudioAdmin.configuration.async_widgets.enabled %>
+      <div data-controller="recording-studio-admin--async-widgets"
+           data-recording-studio-admin--async-widgets-max-concurrent-value="<%= RecordingStudioAdmin.configuration.async_widgets.max_concurrent_requests %>"
+           data-recording-studio-admin--async-widgets-retry-count-value="<%= RecordingStudioAdmin.configuration.async_widgets.retry_count %>">
+    <% end %>
+
     <% if compact_widgets.any? %>
       <%= render FlatPack::Grid::Component.new(cols: :auto, gap: widget_grid_gap, class: "my-4") do %>
         <% compact_widgets.each do |widget| %>
-          <%= render_recording_studio_widget(widget) %>
+          <% if RecordingStudioAdmin.configuration.async_widgets.enabled %>
+            <%= render_recording_studio_async_widget_frame(widget, parent: :section, parent_key: @section.key) %>
+          <% else %>
+            <%= render_recording_studio_widget(widget) %>
+          <% end %>
         <% end %>
       <% end %>
     <% end %>
@@ -51,9 +59,17 @@
     <% if full_widgets.any? %>
       <%= render FlatPack::Grid::Component.new(cols: :auto, gap: widget_grid_gap, class: (compact_widgets.any? ? "my-4" : "my-8")) do %>
         <% full_widgets.each do |widget| %>
-          <%= render_recording_studio_widget(widget) %>
+          <% if RecordingStudioAdmin.configuration.async_widgets.enabled %>
+            <%= render_recording_studio_async_widget_frame(widget, parent: :section, parent_key: @section.key) %>
+          <% else %>
+            <%= render_recording_studio_widget(widget) %>
+          <% end %>
         <% end %>
       <% end %>
+    <% end %>
+
+    <% if RecordingStudioAdmin.configuration.async_widgets.enabled %>
+      </div>
     <% end %>
   <% end %>
 <% end %>

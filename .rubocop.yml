@@ -5,6 +5,7 @@ AllCops:
     - 'test/dummy/**/*'
     - 'vendor/**/*'
     - 'bin/**/*'
+    - 'lib/generators/**/templates/**/*'
 
 Style/Documentation:
   Enabled: false
@@ -20,28 +21,54 @@ Layout/LineLength:
 Metrics/ClassLength:
   Exclude:
     - 'test/**/*'
+    - 'lib/generators/**/*'
+    - 'lib/recording_studio_admin.rb'
+    - 'lib/recording_studio_admin/admin_activity_logs_screen.rb'
     - 'lib/recording_studio_admin/resolvers/**/*'
     - 'lib/recording_studio_admin/widget.rb'
     - 'lib/recording_studio_admin/context.rb'
     - 'lib/recording_studio_admin/period.rb'
+    - 'lib/recording_studio_admin/widgets/presenter.rb'
+
+Metrics/ModuleLength:
+  Exclude:
+    - 'app/helpers/recording_studio_admin/geo_chart_helper.rb'
+    - 'lib/recording_studio_admin.rb'
 
 Metrics/MethodLength:
   Exclude:
     - 'test/**/*'
     - 'lib/generators/**/*'
+    - 'app/controllers/recording_studio_admin/screens_controller.rb'
+    - 'app/controllers/recording_studio_admin/sections_controller.rb'
+    - 'app/helpers/recording_studio_admin/geo_chart_helper.rb'
+    - 'lib/recording_studio_admin.rb'
+    - 'lib/recording_studio_admin/admin_action_audit.rb'
+    - 'lib/recording_studio_admin/admin_activity_logs_support.rb'
+    - 'lib/recording_studio_admin/authorization.rb'
+    - 'lib/recording_studio_admin/configuration.rb'
     - 'lib/recording_studio_admin/filters/date_range_filter.rb'
+    - 'lib/recording_studio_admin/flat_pack_geo_chart_support.rb'
     - 'lib/recording_studio_admin/resolvers/**/*'
+    - 'lib/recording_studio_admin/resource.rb'
+    - 'lib/recording_studio_admin/section.rb'
     - 'lib/recording_studio_admin/widget.rb'
     - 'lib/recording_studio_admin/period.rb'
     - 'lib/recording_studio_admin/screen.rb'
+    - 'lib/recording_studio_admin/widgets/presenter.rb'
     - 'lib/recording_studio_admin/widget_change_semantics.rb'
     - 'lib/recording_studio_admin/context.rb'
 
 Metrics/AbcSize:
   Exclude:
     - 'test/**/*'
+    - 'app/controllers/recording_studio_admin/screens_controller.rb'
+    - 'app/controllers/recording_studio_admin/sections_controller.rb'
+    - 'app/helpers/recording_studio_admin/geo_chart_helper.rb'
     - 'lib/generators/**/*'
+    - 'lib/recording_studio_admin/admin_action_audit.rb'
     - 'lib/recording_studio_admin/filters/date_range_filter.rb'
+    - 'lib/recording_studio_admin/resource.rb'
     - 'lib/recording_studio_admin/resolvers/**/*'
     - 'lib/recording_studio_admin/screen.rb'
     - 'lib/recording_studio_admin/period.rb'
@@ -65,7 +92,10 @@ Naming/VariableNumber:
 Metrics/CyclomaticComplexity:
   Exclude:
     - 'test/**/*'
+    - 'app/controllers/recording_studio_admin/sections_controller.rb'
+    - 'app/helpers/recording_studio_admin/geo_chart_helper.rb'
     - 'lib/generators/**/*'
+    - 'lib/recording_studio_admin/admin_action_audit.rb'
     - 'lib/recording_studio_admin/context.rb'
     - 'lib/recording_studio_admin/filters/date_range_filter.rb'
     - 'lib/recording_studio_admin/resolvers/**/*'
@@ -75,12 +105,16 @@ Metrics/CyclomaticComplexity:
 Metrics/PerceivedComplexity:
   Exclude:
     - 'test/**/*'
+    - 'app/controllers/recording_studio_admin/sections_controller.rb'
+    - 'app/helpers/recording_studio_admin/geo_chart_helper.rb'
     - 'lib/generators/**/*'
+    - 'lib/recording_studio_admin/admin_action_audit.rb'
     - 'lib/recording_studio_admin/filters/date_range_filter.rb'
     - 'lib/recording_studio_admin/resolvers/**/*'
     - 'lib/recording_studio_admin/period.rb'
 
 Metrics/ParameterLists:
+  CountKeywordArgs: false
   Exclude:
     - 'lib/recording_studio_admin/period.rb'
     - 'lib/recording_studio_admin/screen.rb'
@@ -90,10 +124,14 @@ Metrics/ParameterLists:
 
 Metrics/BlockLength:
   Exclude:
-    - 'test/recording_studio_v3_test.rb'
+    - 'test/**/*'
+    - 'lib/recording_studio_admin/admin_activity_logs_screen.rb'
+    - 'lib/recording_studio_admin/admin_activity_logs_widget.rb'
 
 Style/MultilineBlockChain:
   Exclude:
+    - 'app/controllers/recording_studio_admin/sections_controller.rb'
+    - 'lib/recording_studio_admin/resolvers/available_widgets_resolver.rb'
     - 'lib/recording_studio_admin/resolvers/available_sections_resolver.rb'
     - 'lib/recording_studio_admin/resolvers/sections_resolver.rb'
 

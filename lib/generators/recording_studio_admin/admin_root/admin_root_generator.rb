@@ -26,6 +26,7 @@ module RecordingStudioAdmin
 
       def copy_views
         template "app/views/admin/root/show.html.erb", "app/views/admin/root/show.html.erb"
+        template "app/views/admin/root/_search_results.html.erb", "app/views/admin/root/_search_results.html.erb"
         template "app/views/layouts/admin.html.erb", "app/views/layouts/admin.html.erb"
       end
 

@@ -76,7 +76,7 @@ module RecordingStudioAdmin
       end
 
       def action(name, text:, url:, icon: nil, method: nil, confirm: nil, destructive: nil, visible_if: nil,
-             required_role: nil, blast_radius: nil)
+                 required_role: nil, blast_radius: nil)
         definition = ResourceActionDefinition.new(
           name.to_sym,
           text,
