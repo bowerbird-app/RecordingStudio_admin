@@ -35,7 +35,13 @@ module Dummy
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
-    Rails.autoloaders.main.ignore(root.join("app/admin"))
+
+    initializer "dummy.ignore_manual_recording_studio_definitions", before: :set_autoload_paths do |app|
+      Rails.autoloaders.main.ignore(
+        app.root.join("app/admin"),
+        app.root.join("app/services/exports")
+      )
+    end
 
     # Configure generators to use UUID primary keys
     config.generators do |g|
