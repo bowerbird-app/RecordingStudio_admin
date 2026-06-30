@@ -21,7 +21,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres -d recording_studio_admin_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -67,4 +67,10 @@ jobs:
     - name: Run tests
       run: bundle exec rake test:all
       env:
+        RAILS_ENV: test
         DATABASE_URL: postgres://postgres:postgres@localhost:5432/recording_studio_admin_test
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        DB_NAME_TEST: recording_studio_admin_test
