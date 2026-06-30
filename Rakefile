@@ -10,6 +10,7 @@ DUMMY_TEST_FILES = [
 DUMMY_GEMFILE = File.expand_path("test/dummy/Gemfile", __dir__)
 DUMMY_APP_ROOT = File.expand_path("test/dummy", __dir__)
 TEST_ROOT = File.expand_path("test", __dir__)
+TEST_DATABASE_NAME = "recording_studio_admin_test"
 ROOT_TEST_EXCLUSIONS = %w[
   test/controllers/docs_controller_test.rb
   test/dummy/**/*_test.rb
@@ -21,7 +22,6 @@ DUMMY_BUNDLE_CLEARED_ENV = {
   "BUNDLE_BIN_PATH" => nil,
   "BUNDLE_GEMFILE" => DUMMY_GEMFILE,
   "BUNDLE_LOCKFILE" => nil,
-  "BUNDLE_PATH" => nil,
   "BUNDLER_SETUP" => nil,
   "BUNDLER_VERSION" => nil,
   "RUBYLIB" => nil,
@@ -43,10 +43,35 @@ def dummy_bundle_env
 end
 
 def dummy_bundle_base_env
+  env = dummy_bundle_process_env.merge(dummy_database_env)
+  bundle_path = ENV.fetch("BUNDLE_PATH", nil)
+
+  env["BUNDLE_PATH"] = bundle_path if bundle_path.to_s != ""
+  env.compact
+end
+
+def dummy_bundle_process_env
   {
     "BUNDLE_GEMFILE" => DUMMY_GEMFILE,
-    "DISABLE_SIMPLECOV" => "true"
+    "DISABLE_SIMPLECOV" => "true",
+    "DATABASE_URL" => ENV.fetch("DATABASE_URL", nil)
   }
+end
+
+def dummy_database_env
+  {
+    "RAILS_ENV" => ENV.fetch("RAILS_ENV", "test"),
+    "DB_HOST" => ENV.fetch("DB_HOST", "localhost"),
+    "DB_PORT" => ENV.fetch("DB_PORT", "5432"),
+    "DB_USER" => ENV.fetch("DB_USER", "postgres"),
+    "DB_PASSWORD" => ENV.fetch("DB_PASSWORD", "postgres"),
+    "DB_NAME" => dummy_test_database_name,
+    "DB_NAME_TEST" => dummy_test_database_name
+  }
+end
+
+def dummy_test_database_name
+  ENV.fetch("DB_NAME_TEST", TEST_DATABASE_NAME)
 end
 
 Rake::TestTask.new(:test) do |t|

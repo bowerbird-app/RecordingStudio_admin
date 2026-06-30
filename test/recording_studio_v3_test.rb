@@ -89,6 +89,7 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
     workspace_name = unique_name("Section Parent Workspace")
     folder_name = unique_name("Section Folder")
     original_registry = RecordingStudioAdmin.instance_variable_get(:@registry)
+    original_access_recording_resolver = RecordingStudioAdmin.configuration.access_recording_resolver
     original_workspace_sections_definition = Workspace.instance_variable_get(
       :@recording_studio_admin_sections_definition
     )
@@ -114,6 +115,7 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
     end
 
     RecordingStudioAdmin.instance_variable_set(:@registry, RecordingStudioAdmin::Registry.new)
+    RecordingStudioAdmin.configuration.access_recording_resolver = nil
     RecordingStudioAdmin.register_section(section_class)
 
     context = RecordingStudioAdmin::Context.new(
@@ -136,6 +138,7 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
       :@recording_studio_admin_sections_definition,
       original_workspace_sections_definition
     )
+    RecordingStudioAdmin.configuration.access_recording_resolver = original_access_recording_resolver
     RecordingStudioAdmin.instance_variable_set(:@registry, original_registry)
   end
 

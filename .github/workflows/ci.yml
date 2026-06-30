@@ -73,4 +73,6 @@ jobs:
         DB_PORT: 5432
         DB_USER: postgres
         DB_PASSWORD: postgres
+        DB_NAME: recording_studio_admin_test
         DB_NAME_TEST: recording_studio_admin_test
+        BUNDLE_GITHUB__COM: x-access-token:${{ secrets.BOWERBIRD_ORG_CI_TOKEN }}
