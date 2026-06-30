@@ -9,6 +9,15 @@ DUMMY_TEST_FILES = [
 ].freeze
 DUMMY_GEMFILE = File.expand_path("test/dummy/Gemfile", __dir__)
 DUMMY_APP_ROOT = File.expand_path("test/dummy", __dir__)
+DUMMY_APP_TEST_FILES = %w[
+  test/integration/admin_layout_width_consistency_test.rb
+  test/integration/admin_resource_crud_test.rb
+  test/integration/admin_section_rendering_test.rb
+  test/integration/dummy_access_enforcement_test.rb
+  test/integration/recording_studio_v3_template_test.rb
+  test/integration/root_switch_dropdown_test.rb
+  test/integration/stats_root_test.rb
+].freeze
 TEST_ROOT = File.expand_path("test", __dir__)
 TEST_DATABASE_NAME = "recording_studio_admin_test"
 ROOT_TEST_EXCLUSIONS = %w[
@@ -98,7 +107,9 @@ namespace :test do
 
       run_command!(env, "bundle", "install") unless bundle_satisfied?(env)
       run_command!(env, "bundle", "exec", "bin/rails", "db:prepare")
-      run_command!(env, "bundle", "exec", "bin/rails", "test")
+      DUMMY_APP_TEST_FILES.each do |test_file|
+        run_command!(env, "bundle", "exec", "bin/rails", "test", test_file)
+      end
       DUMMY_TEST_FILES.each do |test_file|
         run_command!(env, "bundle", "exec", "ruby", "-I#{TEST_ROOT}", test_file)
       end
