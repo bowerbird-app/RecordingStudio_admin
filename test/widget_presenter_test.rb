@@ -201,7 +201,7 @@ class WidgetPresenterTest < Minitest::Test
     end
 
     def request
-      OpenStruct.new(query_parameters: { "anchor_url" => "/root", "controller" => "ignored", "action" => "show" })
+      Struct.new(:query_parameters).new({ "anchor_url" => "/root", "controller" => "ignored", "action" => "show" })
     end
 
     def section_widget_path(parent_key, widget_key, query)

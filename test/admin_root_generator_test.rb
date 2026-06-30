@@ -61,7 +61,8 @@ class AdminRootGeneratorTest < Minitest::Test
   end
 
   def test_admin_root_view_lists_available_admin_sections
-    generator_source = File.read(File.join(ROOT, "lib/generators/recording_studio_admin/admin_root/admin_root_generator.rb"))
+    generator_source = File.read(File.join(ROOT,
+                                           "lib/generators/recording_studio_admin/admin_root/admin_root_generator.rb"))
     controller_template = File.read(generator_template_path("app/controllers/admin/root_controller.rb"))
     template = File.read(generator_template_path("app/views/admin/root/show.html.erb"))
     search_results_template = File.read(generator_template_path("app/views/admin/root/_search_results.html.erb"))

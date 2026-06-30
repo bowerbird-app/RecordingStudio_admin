@@ -2,38 +2,38 @@
 
 module RecordingStudioAdmin
   module GeoChartHelper
-        def recording_studio_flatpack_geochart_series(series)
-          normalized_series = normalize_geochart_series(series)
-          return normalized_series if normalized_series.any?
+    def recording_studio_flatpack_geochart_series(series)
+      normalized_series = normalize_geochart_series(series)
+      return normalized_series if normalized_series.any?
 
-          series
-        end
+      series
+    end
 
-        def recording_studio_flatpack_geochart_options(options = {})
-          normalized = (options || {}).to_h.deep_symbolize_keys
-          legacy_geo = normalized.delete(:geo) || {}
-          normalized.delete(:chart)
+    def recording_studio_flatpack_geochart_options(options = {})
+      normalized = (options || {}).to_h.deep_symbolize_keys
+      legacy_geo = normalized.delete(:geo) || {}
+      normalized.delete(:chart)
 
-          region = normalized[:region] || legacy_geo[:map] || "world"
+      region = normalized[:region] || legacy_geo[:map] || "world"
 
-          {
-            region: region,
-            displayMode: "regions",
-            resolution: "countries",
-            backgroundColor: { fill: "transparent" },
-            datalessRegionColor: "#e5e7eb",
-            defaultColor: "#9ca3af",
-            colorAxis: {
-              colors: ["#e5e7eb", "#9ca3af", "#4b5563"]
-            },
-            legend: {
-              textStyle: { color: "#334155" }
-            },
-            tooltip: {
-              textStyle: { color: "#111827" }
-            }
-          }.deep_merge(normalized)
-        end
+      {
+        region: region,
+        displayMode: "regions",
+        resolution: "countries",
+        backgroundColor: { fill: "transparent" },
+        datalessRegionColor: "#e5e7eb",
+        defaultColor: "#9ca3af",
+        colorAxis: {
+          colors: ["#e5e7eb", "#9ca3af", "#4b5563"]
+        },
+        legend: {
+          textStyle: { color: "#334155" }
+        },
+        tooltip: {
+          textStyle: { color: "#111827" }
+        }
+      }.deep_merge(normalized)
+    end
 
     WORLD_MAP_ASSET_PATH = "/assets/recording_studio_admin/world_map_light.svg"
 

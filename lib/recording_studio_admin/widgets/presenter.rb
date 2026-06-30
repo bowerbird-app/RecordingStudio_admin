@@ -64,11 +64,12 @@ module RecordingStudioAdmin
       def compact_metric_value
         return unless widget.show_metric
         return widget.value if widget.value.present?
-        return list_count if widget.type == :list
+
+        list_count if widget.type == :list
       end
 
       def compact_unit_label
-        return unit_label if unit_label.present?
+        unit_label if unit_label.present?
       end
 
       def compact_list_preview_mode

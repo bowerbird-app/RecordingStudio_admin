@@ -14,6 +14,7 @@ module AdminScreens
       end
       options do
         {
+          legend_mode: :labels,
           chart: { height: 360 },
           geo: { map: "world", key_field: "iso2" }
         }

@@ -10,12 +10,24 @@
 <% columns_form_id = "screen-table-columns-form" %>
 <% selected_column_keys = screen.table.selected_column_keys %>
 <% export_options = screen.table.export_options || {} %>
-<% export_button_available = screen.table.export_key.present? &&
+<% export_config = screen.table.export_config %>
+<% token_export_available = export_config.present? &&
+  recording_studio_admin_token_export_available?(screen.key) %>
+<% export_button_available = (screen.table.export_key.present? ||
+  token_export_available) &&
   recording_studio_admin_exportable_available? &&
-  respond_to?(:recording_studio_export_button) &&
   recording_studio_admin_context.access_recording.present? %>
-<% export_button_authorized = export_button_available && recording_studio_admin_export_authorized?(screen.table.export_key, screen.key) %>
 <% export_filter_query = base_query.except(:columns, :columns_present, :anchor_url) %>
+<% export_token = if export_button_available && token_export_available
+     recording_studio_admin_export_token(
+       screen_key: screen.key,
+       columns: selected_column_keys,
+       filters: export_filter_query
+     )
+   end %>
+<% legacy_export_authorized = screen.table.export_key.present? &&
+  recording_studio_admin_export_authorized?(screen.table.export_key, screen.key) %>
+<% export_button_authorized = export_button_available && (export_token.present? || legacy_export_authorized) %>
 <% has_more_rows = table_result&.has_more %>
 <% next_page_url = if has_more_rows
      query = base_query.merge(page: table_result.current_page + 1)
@@ -82,18 +94,41 @@
       <div class="flex items-center gap-2">
         <% if export_button_available %>
           <% if export_button_authorized %>
-            <%= recording_studio_export_button(
-              context_recording: recording_studio_admin_context.access_recording,
-              export_key: screen.table.export_key,
-              columns: selected_column_keys,
-              filters: export_filter_query,
-              attributes: { screen_key: screen.key },
-              text: export_options.fetch(:text, "Export"),
-              icon: export_options.fetch(:icon, "arrow-down-tray"),
-              style: export_options.fetch(:style, :secondary),
-              size: export_options.fetch(:size, :md),
-              data: { turbo: false }
-            ) %>
+            <% if export_token.present? %>
+              <%= form_with url: recording_studio_admin_exportable_exports_path, method: :post, data: { turbo: false } do %>
+                <%= hidden_field_tag :export_token, export_token %>
+                <%= hidden_field_tag :format, export_options[:format] || :csv %>
+                <% export_filter_query.each do |key, value| %>
+                  <% if value.is_a?(Array) %>
+                    <% value.each do |entry| %>
+                      <%= hidden_field_tag "filters[#{key}][]", entry %>
+                    <% end %>
+                  <% else %>
+                    <%= hidden_field_tag "filters[#{key}]", value %>
+                  <% end %>
+                <% end %>
+                <%= render FlatPack::Button::Component.new(
+                  text: export_options.fetch(:text, "Export"),
+                  icon: export_options.fetch(:icon, "arrow-down-tray"),
+                  type: "submit",
+                  style: export_options.fetch(:style, :secondary),
+                  size: export_options.fetch(:size, :md)
+                ) %>
+              <% end %>
+            <% elsif respond_to?(:recording_studio_export_button) %>
+              <%= recording_studio_export_button(
+                context_recording: recording_studio_admin_context.access_recording,
+                export_key: screen.table.export_key,
+                columns: selected_column_keys,
+                filters: export_filter_query,
+                attributes: { screen_key: screen.key },
+                text: export_options.fetch(:text, "Export"),
+                icon: export_options.fetch(:icon, "arrow-down-tray"),
+                style: export_options.fetch(:style, :secondary),
+                size: export_options.fetch(:size, :md),
+                data: { turbo: false }
+              ) %>
+            <% end %>
           <% else %>
             <%= render FlatPack::Button::Component.new(
               text: export_options.fetch(:unauthorized_text, "Export restricted"),
@@ -160,7 +195,8 @@
           size: :md,
           url: reset_columns_url,
           data: {
-            turbo_frame: "screen-table"
+            turbo_frame: "screen-table",
+            action: "click->recording-studio-admin--screen-filters#showTableSkeletons"
           }
         ) %>
 
@@ -169,7 +205,10 @@
           style: :primary,
           size: :md,
           type: "submit",
-          form: columns_form_id
+          form: columns_form_id,
+          data: {
+            action: "click->flat-pack--modal#close click->recording-studio-admin--screen-filters#showTableSkeletons"
+          }
         ) %>
       <% end %>
     <% end %>

@@ -92,17 +92,21 @@ module RecordingStudioAdmin
     end
 
     def hide_metric = @show_metric = false
+
     def hide_change
       @show_change = false
       @show_change_explicit = true
     end
+
     def hide_period = @show_period = false
 
     def show_metric(value = true) = @show_metric = value
+
     def show_change(value = true)
       @show_change = value
       @show_change_explicit = true
     end
+
     def show_period(value = true) = @show_period = value
 
     def evaluate(value, context)
@@ -195,7 +199,10 @@ module RecordingStudioAdmin
       return {} if options.empty?
 
       unknown_keys = options.keys - LIST_OPTION_KEYS
-      raise InvalidDefinition, "Widget #{key.inspect} has unsupported list_options keys #{unknown_keys.inspect}" unless unknown_keys.empty?
+      unless unknown_keys.empty?
+        raise InvalidDefinition,
+              "Widget #{key.inspect} has unsupported list_options keys #{unknown_keys.inspect}"
+      end
 
       normalize_compact_list_preview!(options)
       options
@@ -206,7 +213,8 @@ module RecordingStudioAdmin
 
       compact_preview = options[:compact_preview].to_s.downcase.to_sym
       unless COMPACT_LIST_PREVIEW_TYPES.include?(compact_preview)
-        raise InvalidDefinition, "Widget #{key.inspect} has unsupported compact_preview #{options[:compact_preview].inspect}"
+        raise InvalidDefinition,
+              "Widget #{key.inspect} has unsupported compact_preview #{options[:compact_preview].inspect}"
       end
 
       options[:compact_preview] = compact_preview

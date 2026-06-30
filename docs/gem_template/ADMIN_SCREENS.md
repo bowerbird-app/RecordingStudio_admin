@@ -65,6 +65,7 @@ module AdminScreens
     icon :document_text
     title "API requests"
     subtitle "Monitor API traffic and failures"
+    allow_export required_role: :admin
 
     query { |_context| ApiRequest.all }
 
@@ -131,6 +132,29 @@ module AdminScreens
   end
 end
 ```
+
+## Table exports
+
+Screens can opt into dynamic table exports with `allow_export`. When enabled, the table export button issues a short-lived RecordingStudioExportable trusted export token after the normal admin authentication, access-recording authorization, blast-radius, and screen visibility checks have already passed.
+
+```ruby
+class ApiRequests < RecordingStudioAdmin::Screen
+  key "api_requests"
+  allow_export required_role: :admin
+
+  query { |_context| ApiRequest.all }
+
+  table do
+    column :created_at
+    column :method
+    column :status
+    column :path
+    default_columns :created_at, :method, :status, :path
+  end
+end
+```
+
+The exported CSV uses the currently selected table columns and the active filters. Existing table-level `export "some.key"` definitions still work for pre-registered RecordingStudioExportable exports.
 
 ## Minimal section example
 

@@ -1426,4 +1426,94 @@ class ResolverTest < Minitest::Test
     RecordingStudio.__send__(:remove_const, :Recording) if RecordingStudio.const_defined?(:Recording, false)
     RecordingStudio.const_set(:Recording, previous_recording_constant) if previous_recording_constant_defined
   end
+
+  def test_screen_allow_export_sets_export_config_with_required_role
+    export_screen_class = Class.new(RecordingStudioAdmin::Screen) do
+      key "export_allowed"
+      allow_export required_role: :admin
+    end
+
+    assert_equal({ required_role: :admin }, export_screen_class.export_config)
+  end
+
+  def test_screen_without_allow_export_has_nil_export_config
+    no_export_screen_class = Class.new(RecordingStudioAdmin::Screen) do
+      key "no_export"
+    end
+
+    assert_nil no_export_screen_class.export_config
+  end
+
+  def test_screen_allow_export_inherits_from_superclass
+    parent_class = Class.new(RecordingStudioAdmin::Screen) do
+      key "parent_export"
+      allow_export required_role: :view
+    end
+
+    child_class = Class.new(parent_class) do
+      key "child_export"
+    end
+
+    assert_equal({ required_role: :view }, child_class.export_config)
+  end
+
+  def test_screen_allow_export_can_override_superclass
+    parent_class = Class.new(RecordingStudioAdmin::Screen) do
+      key "parent_override"
+      allow_export required_role: :view
+    end
+
+    child_class = Class.new(parent_class) do
+      key "child_override"
+      allow_export required_role: :admin
+    end
+
+    assert_equal({ required_role: :admin }, child_class.export_config)
+    assert_equal({ required_role: :view }, parent_class.export_config)
+  end
+
+  def test_resolved_table_includes_export_config_when_screen_has_allow_export
+    export_screen_class = Class.new(RecordingStudioAdmin::Screen) do
+      key "screen_with_export"
+      allow_export required_role: :admin
+      query { |_context| ArrayRelation.new([Row.new(Time.now, 200, "a")]) }
+      table do
+        column :name
+      end
+    end
+    RecordingStudioAdmin.register_screen(export_screen_class)
+
+    result = with_access_allowed do
+      RecordingStudioAdmin.resolve_screen(key: "screen_with_export", context: allowed_context)
+    end
+
+    assert_equal({ required_role: :admin }, result.table.export_config)
+  end
+
+  def test_resolved_table_has_nil_export_config_when_screen_has_no_allow_export
+    no_export_screen_class = Class.new(RecordingStudioAdmin::Screen) do
+      key "screen_without_export"
+      query { |_context| ArrayRelation.new([Row.new(Time.now, 200, "a")]) }
+      table do
+        column :name
+      end
+    end
+    RecordingStudioAdmin.register_screen(no_export_screen_class)
+
+    result = with_access_allowed do
+      RecordingStudioAdmin.resolve_screen(key: "screen_without_export", context: allowed_context)
+    end
+
+    assert_nil result.table.export_config
+  end
+
+  def test_table_definition_export_still_works_for_backward_compatibility
+    table = RecordingStudioAdmin::TableDefinition.new do
+      column :name
+      export "admin.legacy", text: "Export CSV"
+    end
+
+    assert_equal "admin.legacy", table.export_key
+    assert_equal({ text: "Export CSV" }, table.export_options)
+  end
 end

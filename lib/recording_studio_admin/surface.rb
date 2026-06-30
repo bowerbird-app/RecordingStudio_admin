@@ -6,7 +6,7 @@ module RecordingStudioAdmin
 
     attr_reader :key
     attr_accessor :authentication_method, :current_actor_method, :access_recording_method,
-                  :access_recording_resolver, :engine_layout
+                  :access_recording_resolver, :engine_layout, :allow_export_default_role
 
     def initialize(key, **attributes)
       @key = key.to_s

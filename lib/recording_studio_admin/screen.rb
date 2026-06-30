@@ -4,7 +4,7 @@ module RecordingStudioAdmin
   class Screen < Definitions::Base
     class << self
       attr_reader :query_value, :filters_value, :chart_value, :table_value, :widgets_value, :summary_value,
-                  :availability_scope_value
+                  :availability_scope_value, :export_config_value
 
       def inherited(subclass)
         super
@@ -12,6 +12,7 @@ module RecordingStudioAdmin
         subclass.instance_variable_set(:@widgets_value, {})
         subclass.instance_variable_set(:@summary_value, SummaryDefinition.new)
         subclass.instance_variable_set(:@availability_scope_value, nil)
+        subclass.instance_variable_set(:@export_config_value, nil)
       end
 
       def query(&block)
@@ -47,6 +48,14 @@ module RecordingStudioAdmin
       def availability_scope(value = nil, &block)
         @availability_scope_value = block || normalize_availability_scope(value) if value || block
         @availability_scope_value || DEFAULT_SECTION_AVAILABILITY_SCOPE
+      end
+
+      def allow_export(required_role: :view, **options)
+        @export_config_value = { required_role: required_role.to_sym, **options.symbolize_keys }
+      end
+
+      def export_config
+        @export_config_value || (superclass.respond_to?(:export_config) ? superclass.export_config : nil)
       end
 
       def filters
@@ -119,7 +128,7 @@ module RecordingStudioAdmin
 
   class TableDefinition
     attr_reader :columns, :filters, :actions, :pagination_options, :default_sort_key, :default_direction,
-                :export_key, :export_options
+                :export_key, :export_options, :export_config_value
 
     def initialize(&block)
       @columns = []

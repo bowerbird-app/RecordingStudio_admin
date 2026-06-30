@@ -47,7 +47,8 @@ module RecordingStudioAdmin
                     owner: definition,
                     filters: filters,
                     with_rows: @resolve_table_rows,
-                    with_count: @resolve_table_count
+                    with_count: @resolve_table_count,
+                    screen_definition: definition
                   )
                 end
         summary = if @resolve_summary
@@ -165,7 +166,8 @@ module RecordingStudioAdmin
         )
       end
 
-      def resolve_table(definition, relation, owner:, filters: [], with_rows: true, with_count: true)
+      def resolve_table(definition, relation, owner:, filters: [], with_rows: true, with_count: true,
+                        screen_definition: nil)
         return unless definition
 
         table_filter_keys = Array(definition.filters).map(&:param_key)
@@ -189,10 +191,12 @@ module RecordingStudioAdmin
           end
         end
 
+        export_config = screen_definition&.export_config
+
         Results::ResolvedTable.new(visible_columns, table_filters.map do |entry|
           resolved_filter(entry)
         end, table_result.rows, actions, table_result, definition.columns, selected_column_keys,
-                                   definition.export_key, definition.export_options)
+                                   definition.export_key, definition.export_options, export_config)
       end
 
       def resolve_screen_widget(screen_definition, widget)

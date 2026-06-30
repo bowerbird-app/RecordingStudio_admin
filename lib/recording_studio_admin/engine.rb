@@ -8,9 +8,7 @@ module RecordingStudioAdmin
     isolate_namespace RecordingStudioAdmin
 
     initializer "recording_studio_admin.assets" do |app|
-      if app.config.respond_to?(:assets)
-        app.config.assets.paths << root.join("app/javascript")
-      end
+      app.config.assets.paths << root.join("app/javascript") if app.config.respond_to?(:assets)
     end
 
     initializer "recording_studio_admin.load_config" do |app|

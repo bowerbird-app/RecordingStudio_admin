@@ -48,7 +48,10 @@ module RecordingStudioAdmin
         return show_missing_importmap_notice unless File.exist?(importmap_path)
 
         content = File.read(importmap_path)
-        return say("Importmap already pins RecordingStudioAdmin controllers.", :green) if content.include?(recording_studio_admin_importmap_pin)
+        if content.include?(recording_studio_admin_importmap_pin)
+          return say("Importmap already pins RecordingStudioAdmin controllers.",
+                     :green)
+        end
 
         append_to_file importmap_path, "\n#{recording_studio_admin_importmap_pin}\n"
       end
@@ -80,7 +83,9 @@ module RecordingStudioAdmin
       end
 
       def recording_studio_admin_importmap_pin
+        # rubocop:disable Layout/LineLength
         'pin_all_from RecordingStudioAdmin::Engine.root.join("app/javascript/recording_studio_admin/controllers"), under: "controllers/recording_studio_admin", to: "recording_studio_admin/controllers", preload: false'
+        # rubocop:enable Layout/LineLength
       end
 
       def tailwind_source_lines

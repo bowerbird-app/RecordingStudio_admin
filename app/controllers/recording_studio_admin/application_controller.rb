@@ -4,6 +4,7 @@ require_relative "../../helpers/recording_studio_admin/widget_rendering_helper"
 require_relative "../../helpers/recording_studio_admin/geo_chart_helper"
 
 module RecordingStudioAdmin
+  # rubocop:disable Metrics/ClassLength
   class ApplicationController < ActionController::Base
     if defined?(RecordingStudio::RootSwitchable::ControllerSupport)
       include RecordingStudio::RootSwitchable::ControllerSupport
@@ -24,7 +25,9 @@ module RecordingStudioAdmin
 
     helper_method :recording_studio_admin_context, :recording_studio_admin_surface, :page_nav_anchor_url,
                   :preserve_anchor_url, :widget_link_url, :recording_studio_admin_screen_region_path,
-                  :recording_studio_admin_exportable_available?, :recording_studio_admin_export_authorized?
+                  :recording_studio_admin_exportable_available?, :recording_studio_admin_export_authorized?,
+                  :recording_studio_admin_export_token, :recording_studio_admin_token_export_available?,
+                  :recording_studio_admin_exportable_exports_path
 
     private
 
@@ -85,6 +88,7 @@ module RecordingStudioAdmin
       safe_url
     end
 
+    # rubocop:disable Metrics/MethodLength
     def recording_studio_admin_screen_region_path(key, region, query: request.query_parameters)
       base_path = recording_studio_admin_context.admin_screen_path(key)
       path = case region.to_sym
@@ -99,11 +103,13 @@ module RecordingStudioAdmin
 
       "#{path}?#{query_string}"
     end
+    # rubocop:enable Metrics/MethodLength
 
     def recording_studio_admin_exportable_available?
-      defined?(::RecordingStudioExportable) && defined?(::RecordingStudioExportable::ExportsHelper)
+      defined?(::RecordingStudioExportable::ExportsHelper)
     end
 
+    # rubocop:disable Metrics/MethodLength
     def recording_studio_admin_export_authorized?(export_key, screen_key)
       return false unless recording_studio_admin_exportable_available?
       return false if export_key.blank? || screen_key.blank?
@@ -122,6 +128,125 @@ module RecordingStudioAdmin
     rescue StandardError
       false
     end
+    # rubocop:enable Metrics/MethodLength
+
+    def recording_studio_admin_token_export_available?(screen_key)
+      return false unless recording_studio_admin_exportable_available?
+      return false if screen_key.blank?
+
+      screen = RecordingStudioAdmin.registry.screen_for(screen_key)
+      return false unless screen
+
+      export_config = screen.export_config || screen_export_config_from_surface
+      export_config.present?
+    rescue StandardError
+      false
+    end
+
+    # rubocop:disable Metrics/MethodLength, Metrics/PerceivedComplexity, Metrics/AbcSize, Metrics/CyclomaticComplexity
+    def recording_studio_admin_export_token(screen_key:, columns:, filters:)
+      return nil unless recording_studio_admin_token_export_available?(screen_key)
+
+      screen = RecordingStudioAdmin.registry.screen_for(screen_key)
+      return nil unless screen
+
+      export_config = screen.export_config || screen_export_config_from_surface
+      return nil unless export_config
+
+      context = recording_studio_admin_context
+      return nil unless context&.access_recording && context.current_actor
+
+      required_role = export_config[:required_role] || :view
+      return nil unless authorized_for_export_token?(context, required_role)
+
+      ensure_recording_studio_admin_trusted_export_source!
+
+      export_context = context
+      relation = export_context.query_result&.relation
+      export_params = export_context.params.to_h.deep_stringify_keys.merge(
+        (filters || {}).to_h.deep_stringify_keys
+      ).except("page", "columns", "columns_present", "anchor_url")
+      trusted_columns = trusted_export_columns_for(screen, columns, export_context)
+      token = ::RecordingStudioExportable.issue_trusted_token(
+        context_recording: context.access_recording,
+        actor: context.current_actor,
+        source: "recording_studio_admin",
+        screen_identifier: screen_key,
+        columns: trusted_columns,
+        row_resolver: -> { relation || resolve_export_relation(screen_key, export_params, export_context) },
+        ttl: 5.minutes
+      )
+      token.id if token.respond_to?(:id)
+    rescue NameError, ::RecordingStudioExportable::Error
+      nil
+    end
+    # rubocop:enable Metrics/MethodLength, Metrics/PerceivedComplexity, Metrics/AbcSize, Metrics/CyclomaticComplexity
+
+    def recording_studio_admin_exportable_exports_path
+      return recording_studio_exportable.exports_path if respond_to?(:recording_studio_exportable)
+
+      ::RecordingStudioExportable::Engine.routes.url_helpers.exports_path
+    rescue NameError
+      nil
+    end
+
+    def screen_export_config_from_surface
+      surface = recording_studio_admin_surface
+      return unless surface&.allow_export_default_role
+
+      { required_role: surface.allow_export_default_role.to_sym }
+    end
+
+    def authorized_for_export_token?(context, required_role)
+      ::RecordingStudioAccessible.authorized?(
+        actor: context.current_actor,
+        recording: context.access_recording,
+        role: required_role
+      )
+    rescue StandardError
+      false
+    end
+
+    def ensure_recording_studio_admin_trusted_export_source!
+      configuration = ::RecordingStudioExportable.configuration
+      sources = Array(configuration.trusted_export_sources).map(&:to_s)
+      configuration.trusted_export_sources = sources | ["recording_studio_admin"]
+    end
+
+    def trusted_export_columns_for(screen, column_keys, export_context)
+      columns_by_key = screen.table_value.columns.index_by { |column| column.key.to_s }
+      Array(column_keys).map(&:to_s).filter_map do |key|
+        column = columns_by_key[key]
+        next unless column
+
+        {
+          key: column.key,
+          label: column.title,
+          value: ->(row) { column.cell(row, export_context) }
+        }
+      end
+    end
+
+    # rubocop:disable Metrics/MethodLength
+    def resolve_export_relation(screen_key, export_params, export_context)
+      context = RecordingStudioAdmin::Context.new(
+        params: export_params,
+        current_actor: export_context.current_actor,
+        controller: export_context.controller,
+        routes: export_context.routes,
+        surface: export_context.surface
+      )
+      RecordingStudioAdmin.resolve_screen(
+        key: screen_key,
+        context: context,
+        resolve_widgets: false,
+        resolve_summary: false,
+        resolve_chart: false,
+        resolve_table: false
+      )
+      context.query_result&.relation
+    end
+    # rubocop:enable Metrics/MethodLength
 
     def widget_link_points_to_current_page?(url)
       return false if url.blank? || url == "#" || !url.start_with?("/")
@@ -151,7 +276,9 @@ module RecordingStudioAdmin
     def configured_current_actor
       method_name = recording_studio_admin_surface.current_actor_method ||
                     RecordingStudioAdmin.configuration.current_actor_method
-      send(method_name) if method_name && respond_to?(method_name, true)
+      return send(method_name) if method_name && respond_to?(method_name, true)
+
+      nil
     end
 
     def recording_studio_admin_layout
@@ -165,5 +292,6 @@ module RecordingStudioAdmin
     def render_forbidden
       head :forbidden
     end
+    # rubocop:enable Metrics/ClassLength
   end
 end

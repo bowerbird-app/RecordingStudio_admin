@@ -657,12 +657,10 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-action="click-&gt;recording-studio-admin--screen-filters#showTableSkeletons"'
     assert_includes response.body, 'data-pagination-content="true"'
     assert_includes response.body, 'action="/recording_studio_exportable/exports"'
-    assert_includes response.body, 'name="export_key"'
-    assert_includes response.body, 'value="admin.api_requests"'
-    assert_includes response.body, 'name="attributes[screen_key]"'
-    assert_includes response.body, 'value="api_requests"'
-    assert_includes response.body, 'name="attributes[columns][]"'
-    assert_includes response.body, 'value="created_at"'
+    assert_includes response.body, 'name="export_token"'
+    assert_includes response.body, 'name="format"'
+    assert_includes response.body, 'value="csv"'
+    refute_includes response.body, 'name="export_key"'
     assert_includes response.body, 'data-turbo="false"'
     assert_includes response.body, "Export"
     assert_includes response.body, "Columns"
@@ -774,6 +772,45 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_equal 31, response.body.lines.size
     assert_includes response.body, "/v1/export-all/0"
     assert_includes response.body, "/v1/export-all/29"
+  end
+
+  test "admin screen trusted export token includes selected columns and all filtered rows" do
+    sign_in_admin_user
+    ApiRequest.delete_all
+
+    30.times do |index|
+      ApiRequest.create!(
+        path: "/v1/token-export/#{index}",
+        method: "GET",
+        status: 200,
+        latency_ms: index,
+        created_at: index.minutes.ago,
+        updated_at: index.minutes.ago
+      )
+    end
+
+    get "/admin/screens/api_requests/table", params: {
+      search: "token-export",
+      columns: ["path"],
+      columns_present: "1"
+    }
+
+    assert_response :success
+    token_field = css_select('input[name="export_token"]').first
+    assert token_field, "expected export token field"
+
+    post "/recording_studio_exportable/exports", params: {
+      export_token: token_field["value"],
+      format: "csv",
+      filters: { search: "token-export" }
+    }
+
+    assert_response :success
+    assert_equal "text/csv", response.media_type
+    assert_equal 31, response.body.lines.size
+    assert_equal "Path", response.body.lines.first.strip
+    assert_includes response.body, "/v1/token-export/0"
+    assert_includes response.body, "/v1/token-export/29"
   end
 
   test "admin screen search filter updates chart totals and table rows together" do

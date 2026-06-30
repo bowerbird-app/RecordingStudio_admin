@@ -6,6 +6,7 @@ module AdminScreens
     icon :document_text
     title "API requests"
     subtitle "Monitor API traffic, latency, and failures"
+    allow_export required_role: :admin
     query { |_context| ApiRequest.all }
     filter :date_range, field: :created_at, default: :last_30_days
     filter :group_by, values: %i[hour day week month year], default: :day

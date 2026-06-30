@@ -69,11 +69,11 @@ module RecordingStudioAdmin
       render partial: "recording_studio_admin/screens/table_frame", locals: { screen: @screen }
     end
 
-    def resolve_screen(**options)
+    def resolve_screen(**)
       RecordingStudioAdmin.resolve_screen(
         key: params[:key],
         context: recording_studio_admin_context,
-        **options
+        **
       )
     end
   end

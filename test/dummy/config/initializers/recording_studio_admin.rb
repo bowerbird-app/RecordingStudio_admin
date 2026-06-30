@@ -16,6 +16,7 @@ RecordingStudioAdmin.configure do |config|
   config.surface :stats do |surface|
     surface.access_recording_resolver = ->(context) { context.controller.current_root_recording }
     surface.engine_layout = "flat_pack_sidebar"
+    surface.allow_export_default_role = :admin
   end
 end
 

@@ -18,7 +18,7 @@
 
     <%= render FlatPack::Card::Component.new(style: :outlined, class: "mb-6") do |card| %>
       <% card.body do %>
-        <% if screen.chart.title.present? || screen.chart.subtitle.present? %>
+        <% if screen.chart.title.present? %>
           <div class="mb-4 flex items-start gap-4">
             <% if summary.nil? || summary.show_metric %>
               <div class="shrink-0">
@@ -40,10 +40,6 @@
                     <span class="text-sm font-semibold text-(--surface-muted-content-color)"><%= metric_period_label %></span>
                   <% end %>
                 </p>
-              <% end %>
-
-              <% if screen.chart.subtitle.present? %>
-                <p class="text-sm text-(--surface-muted-content-color)"><%= screen.chart.subtitle %></p>
               <% end %>
             </div>
           </div>

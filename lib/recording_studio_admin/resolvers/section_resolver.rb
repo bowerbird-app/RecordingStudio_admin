@@ -7,7 +7,7 @@ module RecordingStudioAdmin
         new(key, context, resolve_widgets: resolve_widgets).call
       end
 
-      def self.resolve_widget(key:, widget_key:, view_variant: nil, context:)
+      def self.resolve_widget(key:, widget_key:, context:, view_variant: nil)
         new(key, context).resolve_widget(widget_key, view_variant: view_variant)
       end
 
@@ -40,7 +40,10 @@ module RecordingStudioAdmin
       def resolve_widget(widget_key, view_variant: nil)
         definition = authorized_definition
         widget_usage = resolve_widget_usage_entry(definition, widget_key: widget_key, view_variant: view_variant)
-        raise DefinitionNotFound, "Widget #{widget_key.inspect} is not registered for section #{@key.inspect}" unless widget_usage
+        unless widget_usage
+          raise DefinitionNotFound,
+                "Widget #{widget_key.inspect} is not registered for section #{@key.inspect}"
+        end
 
         resolve_widget_usage(definition, widget_usage) || raise(DefinitionNotFound,
                                                                 "Widget #{widget_key.inspect} is not available")
@@ -109,7 +112,9 @@ module RecordingStudioAdmin
         Results::ResolvedWidget.new(
           key: widget_definition.key,
           type: widget_type.to_s.downcase.to_sym,
-          title: resolve_usage_value(definition, widget_usage.title, widget_context) || widget_definition.send(:evaluate, widget_definition.title, widget_context),
+          title: resolve_usage_value(definition, widget_usage.title,
+                                     widget_context) || widget_definition.send(:evaluate, widget_definition.title,
+                                                                               widget_context),
           subtitle: widget_definition.send(:evaluate, widget_definition.subtitle, widget_context),
           description: widget_definition.send(:evaluate, widget_definition.description, widget_context),
           value: nil,
