@@ -106,7 +106,7 @@ namespace :test do
       env = dummy_bundle_env
 
       run_command!(env, "bundle", "install") unless bundle_satisfied?(env)
-      run_command!(env, "bundle", "exec", "bin/rails", "db:prepare")
+      run_command!(env, "bundle", "exec", "bin/rails", "db:test:prepare")
       DUMMY_APP_TEST_FILES.each do |test_file|
         run_command!(env, "bundle", "exec", "bin/rails", "test", test_file)
       end
