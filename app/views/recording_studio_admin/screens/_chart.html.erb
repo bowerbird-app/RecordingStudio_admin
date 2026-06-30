@@ -1,0 +1,62 @@
+<% if screen.chart %>
+  <% summary = screen.summary %>
+  <% metric_count = summary&.value || screen.query_result.count %>
+  <% metric_change = summary&.show_change ? summary.change : nil %>
+  <% metric_period_label = summary&.show_period ? summary.period_label : nil %>
+  <% change_tone = RecordingStudioAdmin::WidgetChangeSemantics.tone(
+    change: metric_change,
+    good_when: summary&.change_good_when || :up
+  ) %>
+  <% change_text_class = case change_tone
+                         when :success
+                           "text-[var(--color-success-background-color)]"
+                         when :danger
+                           "text-[var(--color-danger-background-color)]"
+                         else
+                           "text-[var(--surface-muted-content-color)]"
+                         end %>
+
+    <%= render FlatPack::Card::Component.new(style: :outlined, class: "mb-6") do |card| %>
+      <% card.body do %>
+        <% if screen.chart.title.present? %>
+          <div class="mb-4 flex items-start gap-4">
+            <% if summary.nil? || summary.show_metric %>
+              <div class="shrink-0">
+                <p class="text-5xl font-bold leading-none text-(--surface-content-color)"><%= metric_count %></p>
+              </div>
+            <% end %>
+
+            <div class="min-w-0 flex-1 space-y-1 text-left">
+              <% if screen.chart.title.present? %>
+                <h3 class="text-lg font-semibold text-(--surface-content-color)"><%= screen.chart.title %></h3>
+              <% end %>
+
+              <% if metric_change.present? || metric_period_label.present? %>
+                <p class="flex flex-wrap items-center gap-2">
+                  <% if metric_change.present? %>
+                    <span class="text-sm font-semibold <%= change_text_class %>"><%= metric_change %></span>
+                  <% end %>
+                  <% if metric_period_label.present? %>
+                    <span class="text-sm font-semibold text-(--surface-muted-content-color)"><%= metric_period_label %></span>
+                  <% end %>
+                </p>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <% screen_chart_options = (screen.chart.options || {}) %>
+
+        <% screen_chart_type = RecordingStudioAdmin::Widgets::Presenter.renderable_chart_type(screen.chart.type, default: :line) %>
+        <% screen_chart_series = screen_chart_type == :geochart ? recording_studio_flatpack_geochart_series(screen.chart.series) : screen.chart.series %>
+        <% screen_chart_render_options = screen_chart_type == :geochart ? recording_studio_flatpack_geochart_options(screen_chart_options) : screen_chart_options %>
+
+        <%= render FlatPack::Chart::Component.new(
+          type: screen_chart_type,
+          series: screen_chart_series,
+          options: screen_chart_render_options,
+          card: false
+        ) %>
+      <% end %>
+    <% end %>
+<% end %>

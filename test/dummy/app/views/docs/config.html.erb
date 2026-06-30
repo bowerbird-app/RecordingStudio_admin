@@ -1,14 +1,82 @@
 <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
   <%= render FlatPack::PageTitle::Component.new(
     title: "Config",
-    subtitle: "Replace this placeholder with the configuration settings your generated gem exposes.",
+    subtitle: "RecordingStudioAdmin is configured in Ruby through a small initializer plus to_prepare registration blocks.",
     variant: :h1
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Recommended initializer",
+    subtitle: "Use RecordingStudioAdmin.configure for engine settings only.",
   ) %>
 
   <%= render FlatPack::CodeBlock::Component.new(
     language: :ruby,
     code: <<~'CODE'
-      # Add the config settings for the gem here.
+      RecordingStudioAdmin.configure do |config|
+        config.default_mount_path = "/admin"
+        config.engine_layout = "application"
+        config.authentication_method = :authenticate_user!
+        config.current_actor_method = :current_user
+        config.required_access_role = :view
+        config.max_page = 1_000
+
+        config.access_recording_resolver = lambda do |_context|
+          admin_root = AdminRoot.find_by(name: "Admin")
+          next unless admin_root
+
+          RecordingStudio::Recording.find_by(recordable: admin_root, trashed_at: nil)
+        end
+      end
     CODE
   ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Configuration keys",
+    subtitle: "These are the top-level keys exposed by RecordingStudioAdmin::Configuration.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+    code: <<~'CODE'
+      config.default_mount_path
+      config.engine_layout
+      config.authentication_method
+      config.current_actor_method
+      config.access_recording_method
+      config.access_recording_resolver
+      config.site_admin_recording_resolver
+      config.admin_sections_resolver
+      config.required_access_role
+      config.max_page
+      config.surface(:stats)
+    CODE
+  ) %>
+
+  <p class="text-sm text-(--body-muted-content-color)">
+    If the host app defines <span class="font-mono">config/recording_studio_admin.yml</span>, the engine also loads and merges
+    that file at boot before request handling.
+  </p>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Registration lives elsewhere",
+    subtitle: "Register screens and sections from to_prepare so development reloads stay correct.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+    code: <<~'CODE'
+      Rails.application.config.to_prepare do
+        RecordingStudioAdmin.register_screen(AdminScreens::ApiRequests)
+        RecordingStudioAdmin.register_section(AdminScreens::RootSection)
+      end
+    CODE
+  ) %>
+
+  <p class="text-sm text-(--body-muted-content-color)">
+    The optional <span class="font-mono">admin_sections_resolver</span> is an override hook for deciding which registered
+    sections a recording should expose. Most apps should prefer the built-in
+    <span class="font-mono">RecordingStudioAdmin::AllowsAdminSections</span> DSL on recordable classes and only add a custom
+    resolver when section enablement needs external logic.
+  </p>
 </div>

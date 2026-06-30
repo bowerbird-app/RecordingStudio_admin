@@ -11,15 +11,16 @@ class RecordingStudioV3TemplateTest < ActiveSupport::TestCase
 
   test "dummy app validates v3 recordable declarations" do
     assert RecordingStudio.validate_recordable_declarations!
-    assert_equal [ "Workspace" ], RecordingStudio.root_recordable_types
+    assert_equal [ "AdminRoot", "Workspace" ], RecordingStudio.root_recordable_types.sort
+    assert_equal [ "AdminRoot" ], RecordingStudio.allowed_parent_types_for("AdminSection")
     assert_equal [ "Workspace", "Folder" ], RecordingStudio.allowed_parent_types_for("Page")
   end
 
-  test "dummy app schema excludes removed access control tables" do
+  test "dummy app schema includes recording_studio_accesses for accessible checks" do
     connection = ActiveRecord::Base.connection
 
     assert connection.column_exists?(:recording_studio_recordings, :root_recording_id)
-    refute connection.table_exists?(:recording_studio_accesses)
+    assert connection.table_exists?(:recording_studio_accesses)
     refute connection.table_exists?(:recording_studio_access_boundaries)
     refute connection.table_exists?(:recording_studio_device_sessions)
   end
@@ -32,11 +33,16 @@ class RecordingStudioV3TemplateTest < ActiveSupport::TestCase
     workspace = Workspace.find_by!(name: "Studio Workspace")
     accessible_workspace = Workspace.find_by!(name: "Client Workspace")
     private_workspace = Workspace.find_by!(name: "Private Workspace")
+    admin_root = AdminRoot.find_by!(name: "Admin")
+    admin_section = AdminSection.find_by!(key: "root")
+    admin_user = User.find_by!(email: "admin@admin.com")
     folder = Folder.find_by!(name: "Product Docs")
     page = Page.find_by!(title: "Getting Started")
     root_recording = RecordingStudio::Recording.find_by!(recordable: workspace)
     accessible_root_recording = RecordingStudio::Recording.find_by!(recordable: accessible_workspace)
     private_root_recording = RecordingStudio::Recording.find_by!(recordable: private_workspace)
+    admin_root_recording = RecordingStudio::Recording.find_by!(recordable: admin_root)
+    admin_section_recording = RecordingStudio::Recording.find_by!(recordable: admin_section)
     folder_recording = RecordingStudio::Recording.find_by!(recordable: folder)
     page_recording = RecordingStudio::Recording.find_by!(recordable: page)
 
@@ -44,15 +50,23 @@ class RecordingStudioV3TemplateTest < ActiveSupport::TestCase
     assert_nil root_recording.parent_recording_id
     assert_nil accessible_root_recording.parent_recording_id
     assert_nil private_root_recording.parent_recording_id
+    assert_equal admin_root_recording, admin_section_recording.parent_recording
+    assert_equal admin_root_recording, admin_section_recording.root_recording
     assert_equal root_recording, folder_recording.parent_recording
     assert_equal root_recording, folder_recording.root_recording
     assert_equal folder_recording, page_recording.parent_recording
     assert_equal root_recording, page_recording.root_recording
+    assert_equal :admin, RecordingStudioAccessible.role_for(actor: admin_user, recording: root_recording)
+    assert_equal :admin, RecordingStudioAccessible.role_for(actor: admin_user, recording: accessible_root_recording)
+    assert_equal :admin, RecordingStudioAccessible.role_for(actor: admin_user, recording: private_root_recording)
+    assert_equal :admin, RecordingStudioAccessible.role_for(actor: admin_user, recording: admin_root_recording)
     assert_equal 3, Workspace.count
 
     assert_no_difference -> { User.count } do
       assert_no_difference -> { RecordingStudio::Recording.count } do
+        assert_no_difference -> { RecordingStudio::Access.count } do
         load Rails.root.join("db/seeds.rb").to_s
+        end
       end
     end
     assert_nil Current.actor

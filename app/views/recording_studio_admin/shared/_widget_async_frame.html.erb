@@ -1,0 +1,13 @@
+<% widget_frame_src = recording_studio_widget_frame_src(parent: parent, parent_key: parent_key, widget: widget) %>
+
+<%= turbo_frame_tag recording_studio_widget_frame_id(parent: parent, parent_key: parent_key, widget: widget),
+                    src: widget_frame_src,
+                    target: "_top",
+                    loading: :lazy,
+                    data: {
+                      recording_studio_admin__async_widgets_target: "widget",
+                      recording_studio_admin__async_widgets_src_value: widget_frame_src
+                    },
+                    class: "block w-full" do %>
+  <%= render partial: "recording_studio_admin/shared/widget_placeholder", locals: { widget: widget } %>
+<% end %>

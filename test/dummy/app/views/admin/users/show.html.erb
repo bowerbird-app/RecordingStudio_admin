@@ -1,0 +1,40 @@
+<%= render layout: "recording_studio_admin/shared/page_shell" do %>
+  <%= render FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url(default: recording_studio_admin_context.admin_screen_path("users")), class: "mb-4") %>
+
+  <%= render FlatPack::PageTitle::Component.new(title: "User details", subtitle: @user.email) %>
+
+  <% attribute_rows = @user.attributes.sort_by { |name, _| name }.map do |name, value|
+       formatted_value = case value
+                         when Time, DateTime, ActiveSupport::TimeWithZone
+                           value.strftime("%b %-d, %Y %l:%M%P")
+                         when Date
+                           value.strftime("%b %-d, %Y")
+                         when nil
+                           "-"
+                         else
+                           value.to_s
+                         end
+
+       {
+         attribute: name.titleize,
+         value: formatted_value
+       }
+     end %>
+
+  <div class="space-y-4">
+    <% if @edit_user_action %>
+      <div class="flex items-center gap-2 pt-2">
+        <%= render FlatPack::Button::Component.new(
+          text: "Edit",
+          url: preserve_anchor_url(@edit_user_action.url),
+          style: :primary
+        ) %>
+      </div>
+    <% end %>
+
+    <%= render FlatPack::Table::Component.new(data: attribute_rows, class: "text-sm") do |table| %>
+      <% table.column(title: "Attribute") { |attribute_row| attribute_row.fetch(:attribute) } %>
+      <% table.column(title: "Value") { |attribute_row| attribute_row.fetch(:value) } %>
+    <% end %>
+  </div>
+<% end %>

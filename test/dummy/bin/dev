@@ -8,6 +8,15 @@ fi
 # Default to port 3000 if not specified
 export PORT="${PORT:-3000}"
 
+# Clear stale Rails PID locks that can remain after abrupt stops.
+PIDFILE="tmp/pids/server.pid"
+if [ -f "$PIDFILE" ]; then
+  PID="$(cat "$PIDFILE")"
+  if [ -n "$PID" ] && ! kill -0 "$PID" 2>/dev/null; then
+    rm -f "$PIDFILE"
+  fi
+fi
+
 # Let the debug gem allow remote connections,
 # but avoid loading until `debugger` is called
 export RUBY_DEBUG_OPEN="true"

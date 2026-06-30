@@ -2,7 +2,7 @@
   <% sidebar.header do %>
     <%= render FlatPack::Sidebar::Header::Component.new(
       brand_abbr: "RS",
-      title: "Addon Template",
+      title: "Admin",
       subtitle: "Recording Studio"
     ) %>
   <% end %>
@@ -10,27 +10,81 @@
   <% sidebar.items do %>
     <nav class="py-4 space-y-1" aria-label="Main navigation">
       <%= render FlatPack::Sidebar::Item::Component.new(
-        label: "Home",
+        label: "Workspace home",
         href: main_app.root_path,
         icon: :home
       ) %>
 
       <%= render FlatPack::Sidebar::Item::Component.new(
-        label: "Install",
+        label: "Admin root page",
+        href: main_app.admin_root_path,
+        icon: :building_office
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "Mounted admin",
+        href: "/admin",
+        icon: :squares_2x2
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "Stats root",
+        href: main_app.stats_root_path,
+        icon: :chart_bar
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "Install guide",
         href: main_app.docs_install_path,
         icon: :arrow_down_tray
       ) %>
 
       <%= render FlatPack::Sidebar::Item::Component.new(
-        label: "Config",
+        label: "Access flow",
+        href: main_app.docs_admin_access_path,
+        icon: :lock
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "AdminRoot recordable",
+        href: main_app.docs_admin_root_path,
+        icon: :building_office
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "Admin sections",
+        href: main_app.docs_admin_section_path,
+        icon: :folder
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "Configuration",
         href: main_app.docs_config_path,
         icon: :settings
       ) %>
 
       <%= render FlatPack::Sidebar::Item::Component.new(
-        label: "Methods",
+        label: "Public API",
         href: main_app.docs_methods_path,
         icon: :code_bracket
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "View helpers",
+        href: main_app.docs_helpers_path,
+        icon: :magnifying_glass
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "Blast radius",
+        href: main_app.docs_blast_radius_path,
+        icon: :shield_exclamation
+      ) %>
+
+      <%= render FlatPack::Sidebar::Item::Component.new(
+        label: "Generators",
+        href: main_app.admin_generators_path,
+        icon: :wrench_screwdriver
       ) %>
 
       <%= render FlatPack::Sidebar::Item::Component.new(
@@ -46,7 +100,7 @@
       ) %>
 
       <%= render FlatPack::Sidebar::Item::Component.new(
-        label: "Gem Views",
+        label: "Engine views",
         href: main_app.docs_gem_views_path,
         icon: :eye
       ) %>

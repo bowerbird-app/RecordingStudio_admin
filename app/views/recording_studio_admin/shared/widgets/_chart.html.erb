@@ -1,0 +1,17 @@
+<% presenter ||= recording_studio_widget_presenter(widget) %>
+<% chart_type = presenter.chart_type %>
+<% chart_series = chart_type == :geochart ? recording_studio_flatpack_geochart_series(widget.series) : widget.series %>
+<% chart_options = if chart_type == :geochart
+                     recording_studio_flatpack_geochart_options(widget.chart_options || {})
+                   else
+                     {
+                       grid: { show: false }
+                     }.deep_merge(widget.chart_options || {})
+                   end %>
+
+<%= render FlatPack::Chart::Component.new(
+  type: chart_type,
+  series: chart_series,
+  options: chart_options,
+  card: false
+) %>

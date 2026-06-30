@@ -1,30 +1,83 @@
 <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
   <%= render FlatPack::PageTitle::Component.new(
     title: "Methods",
-    subtitle: "Document the public methods your addon exposes.",
+    subtitle: "The main public APIs are registration, lookup, availability, and resolver methods on RecordingStudioAdmin.",
     variant: :h1
   ) %>
 
   <%= render FlatPack::SectionTitle::Component.new(
-    title: "Example method",
-    subtitle: "recordingstudio_addon.example_method",
+    title: "Register definitions",
+    subtitle: "Use these methods from Rails.application.config.to_prepare.",
   ) %>
 
   <%= render FlatPack::CodeBlock::Component.new(
     language: :ruby,
     code: <<~'CODE'
-      # Explain what this method does before the example.
-      result = RecordingstudioAddon.example_method(
-        # Replace with the real arguments this method accepts.
-        input: "demo value"
+      RecordingStudioAdmin.register_screen(AdminScreens::ApiRequests)
+      RecordingStudioAdmin.register_section(AdminScreens::RootSection)
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Look up definitions",
+    subtitle: "Use registry-backed lookups when you need the registered class object.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+    code: <<~'CODE'
+      RecordingStudioAdmin.screen_for("api_requests")
+      RecordingStudioAdmin.section_for("root")
+      RecordingStudioAdmin.widget_for("api_requests.widgets.api_activity")
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Resolve rendered results",
+    subtitle: "Resolvers turn definitions into structured result objects for controllers, views, and tests.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+    code: <<~'CODE'
+      RecordingStudioAdmin.resolve_sections(context: context)
+      RecordingStudioAdmin.resolve_section(key: "root", context: context)
+      RecordingStudioAdmin.resolve_screen(key: "api_requests", context: context)
+      RecordingStudioAdmin.resolve_widget(key: "api_requests.widgets.api_activity", context: context)
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Check availability",
+    subtitle: "Availability methods apply the current recording, placement, parent, and enabled-section rules.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+    code: <<~'CODE'
+      RecordingStudioAdmin.available_sections(
+        context: context,
+        recording: recording,
+        placement: :all
       )
 
-      # Show what the method returns or what side effect it creates.
-      puts result
+      RecordingStudioAdmin.available_admin_items(
+        context: context,
+        recording: recording,
+        placement: :descendant,
+        parent: "root",
+        include: %i[sections screens]
+      )
+
+      RecordingStudioAdmin.enabled_admin_section_keys(
+        recording: recording,
+        context: context
+      )
     CODE
   ) %>
 
   <p class="text-sm text-(--body-muted-content-color)">
-    Provide one section title and codeblock for each method
+    Use the context helper methods inside views and definition blocks when possible. Reach for the top-level
+    <span class="font-mono">RecordingStudioAdmin</span> methods in tests, debugging tools, or app-level orchestration code.
   </p>
 </div>

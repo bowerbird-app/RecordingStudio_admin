@@ -11,6 +11,7 @@ class ApplicationController < ActionController::Base
 
   before_action :authenticate_user!
   before_action :set_current_actor
+  before_action :authorize_dummy_page_access!, unless: :devise_controller?
 
   private
 
@@ -20,5 +21,18 @@ class ApplicationController < ActionController::Base
 
   def set_current_actor
     Current.actor = current_user
+  end
+
+  def authorize_dummy_page_access!
+    return if accessible_for_current_root?
+
+    head :forbidden
+  end
+
+  def accessible_for_current_root?
+    root_recording = current_root_recording
+    return false unless root_recording
+
+    RecordingStudioAccessible.authorized?(actor: current_user, recording: root_recording, role: :view)
   end
 end

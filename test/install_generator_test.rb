@@ -3,166 +3,96 @@
 require "test_helper"
 require "fileutils"
 require "tmpdir"
-require "generators/gem_template/install/install_generator"
+require "generators/recording_studio_admin/install/install_generator"
 
 class InstallGeneratorTest < Minitest::Test
-  INSTALL_TEMPLATE_PATH = File.expand_path(
-    "../lib/generators/gem_template/install/templates/INSTALL.md",
-    __dir__
-  )
-
   def with_temp_app
     Dir.mktmpdir do |dir|
       FileUtils.mkdir_p(File.join(dir, "app/assets/tailwind"))
+      FileUtils.mkdir_p(File.join(dir, "config"))
       yield dir
     end
   end
 
   def build_generator(destination_root, options = {})
-    GemTemplate::Generators::InstallGenerator.new(
-      [],
-      options,
-      destination_root: destination_root
-    )
+    RecordingStudioAdmin::Generators::InstallGenerator.new([], options, destination_root: destination_root)
   end
 
-  def test_mount_engine_uses_configured_mount_path
-    generator = build_generator("/tmp", mount_path: "/addons/recording")
+  def test_mount_engine_uses_configured_mount_path_and_accessible_engine
+    generator = build_generator("/tmp", mount_path: "/backoffice")
     routes = []
 
-    generator.stub(:route, ->(value) { routes << value }) do
-      generator.mount_engine
-    end
+    with_singleton_stub(generator, :route, ->(value) { routes << value }) { generator.mount_engine }
 
-    assert_equal ["mount GemTemplate::Engine, at: \"/addons/recording\""], routes
+    assert_equal [
+      'mount RecordingStudioAccessible::Engine, at: "/backoffice/access"',
+      'recording_studio_admin_for :admin, at: "/backoffice"'
+    ], routes
+  end
+
+  def test_mount_engine_rejects_unsafe_mount_path
+    generator = build_generator("/tmp", mount_path: %(/admin"; system("open"); #))
+
+    assert_raises(ArgumentError) { generator.mount_engine }
+  end
+
+  def test_copy_initializer_uses_configured_mount_path_and_access_recording_resolver
+    with_temp_app do |dir|
+      generator = build_generator(dir, mount_path: "/backoffice")
+
+      generator.copy_initializer
+
+      initializer = File.read(File.join(dir, "config/initializers/recording_studio_admin.rb"))
+      assert_includes initializer, 'config.default_mount_path = "/backoffice"'
+      assert_includes initializer, "config.access_recording_resolver = lambda do |context|"
+      assert_includes initializer, "config.async_widgets.enabled = false"
+    end
   end
 
   def test_add_tailwind_source_injects_engine_and_flatpack_sources
     with_temp_app do |dir|
       css_path = File.join(dir, "app/assets/tailwind/application.css")
       File.write(css_path, "@import \"tailwindcss\";\n")
-
       generator = build_generator(dir)
 
-      Rails.stub(:root, Pathname.new(dir)) do
-        generator.stub(:say, nil) do
-          generator.add_tailwind_source
-        end
+      with_singleton_stub(Rails, :root, Pathname.new(dir)) do
+        with_singleton_stub(generator, :say, nil) { generator.add_tailwind_source }
       end
 
       css = File.read(css_path)
-      assert_tailwind_sources_present(css)
+      assert_includes css, "@theme inline"
+      assert_includes css, "--color-primary: var(--color-primary);"
+      assert_includes css, "recording_studio_admin/app/views/**/*.erb"
+      assert_includes css, "flat_pack/app/components/**/*.{rb,erb}"
     end
   end
 
-  def test_add_tailwind_source_does_not_duplicate_existing_entries
+  def test_add_importmap_source_pins_engine_stimulus_controllers
     with_temp_app do |dir|
-      css_path = File.join(dir, "app/assets/tailwind/application.css")
-      File.write(css_path, <<~CSS)
-        @import "tailwindcss";
-        @source "../../vendor/bundle/**/gem_template/app/views/**/*.erb";
-        @source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/gem_template-*/app/views/**/*.erb";
-        @source "../../vendor/bundle/**/flatpack/app/components/**/*.{rb,erb}";
-        @source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/flatpack-*/app/components/**/*.{rb,erb}";
-      CSS
-
+      importmap_path = File.join(dir, "config/importmap.rb")
+      File.write(importmap_path, "pin \"application\"\n")
       generator = build_generator(dir)
 
-      Rails.stub(:root, Pathname.new(dir)) do
-        generator.stub(:say, nil) do
-          generator.add_tailwind_source
-        end
+      with_singleton_stub(Rails, :root, Pathname.new(dir)) do
+        with_singleton_stub(generator, :say, nil) { generator.add_importmap_source }
       end
 
-      css = File.read(css_path)
-      assert_tailwind_sources_present(css)
-      assert_tailwind_sources_count(css, 1)
+      importmap = File.read(importmap_path)
+      assert_includes importmap, 'RecordingStudioAdmin::Engine.root.join("app/javascript/recording_studio_admin/controllers")'
+      assert_includes importmap, 'under: "controllers/recording_studio_admin"'
+      assert_includes importmap, 'to: "recording_studio_admin/controllers"'
     end
   end
 
-  def test_add_tailwind_source_reports_missing_tailwind_config
-    with_temp_app do |dir|
-      FileUtils.rm_rf(File.join(dir, "app/assets/tailwind"))
-      generator = build_generator(dir)
-      messages = []
+  def test_install_guide_mentions_admin_root_and_registration
+    install_guide = File.read(File.expand_path("../lib/generators/recording_studio_admin/install/INSTALL.md", __dir__))
 
-      Rails.stub(:root, Pathname.new(dir)) do
-        generator.stub(:say, ->(message, color = nil) { messages << [message, color] }) do
-          generator.add_tailwind_source
-        end
-      end
-
-      assert_includes messages, ["Tailwind CSS not detected. Skipping Tailwind configuration.", :yellow]
-      assert_includes messages, ["If you use Tailwind, add these lines to your Tailwind CSS config:", :yellow]
-      tailwind_source_lines.each do |line|
-        assert_includes messages, ["  #{line}", :yellow]
-      end
-    end
-  end
-
-  def test_add_tailwind_source_reports_manual_configuration_when_import_is_missing
-    with_temp_app do |dir|
-      css_path = File.join(dir, "app/assets/tailwind/application.css")
-      File.write(css_path, "@source \"../local/**/*.erb\";\n")
-      generator = build_generator(dir)
-      messages = []
-
-      Rails.stub(:root, Pathname.new(dir)) do
-        generator.stub(:say, ->(message, color = nil) { messages << [message, color] }) do
-          generator.add_tailwind_source
-        end
-      end
-
-      assert_equal "@source \"../local/**/*.erb\";\n", File.read(css_path)
-      assert_includes messages, ["Could not find @import \"tailwindcss\" in your Tailwind config.", :yellow]
-      assert_includes messages, ["Please manually add these lines to your Tailwind CSS config:", :yellow]
-      tailwind_source_lines.each do |line|
-        assert_includes messages, ["  #{line}", :yellow]
-      end
-    end
-  end
-
-  def test_show_readme_displays_install_guide_for_invoke_behavior
-    generator = build_generator("/tmp")
-    shown_templates = []
-
-    generator.stub(:behavior, :invoke) do
-      generator.stub(:readme, ->(template) { shown_templates << template }) do
-        generator.show_readme
-      end
-    end
-
-    assert_equal ["INSTALL.md"], shown_templates
-  end
-
-  def test_install_guide_includes_migration_and_host_setup_steps
-    install_guide = File.read(INSTALL_TEMPLATE_PATH)
-
-    assert_includes install_guide, "bin/rails generate gem_template:migrations"
-    assert_includes install_guide, "bin/rails db:migrate"
-    assert_includes install_guide, "auth, layout, and current actor integration"
-  end
-
-  private
-
-  def assert_tailwind_sources_present(css)
-    tailwind_source_lines.each do |line|
-      assert_includes css, line
-    end
-  end
-
-  def assert_tailwind_sources_count(css, count)
-    tailwind_source_lines.each do |line|
-      assert_equal count, css.scan(line).size
-    end
-  end
-
-  def tailwind_source_lines
-    [
-      '@source "../../vendor/bundle/**/gem_template/app/views/**/*.erb";',
-      '@source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/gem_template-*/app/views/**/*.erb";',
-      '@source "../../vendor/bundle/**/flatpack/app/components/**/*.{rb,erb}";',
-      '@source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/flatpack-*/app/components/**/*.{rb,erb}";'
-    ]
+    assert_includes install_guide, "recording_studio_admin:admin_root"
+    assert_includes install_guide, "app/admin"
+    assert_includes install_guide, "capability folders"
+    assert_includes install_guide, "authentication_method"
+    assert_includes install_guide, "access_recording_resolver"
+    assert_includes install_guide, "recording_studio_admin_for"
+    assert_includes install_guide, "RecordingStudioAccessible.authorized?"
   end
 end

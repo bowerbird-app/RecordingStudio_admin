@@ -1,0 +1,114 @@
+<div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
+  <%= render FlatPack::PageTitle::Component.new(
+    title: "Helpers",
+    subtitle: "Common helper methods for building admin navigation, search, widget links, and anchor-safe navigation.",
+    variant: :h1
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Available sections",
+    subtitle: "Use context.available_admin_sections to list only sections enabled for the current recording and actor, optionally filtered by placement.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+      code: <<~CODE
+      sections = recording_studio_admin_context.available_admin_sections(
+        recording: recording_studio_admin_access_recording,
+        placement: :root
+      )
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Admin search items",
+    subtitle: "Use context.available_admin_items to build search results for sections and screens on the generated admin root page, with optional placement and parent filtering.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+      code: <<~CODE
+      items = recording_studio_admin_context.available_admin_items(
+        recording: recording_studio_admin_access_recording,
+        placement: :all,
+        include: %i[sections screens]
+      )
+
+      query = params[:q].to_s.strip.downcase
+      matching_items = items.select { |item| item.search_text.include?(query) }
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Available widgets",
+    subtitle: "Use context.available_admin_widgets to list widget metadata exposed by available sections or linked screens without running widget queries.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+      code: <<~CODE
+      widgets = recording_studio_admin_context.available_admin_widgets(
+        recording: recording_studio_admin_access_recording,
+        placement: :root,
+        include: %i[section_widgets linked_screen_widgets]
+      )
+
+      geo_widgets = widgets.select { |widget| widget.chart_type == :geo }
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Widget date helpers",
+    subtitle: "Use context helpers to keep widget links, labels, and derived time ranges aligned with date-range filters.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+      code: <<~CODE
+      period_label = context.widget_period_label(default_preset_key: :this_week)
+      range = context.widget_time_range(default_preset_key: :this_week)
+
+      params = context.widget_filter_params(
+        default_preset_key: :this_week,
+        preset_param: :date_range_preset
+      )
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Anchor-safe links",
+    subtitle: "Use preserve_anchor_url for admin links, page_nav_anchor_url for back links, and widget_link_url to suppress self-links.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+      code: <<~CODE
+      link_to "Open section", preserve_anchor_url(section.url)
+
+      link_to "Back to app", page_nav_anchor_url(default: "/")
+
+      widget_link_url(widget.link_to)
+    CODE
+  ) %>
+
+  <%= render FlatPack::SectionTitle::Component.new(
+    title: "Widget rendering",
+    subtitle: "Render resolved widgets from custom views without inheriting from the mounted admin controller.",
+  ) %>
+
+  <%= render FlatPack::CodeBlock::Component.new(
+    language: :ruby,
+      code: <<~CODE
+      helper RecordingStudioAdmin::WidgetRenderingHelper
+
+      widget = RecordingStudioAdmin.resolve_widget(
+        key: "api_requests.widgets.api_activity",
+        context: context
+      )
+
+      render_recording_studio_widget(widget)
+      render_recording_studio_widget_body(widget)
+      render_recording_studio_chart_widget(widget)
+    CODE
+  ) %>
+</div>

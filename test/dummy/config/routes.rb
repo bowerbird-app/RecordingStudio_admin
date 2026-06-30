@@ -6,6 +6,21 @@ Rails.application.routes.draw do
   get "/recording_studio", to: redirect("/"), as: nil
   mount RecordingStudio::Engine, at: "/recording_studio"
   mount RecordingStudioRootSwitchable::Engine, at: "/recording_studio_root_switchable"
+  mount RecordingStudioAccessible::Engine, at: "/admin/access"
+  mount RecordingStudioExportable::Engine, at: "/recording_studio_exportable" if defined?(RecordingStudioExportable::Engine)
+  namespace :admin do
+    get "root", to: "root#show"
+    get "generators", to: "generators#index"
+    resources :users, only: %i[show edit update] do
+      post :flag_email, on: :member
+    end
+    resources :user_activities, only: :destroy
+  end
+  namespace :stats do
+    get "root", to: "root#show"
+  end
+  recording_studio_admin_for :admin, at: "/admin", root_section: :root
+  recording_studio_admin_for :stats, at: "/stats", root_section: :stats
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
@@ -18,11 +33,16 @@ Rails.application.routes.draw do
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   get "docs/install", to: "docs#install", as: :docs_install
+  get "docs/admin_access", to: "docs#admin_access", as: :docs_admin_access
+  get "docs/admin_root", to: "docs#admin_root", as: :docs_admin_root
+  get "docs/admin_section", to: "docs#admin_section", as: :docs_admin_section
   get "docs/config", to: "docs#configuration", as: :docs_config
   get "docs/recordable_types", to: "docs#recordable_types", as: :docs_recordable_types
   get "docs/recordings_tree", to: "docs#recordings_tree", as: :docs_recordings_tree
   get "docs/gem_views", to: "docs#gem_views", as: :docs_gem_views
   get "docs/methods", to: "docs#methods", as: :docs_methods
+  get "docs/helpers", to: "docs#helpers", as: :docs_helpers
+  get "docs/blast_radius", to: "docs#blast_radius", as: :docs_blast_radius
 
   # Defines the root path route ("/")
   root "home#index"
