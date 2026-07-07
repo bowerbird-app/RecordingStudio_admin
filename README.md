@@ -56,6 +56,10 @@ app/admin/
 
 ```ruby
 module AdminScreens
+  def self.load!
+    # Load or reload app/admin definition files here.
+  end
+
   def self.register!
     Root.register!
     Api.register!
@@ -109,8 +113,7 @@ Rails.application.config.to_prepare do
 
   AdminScreens.load!
   RecordingStudioAdmin.register_widget(AdminScreens::ApiRequestsActivityWidget)
-  AdminScreens::Root.register!
-  AdminScreens::Api.register!
+  AdminScreens.register!
 end
 ```
 

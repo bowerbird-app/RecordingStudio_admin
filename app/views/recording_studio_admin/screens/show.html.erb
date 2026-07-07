@@ -22,7 +22,7 @@
     <%= render FlatPack::Grid::Component.new(cols: :auto, gap: :md, class: "mb-6") do %>
       <% @screen.widgets.each do |widget| %>
         <% if RecordingStudioAdmin.configuration.async_widgets.enabled %>
-          <%= render_recording_studio_async_widget_frame(widget.with(view_variant: :compact), parent: :screen, parent_key: @screen.key) %>
+          <%= render_recording_studio_async_widget_frame(widget, parent: :screen, parent_key: @screen.key, variant: :compact) %>
         <% else %>
           <%= render_recording_studio_widget(widget, variant: :compact) %>
         <% end %>
@@ -111,4 +111,3 @@
     <%= render "table_placeholder", screen: @screen %>
   <% end %>
 <% end %>
-

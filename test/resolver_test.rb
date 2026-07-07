@@ -83,6 +83,11 @@ class ResolverTest < Minitest::Test
                  y: context.widget_param(:limit, default: 2) }]
       }]
     end
+
+    RequestsParamTitleWidget = RecordingStudioAdmin::Widget.new("widgets.requests.param_title") do
+      title { |context| context.widget_param(:title, default: "Default title") }
+      value { |context| context.widget_param(:value, default: 1) }
+    end
   end
 
   RequestsReviewCompletionWidget = RecordingStudioAdmin::Widget.new("widgets.requests.review_completion") do
@@ -352,6 +357,7 @@ class ResolverTest < Minitest::Test
       RequestsTotalWidget,
       RequestsRecentStatusesWidget,
       RequestsTrafficPreviewWidget,
+      RequestsParamTitleWidget,
       RequestsReviewCompletionWidget,
       RequestsChurnWidget,
       RequestsAliasPolarityWidget,
@@ -663,7 +669,11 @@ class ResolverTest < Minitest::Test
 
   def test_legacy_stat_widgets_are_normalized_to_number
     widget = with_access_allowed do
-      RecordingStudioAdmin::Resolvers::ScreenResolver.resolve_widget(key: "requests", widget_key: "widgets.requests.legacy_total", context: allowed_context)
+      RecordingStudioAdmin::Resolvers::ScreenResolver.resolve_widget(
+        key: "requests",
+        widget_key: "widgets.requests.legacy_total",
+        context: allowed_context
+      )
     end
 
     assert_equal :number, widget.type
@@ -673,7 +683,11 @@ class ResolverTest < Minitest::Test
 
   def test_widget_description_is_resolved
     widget = with_access_allowed do
-      RecordingStudioAdmin::Resolvers::ScreenResolver.resolve_widget(key: "requests", widget_key: "widgets.requests.total", context: allowed_context)
+      RecordingStudioAdmin::Resolvers::ScreenResolver.resolve_widget(
+        key: "requests",
+        widget_key: "widgets.requests.total",
+        context: allowed_context
+      )
     end
 
     assert_equal "Total requests returned by the current query.", widget.description
@@ -1146,6 +1160,76 @@ class ResolverTest < Minitest::Test
     assert_includes widgets.map(&:key), "widgets.requests.recent_statuses"
     assert_equal [:linked_screen_widget], widgets.map(&:source).uniq
     assert_equal ["root"], widgets.map(&:section_key).uniq
+  end
+
+  def test_available_widgets_preserves_distinct_usage_variants_for_the_same_widget
+    variant_section = Class.new(RecordingStudioAdmin::Section) do
+      key "variant_root"
+      title "Variant root"
+      availability_scope :root
+      widget "widgets.requests.total"
+      widget "widgets.requests.total", view_variant: :compact
+    end
+    RecordingStudioAdmin.register_section(variant_section)
+    root_recording = TestRecording.new(nil)
+
+    widgets = with_access_allowed do
+      RecordingStudioAdmin.available_widgets(
+        context: allowed_context(recording: root_recording),
+        recording: root_recording,
+        placement: :root,
+        include: :section_widgets
+      )
+    end.select { |widget| widget.section_key == "variant_root" }
+
+    assert_equal [nil, :compact], widgets.map(&:view_variant)
+    assert_equal %w[widgets.requests.total widgets.requests.total], widgets.map(&:key)
+  end
+
+  def test_available_widgets_resolves_widget_metadata_with_usage_params
+    param_section = Class.new(RecordingStudioAdmin::Section) do
+      key "param_root"
+      title "Param root"
+      availability_scope :root
+      widget "widgets.requests.param_title", params: { title: "Usage title", value: 7 }
+    end
+    RecordingStudioAdmin.register_section(param_section)
+    root_recording = TestRecording.new(nil)
+
+    widget = with_access_allowed do
+      RecordingStudioAdmin.available_widgets(
+        context: allowed_context(recording: root_recording),
+        recording: root_recording,
+        placement: :root,
+        include: :section_widgets
+      )
+    end.find { |available_widget| available_widget.section_key == "param_root" }
+
+    assert_equal "Usage title", widget.title
+    assert_equal({ title: "Usage title", value: 7 }, widget.params)
+  end
+
+  def test_section_widget_resolution_uses_usage_index_for_duplicate_widgets
+    duplicate_section = Class.new(RecordingStudioAdmin::Section) do
+      key "duplicate_root"
+      title "Duplicate root"
+      widget "widgets.requests.param_title", params: { title: "First", value: 1 }
+      widget "widgets.requests.param_title", params: { title: "Second", value: 2 }
+    end
+    RecordingStudioAdmin.register_section(duplicate_section)
+
+    widget = with_access_allowed do
+      RecordingStudioAdmin::Resolvers::SectionResolver.resolve_widget(
+        key: "duplicate_root",
+        widget_key: "widgets.requests.param_title",
+        usage_index: "1",
+        context: allowed_context
+      )
+    end
+
+    assert_equal "Second", widget.title
+    assert_equal 2, widget.value
+    assert_equal 1, widget.metadata[:recording_studio_admin_widget_usage_index]
   end
 
   def test_available_widgets_prefers_recordable_enabled_admin_sections

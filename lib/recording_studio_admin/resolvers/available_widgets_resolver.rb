@@ -30,9 +30,15 @@ module RecordingStudioAdmin
         end
 
         widgets.compact.uniq do |widget|
-          [widget.key, widget.section_key, widget.screen_key, widget.source, widget.params]
+          [widget.key, widget.section_key, widget.screen_key, widget.source, widget.view_variant, widget.params]
         end.sort_by do |widget|
-          [widget.section_key.to_s, widget.screen_key.to_s, widget.key.to_s, widget.source.to_s]
+          [
+            widget.section_key.to_s,
+            widget.screen_key.to_s,
+            widget.key.to_s,
+            widget.source.to_s,
+            widget.view_variant.to_s
+          ]
         end
       end
 
@@ -123,10 +129,11 @@ module RecordingStudioAdmin
 
       def build_widget(widget_definition, section_key:, source:, view_variant:, params:, screen_key: nil,
                        title_override: nil, chart_type_override: nil)
-        title = title_override || resolve_widget_value(widget_definition.title)
-        description = resolve_widget_value(widget_definition.description)
-        type = normalize_widget_type(resolve_widget_value(widget_definition.type))
-        chart_type = chart_type_override || resolve_widget_value(widget_definition.chart_type)
+        widget_context = params.empty? ? @context : @context.with_widget_params(params)
+        title = title_override || resolve_widget_value(widget_definition.title, widget_context)
+        description = resolve_widget_value(widget_definition.description, widget_context)
+        type = normalize_widget_type(resolve_widget_value(widget_definition.type, widget_context))
+        chart_type = chart_type_override || resolve_widget_value(widget_definition.chart_type, widget_context)
 
         Results::ResolvedAvailableWidget.new(
           key: widget_definition.key,
@@ -177,8 +184,8 @@ module RecordingStudioAdmin
         raise InvalidDefinition, "Screen widget #{field_name} must resolve to a Hash"
       end
 
-      def resolve_widget_value(value)
-        return value.call(@context) if value.respond_to?(:call)
+      def resolve_widget_value(value, context)
+        return value.call(context) if value.respond_to?(:call)
 
         value
       end

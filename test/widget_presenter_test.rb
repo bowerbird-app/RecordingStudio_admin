@@ -159,6 +159,45 @@ class WidgetPresenterTest < Minitest::Test
                  view.section_widget_path_args
   end
 
+  def test_helper_builds_screen_async_frame_src_with_separate_usage_and_render_variants
+    view = FakeWidgetView.new
+    widget = resolved_widget(
+      key: "widgets.users.total",
+      metadata: { recording_studio_admin_widget_usage_index: 0 }
+    )
+    expected_src = "/admin/screens/users/widgets/widgets.users.total?" \
+                   "anchor_url=%2Froot&widget_render_variant=compact&" \
+                   "widget_usage_index=0&widget_view_variant=__default__"
+
+    assert_equal expected_src, view.recording_studio_widget_frame_src(
+      parent: :screen,
+      parent_key: "users",
+      widget: widget,
+      usage_variant: "__default__"
+    )
+    assert_equal [
+      "users",
+      "widgets.users.total",
+      {
+        "anchor_url" => "/root",
+        widget_view_variant: "__default__",
+        widget_usage_index: 0,
+        widget_render_variant: :compact
+      }
+    ], view.screen_widget_path_args
+  end
+
+  def test_helper_uses_usage_index_for_distinct_frame_ids
+    view = FakeWidgetView.new
+    first = resolved_widget(metadata: { recording_studio_admin_widget_usage_index: 0 })
+    second = resolved_widget(metadata: { recording_studio_admin_widget_usage_index: 1 })
+
+    refute_equal(
+      view.recording_studio_widget_frame_id(parent: :screen, parent_key: "users", widget: first),
+      view.recording_studio_widget_frame_id(parent: :screen, parent_key: "users", widget: second)
+    )
+  end
+
   private
 
   def resolved_widget(**overrides)
@@ -192,7 +231,7 @@ class WidgetPresenterTest < Minitest::Test
   class FakeWidgetView
     include RecordingStudioAdmin::WidgetRenderingHelper
 
-    attr_reader :rendered_partial, :rendered_locals, :section_widget_path_args
+    attr_reader :rendered_partial, :rendered_locals, :section_widget_path_args, :screen_widget_path_args
 
     def render(partial:, locals:)
       @rendered_partial = partial
@@ -210,6 +249,7 @@ class WidgetPresenterTest < Minitest::Test
     end
 
     def screen_widget_path(parent_key, widget_key, query)
+      @screen_widget_path_args = [parent_key, widget_key, query]
       "/admin/screens/#{parent_key}/widgets/#{widget_key}?#{query.to_query}"
     end
   end

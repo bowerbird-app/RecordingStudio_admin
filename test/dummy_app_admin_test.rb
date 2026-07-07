@@ -86,11 +86,15 @@ class DummyAppAdminTest < Minitest::Test
     assert_includes api_requests_chart, "chart do"
     assert_includes api_requests_table, "class ApiRequests"
     assert_includes api_requests_table, "table do"
-    assert_includes api_activity_widget,
-                    'ApiRequestsApiActivityWidget = RecordingStudioAdmin::Widget.new("widgets.api_requests.api_activity")'
+    assert_includes(
+      api_activity_widget,
+      'ApiRequestsApiActivityWidget = RecordingStudioAdmin::Widget.new("widgets.api_requests.api_activity")'
+    )
     assert_includes api_manifest, "RecordingStudioAdmin.register_widget(AdminScreens::ApiRequestsApiActivityWidget)"
-    assert_includes review_volume_widget,
-                    'UserReviewsReviewVolumeWidget = RecordingStudioAdmin::Widget.new("widgets.user_reviews.review_volume")'
+    assert_includes(
+      review_volume_widget,
+      'UserReviewsReviewVolumeWidget = RecordingStudioAdmin::Widget.new("widgets.user_reviews.review_volume")'
+    )
     assert_includes users_manifest, "RecordingStudioAdmin.register_widget(AdminScreens::UserReviewsReviewVolumeWidget)"
   end
 
