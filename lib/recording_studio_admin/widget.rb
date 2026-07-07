@@ -19,12 +19,17 @@ module RecordingStudioAdmin
     LIST_ITEM_KEYS = %i[text label icon avatar leading trailing href hover active link_arguments].freeze
     COMPACT_LIST_PREVIEW_TYPES = %i[visual_stack text_summary].freeze
 
-    attr_reader :key, :local_key, :screen_key
+    attr_reader :key, :local_key, :source_location
 
     def initialize(local_key = nil, screen_key: nil, registry_prefix: nil, blast_radius: nil, &block)
+      if screen_key
+        raise InvalidDefinition,
+              "Widgets must be standalone definitions. Pass an explicit widget key and register the widget separately."
+      end
+
       @local_key = local_key&.to_s
-      @screen_key = screen_key&.to_s
-      @key = registry_prefix || [@screen_key, "widgets", @local_key].compact.join(".")
+      @key = registry_prefix || normalize_key(@local_key)
+      @source_location = block&.source_location
       if blast_radius
         @blast_radius = RecordingStudioAdmin::BlastRadius.normalize(blast_radius,
                                                                     owner: "Widget #{key.inspect}")
@@ -49,6 +54,8 @@ module RecordingStudioAdmin
       @blast_radius = RecordingStudioAdmin::BlastRadius.normalize(value, owner: "Widget #{key.inspect}") if value
       @blast_radius || RecordingStudioAdmin::BlastRadius::DEFAULT
     end
+
+    def screen_key = nil
 
     def resolve(context)
       attributes = resolved_attributes(context)
@@ -117,16 +124,13 @@ module RecordingStudioAdmin
       explicit_label = evaluate(@link_label, context)
       return explicit_label if explicit_label.present?
 
-      screen_title(context)
+      nil
     end
 
-    def screen_title(context)
-      return unless screen_key
+    def normalize_key(value)
+      raise InvalidDefinition, "Widget key is required" if value.blank?
 
-      screen = RecordingStudioAdmin.screen_for(screen_key)
-      return unless screen
-
-      screen.evaluate(screen.title, context)
+      value.include?(".") ? value : "widgets.#{value}"
     end
 
     def normalize_type(value)

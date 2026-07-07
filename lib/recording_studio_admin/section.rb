@@ -2,11 +2,12 @@
 
 module RecordingStudioAdmin
   SectionRecordableDefinition = Data.define(:class_name, :find_or_create_by, :parent, :parent_recording, :action)
-  SectionWidgetUsage = Data.define(:key, :view_variant, :title, :chart_type, :chart_options, :params, :blast_radius) do
+  WidgetUsage = Data.define(:key, :view_variant, :title, :chart_type, :chart_options, :params, :blast_radius) do
     def effective_blast_radius(widget_definition)
       RecordingStudioAdmin::BlastRadius.max(widget_definition&.blast_radius, blast_radius)
     end
   end
+  SectionWidgetUsage = WidgetUsage
   SECTION_WIDGET_VIEW_VARIANTS = %i[card compact].freeze
   SECTION_AVAILABILITY_SCOPES = %i[all root descendant].freeze
   DEFAULT_SECTION_AVAILABILITY_SCOPE = :root
@@ -38,7 +39,7 @@ module RecordingStudioAdmin
                                       owner: "Section widget #{key.inspect}"
                                     )
                                   end
-        @widget_keys_value << SectionWidgetUsage.new(
+        @widget_keys_value << WidgetUsage.new(
           key: key.to_s,
           view_variant: normalized_view_variant,
           title: title,
@@ -76,11 +77,11 @@ module RecordingStudioAdmin
 
       def widget_usages
         (@widget_keys_value || []).map do |entry|
-          if entry.is_a?(SectionWidgetUsage)
+          if entry.is_a?(WidgetUsage)
             entry
           else
-            SectionWidgetUsage.new(key: entry.to_s, view_variant: nil, title: nil, chart_type: nil,
-                                   chart_options: nil, params: nil, blast_radius: nil)
+            WidgetUsage.new(key: entry.to_s, view_variant: nil, title: nil, chart_type: nil,
+                            chart_options: nil, params: nil, blast_radius: nil)
           end
         end
       end

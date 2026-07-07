@@ -13,7 +13,6 @@ module RecordingStudioAdmin
 
     def register_screen(klass)
       register(@screens, klass.key, klass)
-      klass.widgets.each_value { |widget| register_widget(widget) }
       klass
     end
 
@@ -74,9 +73,7 @@ module RecordingStudioAdmin
 
     def replaceable_reload?(existing, value)
       return false unless existing
-      return true if reloadable_definition?(existing, value)
-
-      reloadable_screen_widget?(existing, value)
+      reloadable_definition?(existing, value) || reloadable_widget?(existing, value)
     end
 
     def reloadable_definition?(existing, value)
@@ -86,11 +83,11 @@ module RecordingStudioAdmin
       existing.name == value.name
     end
 
-    def reloadable_screen_widget?(existing, value)
+    def reloadable_widget?(existing, value)
       return false unless existing.is_a?(Widget) && value.is_a?(Widget)
-      return false if existing.screen_key.blank? || value.screen_key.blank?
+      return false if existing.source_location.blank? || value.source_location.blank?
 
-      existing.screen_key == value.screen_key && existing.local_key == value.local_key
+      existing.source_location == value.source_location
     end
 
     def definition_name(definition)

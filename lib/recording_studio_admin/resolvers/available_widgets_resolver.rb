@@ -86,15 +86,22 @@ module RecordingStudioAdmin
         linked_screen_definitions(section_definition).flat_map do |screen_definition|
           next [] unless blast_radius_allowed?(screen_definition, container: section_definition)
 
-          screen_definition.widgets.values.map do |widget_definition|
-            next unless blast_radius_allowed?(widget_definition, container: screen_definition)
+          screen_definition.widget_usages.map do |widget_usage|
+            widget_definition = RecordingStudioAdmin.widget_for(widget_usage.key)
+            next unless widget_definition
+
+            widget_radius = widget_usage.effective_blast_radius(widget_definition)
+            next unless blast_radius_allowed?(widget_radius, container: screen_definition)
 
             build_widget(
               widget_definition,
               section_key: section_definition.key,
+              screen_key: screen_definition.key,
               source: :linked_screen_widget,
-              view_variant: nil,
-              params: nil
+              view_variant: widget_usage.view_variant,
+              params: resolve_screen_usage_hash(screen_definition, widget_usage.params, field_name: :params),
+              title_override: resolve_screen_usage_value(screen_definition, widget_usage.title),
+              chart_type_override: resolve_screen_usage_value(screen_definition, widget_usage.chart_type)
             )
           end.compact
         end
@@ -114,7 +121,7 @@ module RecordingStudioAdmin
         end
       end
 
-      def build_widget(widget_definition, section_key:, source:, view_variant:, params:,
+      def build_widget(widget_definition, section_key:, source:, view_variant:, params:, screen_key: nil,
                        title_override: nil, chart_type_override: nil)
         title = title_override || resolve_widget_value(widget_definition.title)
         description = resolve_widget_value(widget_definition.description)
@@ -127,7 +134,7 @@ module RecordingStudioAdmin
           description: description,
           type: type,
           chart_type: normalize_chart_type(chart_type),
-          screen_key: widget_definition.screen_key,
+          screen_key: screen_key,
           section_key: section_key,
           source: source,
           recording: @recording,
@@ -154,6 +161,20 @@ module RecordingStudioAdmin
         return resolved.to_h.deep_symbolize_keys if resolved.respond_to?(:to_h)
 
         raise InvalidDefinition, "Section widget #{field_name} must resolve to a Hash"
+      end
+
+      def resolve_screen_usage_value(screen_definition, value)
+        return if value.nil?
+
+        screen_definition.evaluate(value, @context)
+      end
+
+      def resolve_screen_usage_hash(screen_definition, value, field_name:)
+        resolved = resolve_screen_usage_value(screen_definition, value)
+        return {} if resolved.nil?
+        return resolved.to_h.deep_symbolize_keys if resolved.respond_to?(:to_h)
+
+        raise InvalidDefinition, "Screen widget #{field_name} must resolve to a Hash"
       end
 
       def resolve_widget_value(value)

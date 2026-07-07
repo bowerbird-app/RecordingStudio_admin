@@ -3,7 +3,7 @@
 module RecordingStudioAdmin
   AdminActivityLogsActivityOverview = RecordingStudioAdmin::Widget.new(
     nil,
-    registry_prefix: "admin_activity_logs.widgets.activity_overview",
+    registry_prefix: "widgets.admin_activity_logs.activity_overview",
     blast_radius: :site
   ) do
     type :chart

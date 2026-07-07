@@ -3,13 +3,13 @@
 module RecordingStudioAdmin
   class Screen < Definitions::Base
     class << self
-      attr_reader :query_value, :filters_value, :chart_value, :table_value, :widgets_value, :summary_value,
+      attr_reader :query_value, :filters_value, :chart_value, :table_value, :widget_usages_value, :summary_value,
                   :availability_scope_value, :export_config_value
 
       def inherited(subclass)
         super
         subclass.instance_variable_set(:@filters_value, [])
-        subclass.instance_variable_set(:@widgets_value, {})
+        subclass.instance_variable_set(:@widget_usages_value, [])
         subclass.instance_variable_set(:@summary_value, SummaryDefinition.new)
         subclass.instance_variable_set(:@availability_scope_value, nil)
         subclass.instance_variable_set(:@export_config_value, nil)
@@ -35,9 +35,32 @@ module RecordingStudioAdmin
         @table_value
       end
 
-      def widget(name, blast_radius: nil, &)
-        definition = Widget.new(name, screen_key: key, blast_radius: blast_radius || self.blast_radius, &)
-        @widgets_value[definition.key] = definition
+      def widget(key, view_variant: nil, title: nil, chart_type: nil, chart_options: nil, params: nil,
+                 blast_radius: nil, &block)
+        if block
+          raise InvalidDefinition,
+                "Screen.widget only references standalone widgets. Define widgets with " \
+                "RecordingStudioAdmin::Widget and register them separately."
+        end
+
+        normalized_view_variant = view_variant.nil? ? nil : Section.normalize_view_variant(view_variant)
+        normalized_blast_radius = if blast_radius.nil?
+                                    nil
+                                  else
+                                    RecordingStudioAdmin::BlastRadius.normalize(
+                                      blast_radius,
+                                      owner: "Screen widget #{key.inspect}"
+                                    )
+                                  end
+        @widget_usages_value << WidgetUsage.new(
+          key: key.to_s,
+          view_variant: normalized_view_variant,
+          title: title,
+          chart_type: chart_type,
+          chart_options: Section.normalize_widget_usage_hash(chart_options, field_name: :chart_options),
+          params: Section.normalize_widget_usage_hash(params, field_name: :params),
+          blast_radius: normalized_blast_radius
+        )
       end
 
       def summary(**options, &block)
@@ -62,8 +85,16 @@ module RecordingStudioAdmin
         @filters_value || []
       end
 
+      def widget_keys
+        widget_usages.map(&:key)
+      end
+
+      def widget_usages
+        @widget_usages_value || []
+      end
+
       def widgets
-        @widgets_value || {}
+        widget_usages
       end
 
       private
