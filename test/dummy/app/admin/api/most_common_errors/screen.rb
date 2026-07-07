@@ -2,6 +2,8 @@
 
 module AdminScreens
   class MostCommonErrors < Base
+    widget "widgets.most_common_errors.error_distribution_chart"
+
     class << self
       def top_error_breakdown(relation, limit: 5)
         relation

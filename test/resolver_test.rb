@@ -41,6 +41,100 @@ class ResolverTest < Minitest::Test
     end
   end
 
+  RequestsTotalWidget = RecordingStudioAdmin::Widget.new("widgets.requests.total") do
+    title "Total"
+    description "Total requests returned by the current query."
+    value { |context| context.query_result.count }
+    link_to { |context| context.admin_screen_path("requests") }
+  end
+
+  RequestsRecentStatusesWidget = RecordingStudioAdmin::Widget.new("widgets.requests.recent_statuses") do
+    type :list
+    title "Recent statuses"
+    list_options divider: true, spacing: :dense, hover: true
+    items do |context|
+      [
+        {
+          text: "200 OK",
+          icon: :check,
+          trailing: "Healthy",
+          href: context.admin_screen_path("requests")
+        },
+        {
+          label: "500 Error",
+          leading: "!",
+          href: "javascript:alert(1)"
+        }
+      ]
+    end
+  end
+
+  RequestsTrafficPreviewWidget = RecordingStudioAdmin::Widget.new("widgets.requests.traffic_preview") do
+    type :chart
+    title "Traffic preview"
+    link_label "Traffic details"
+    chart_type :bar
+    metadata { |context| { period_label: context.widget_period_label(default_duration: 7.days) } }
+    value { |context| context.widget_param(:limit, default: 2) }
+    series do |context|
+      [{
+        name: context.widget_group_by(default: :day).to_s,
+        data: [{ x: context.widget_period_label(default_duration: 7.days),
+                 y: context.widget_param(:limit, default: 2) }]
+      }]
+    end
+  end
+
+  RequestsReviewCompletionWidget = RecordingStudioAdmin::Widget.new("widgets.requests.review_completion") do
+    type :progress
+    title "Review completion"
+    subtitle "Resolved review backlog"
+    metadata do |context|
+      reviewed = context.widget_param(:reviewed, default: 3)
+      total = context.widget_param(:total, default: 5)
+
+      {
+        period_label: context.widget_period_label(default_duration: 7.days),
+        progress_value: reviewed,
+        progress_max: total,
+        progress_label: "#{reviewed} / #{total}"
+      }
+    end
+  end
+
+  RequestsChurnWidget = RecordingStudioAdmin::Widget.new("widgets.requests.churn") do
+    type :number
+    title "Churn"
+    value 7
+    change "+30%"
+    change_good_when :down
+  end
+
+  RequestsAliasPolarityWidget = RecordingStudioAdmin::Widget.new("widgets.requests.alias_polarity") do
+    type :number
+    title "Alias"
+    value 1
+    change "-2%"
+    change_good_when :negative
+  end
+
+  RequestsHiddenSummaryPartsWidget = RecordingStudioAdmin::Widget.new("widgets.requests.hidden_summary_parts") do
+    type :number
+    title "Hidden summary parts"
+    value 9
+    change "+4%"
+    metadata period_label: "Last 7 days"
+    hide_metric
+    hide_change
+    hide_period
+  end
+
+  RequestsLegacyTotalWidget = RecordingStudioAdmin::Widget.new("widgets.requests.legacy_total") do
+    type :stat
+    title "Legacy total"
+    value { |context| context.query_result.count }
+  end
+
   class RequestsScreen < RecordingStudioAdmin::Screen
     key "requests"
     icon :document_text
@@ -94,99 +188,21 @@ class ResolverTest < Minitest::Test
       paginate per_page: 1
     end
 
-    widget :total do
-      title "Total"
-      description "Total requests returned by the current query."
-      value { |context| context.query_result.count }
-      link_to { |context| context.admin_screen_path("requests") }
-    end
+    widget "widgets.requests.total"
 
-    widget :recent_statuses do
-      type :list
-      title "Recent statuses"
-      list_options divider: true, spacing: :dense, hover: true
-      items do |context|
-        [
-          {
-            text: "200 OK",
-            icon: :check,
-            trailing: "Healthy",
-            href: context.admin_screen_path("requests")
-          },
-          {
-            label: "500 Error",
-            leading: "!",
-            href: "javascript:alert(1)"
-          }
-        ]
-      end
-    end
+    widget "widgets.requests.recent_statuses"
 
-    widget :traffic_preview do
-      type :chart
-      title "Traffic preview"
-      link_label "Traffic details"
-      chart_type :bar
-      metadata { |context| { period_label: context.widget_period_label(default_duration: 7.days) } }
-      value { |context| context.widget_param(:limit, default: 2) }
-      series do |context|
-        [{
-          name: context.widget_group_by(default: :day).to_s,
-          data: [{ x: context.widget_period_label(default_duration: 7.days),
-                   y: context.widget_param(:limit, default: 2) }]
-        }]
-      end
-    end
+    widget "widgets.requests.traffic_preview"
 
-    widget :review_completion do
-      type :progress
-      title "Review completion"
-      subtitle "Resolved review backlog"
-      metadata do |context|
-        reviewed = context.widget_param(:reviewed, default: 3)
-        total = context.widget_param(:total, default: 5)
+    widget "widgets.requests.review_completion"
 
-        {
-          period_label: context.widget_period_label(default_duration: 7.days),
-          progress_value: reviewed,
-          progress_max: total,
-          progress_label: "#{reviewed} / #{total}"
-        }
-      end
-    end
+    widget "widgets.requests.churn"
 
-    widget :churn do
-      type :number
-      title "Churn"
-      value 7
-      change "+30%"
-      change_good_when :down
-    end
+    widget "widgets.requests.alias_polarity"
 
-    widget :alias_polarity do
-      type :number
-      title "Alias"
-      value 1
-      change "-2%"
-      change_good_when :negative
-    end
+    widget "widgets.requests.hidden_summary_parts"
 
-    widget :hidden_summary_parts do
-      type :number
-      title "Hidden summary parts"
-      value 9
-      change "+4%"
-      metadata period_label: "Last 7 days"
-      hide_metric
-      hide_change
-      hide_period
-    end
-
-    widget :legacy_total do
-      type :stat
-      title "Legacy total"
-      value { |context| context.query_result.count }
-    end
+    widget "widgets.requests.legacy_total"
   end
 
   class HiddenSummaryScreen < RecordingStudioAdmin::Screen
@@ -277,8 +293,8 @@ class ResolverTest < Minitest::Test
     icon :folder
     title "Root"
     link :requests, text: "Requests", url: ->(context) { context.admin_screen_path("requests") }, style: :primary
-    widget "requests.widgets.total", view_variant: :compact
-    widget "requests.widgets.traffic_preview",
+    widget "widgets.requests.total", view_variant: :compact
+    widget "widgets.requests.traffic_preview",
            title: "Weekly traffic",
            chart_type: :area,
            chart_options: { colors: ["#123456"] },
@@ -332,6 +348,16 @@ class ResolverTest < Minitest::Test
     @original_admin_sections_resolver = RecordingStudioAdmin.configuration.admin_sections_resolver
     RecordingStudioAdmin.instance_variable_set(:@registry, RecordingStudioAdmin::Registry.new)
     RecordingStudioAdmin.configuration.admin_sections_resolver = nil
+    [
+      RequestsTotalWidget,
+      RequestsRecentStatusesWidget,
+      RequestsTrafficPreviewWidget,
+      RequestsReviewCompletionWidget,
+      RequestsChurnWidget,
+      RequestsAliasPolarityWidget,
+      RequestsHiddenSummaryPartsWidget,
+      RequestsLegacyTotalWidget
+    ].each { |widget| RecordingStudioAdmin.register_widget(widget) }
     RecordingStudioAdmin.register_screen(RequestsScreen)
     RecordingStudioAdmin.register_screen(HiddenScreen)
     RecordingStudioAdmin.register_screen(HiddenSummaryScreen)
@@ -514,7 +540,7 @@ class ResolverTest < Minitest::Test
     assert result.summary.show_change
     assert result.summary.show_period
 
-    recent_statuses = result.widgets.find { |widget| widget.key == "requests.widgets.recent_statuses" }
+    recent_statuses = result.widgets.find { |widget| widget.key == "widgets.requests.recent_statuses" }
     assert_equal :list, recent_statuses.type
     assert_equal({ divider: true, spacing: :dense, hover: true }, recent_statuses.list_options)
     assert_equal "200 OK", recent_statuses.items.first[:text]
@@ -523,7 +549,7 @@ class ResolverTest < Minitest::Test
     assert_equal "/admin/screens/requests", recent_statuses.items.first[:href]
     assert_equal "500 Error", recent_statuses.items.second[:label]
     assert_equal "#", recent_statuses.items.second[:href]
-    traffic_preview = result.widgets.find { |widget| widget.key == "requests.widgets.traffic_preview" }
+    traffic_preview = result.widgets.find { |widget| widget.key == "widgets.requests.traffic_preview" }
     assert_equal :chart, traffic_preview.type
     assert_equal "Traffic details", traffic_preview.link_label
     assert_equal :bar, traffic_preview.chart_type
@@ -637,7 +663,7 @@ class ResolverTest < Minitest::Test
 
   def test_legacy_stat_widgets_are_normalized_to_number
     widget = with_access_allowed do
-      RecordingStudioAdmin.resolve_widget(key: "requests.widgets.legacy_total", context: allowed_context)
+      RecordingStudioAdmin::Resolvers::ScreenResolver.resolve_widget(key: "requests", widget_key: "widgets.requests.legacy_total", context: allowed_context)
     end
 
     assert_equal :number, widget.type
@@ -647,7 +673,7 @@ class ResolverTest < Minitest::Test
 
   def test_widget_description_is_resolved
     widget = with_access_allowed do
-      RecordingStudioAdmin.resolve_widget(key: "requests.widgets.total", context: allowed_context)
+      RecordingStudioAdmin::Resolvers::ScreenResolver.resolve_widget(key: "requests", widget_key: "widgets.requests.total", context: allowed_context)
     end
 
     assert_equal "Total requests returned by the current query.", widget.description
@@ -656,7 +682,7 @@ class ResolverTest < Minitest::Test
 
   def test_widget_change_good_when_is_resolved
     widget = with_access_allowed do
-      RecordingStudioAdmin.resolve_widget(key: "requests.widgets.churn", context: allowed_context)
+      RecordingStudioAdmin.resolve_widget(key: "widgets.requests.churn", context: allowed_context)
     end
 
     assert_equal :down, widget.change_good_when
@@ -665,7 +691,7 @@ class ResolverTest < Minitest::Test
 
   def test_widget_change_good_when_aliases_are_normalized
     widget = with_access_allowed do
-      RecordingStudioAdmin.resolve_widget(key: "requests.widgets.alias_polarity", context: allowed_context)
+      RecordingStudioAdmin.resolve_widget(key: "widgets.requests.alias_polarity", context: allowed_context)
     end
 
     assert_equal :down, widget.change_good_when
@@ -673,7 +699,7 @@ class ResolverTest < Minitest::Test
 
   def test_widget_summary_visibility_flags_are_resolved
     widget = with_access_allowed do
-      RecordingStudioAdmin.resolve_widget(key: "requests.widgets.hidden_summary_parts", context: allowed_context)
+      RecordingStudioAdmin.resolve_widget(key: "widgets.requests.hidden_summary_parts", context: allowed_context)
     end
 
     refute widget.show_metric
@@ -820,7 +846,7 @@ class ResolverTest < Minitest::Test
 
   def test_progress_widget_uses_metadata_payload
     widget = with_access_allowed do
-      RecordingStudioAdmin.resolve_widget(key: "requests.widgets.review_completion", context: allowed_context)
+      RecordingStudioAdmin.resolve_widget(key: "widgets.requests.review_completion", context: allowed_context)
     end
 
     assert_equal :progress, widget.type
@@ -1087,10 +1113,10 @@ class ResolverTest < Minitest::Test
       )
     end
 
-    assert_equal %w[requests.widgets.total requests.widgets.traffic_preview], widgets.map(&:key)
+    assert_equal %w[widgets.requests.total widgets.requests.traffic_preview], widgets.map(&:key)
     assert_equal %i[section_widget section_widget], widgets.map(&:source)
     assert_equal %w[root root], widgets.map(&:section_key)
-    assert_equal %w[requests requests], widgets.map(&:screen_key)
+    assert_equal [nil, nil], widgets.map(&:screen_key)
     assert_equal [:compact, nil], widgets.map(&:view_variant)
     assert_equal({}, widgets.first.params)
 
@@ -1116,8 +1142,8 @@ class ResolverTest < Minitest::Test
       )
     end
 
-    assert_includes widgets.map(&:key), "requests.widgets.total"
-    assert_includes widgets.map(&:key), "requests.widgets.recent_statuses"
+    assert_includes widgets.map(&:key), "widgets.requests.total"
+    assert_includes widgets.map(&:key), "widgets.requests.recent_statuses"
     assert_equal [:linked_screen_widget], widgets.map(&:source).uniq
     assert_equal ["root"], widgets.map(&:section_key).uniq
   end
@@ -1129,7 +1155,7 @@ class ResolverTest < Minitest::Test
       RecordingStudioAdmin.available_widgets(context: allowed_context(recording: recording), recording: recording)
     end
 
-    assert_includes widgets.map(&:key), "requests.widgets.total"
+    assert_includes widgets.map(&:key), "widgets.requests.total"
     assert_equal ["root"], widgets.map(&:section_key).uniq
     refute_includes widgets.map(&:section_key), "everywhere"
   end
@@ -1140,7 +1166,7 @@ class ResolverTest < Minitest::Test
 
     widgets = with_access_allowed { context.available_admin_widgets(placement: :root, include: :section_widgets) }
 
-    assert_equal %w[requests.widgets.total requests.widgets.traffic_preview], widgets.map(&:key)
+    assert_equal %w[widgets.requests.total widgets.requests.traffic_preview], widgets.map(&:key)
     assert_equal [root_recording], widgets.map(&:recording).uniq
   end
 
@@ -1210,9 +1236,9 @@ class ResolverTest < Minitest::Test
     assert_equal "Root", section.title
     assert_equal :folder, section.icon
     assert_equal "/admin/screens/requests", section.links.first.url
-    assert_equal "requests.widgets.total", section.widgets.first.key
+    assert_equal "widgets.requests.total", section.widgets.first.key
     assert_equal :compact, section.widgets.first.view_variant
-    traffic_preview = section.widgets.find { |widget| widget.key == "requests.widgets.traffic_preview" }
+    traffic_preview = section.widgets.find { |widget| widget.key == "widgets.requests.traffic_preview" }
     assert_equal "Weekly traffic", traffic_preview.title
     assert_equal :area, traffic_preview.chart_type
     assert_equal ["#123456"], traffic_preview.chart_options[:colors]
@@ -1229,7 +1255,7 @@ class ResolverTest < Minitest::Test
       RecordingStudioAdmin.resolve_section(key: "root", context: context, resolve_widgets: false)
     end
 
-    traffic_preview = section.widgets.find { |widget| widget.key == "requests.widgets.traffic_preview" }
+    traffic_preview = section.widgets.find { |widget| widget.key == "widgets.requests.traffic_preview" }
 
     assert_equal "Weekly traffic", traffic_preview.title
     assert_equal :chart, traffic_preview.type
@@ -1244,12 +1270,12 @@ class ResolverTest < Minitest::Test
     widget = with_access_allowed do
       RecordingStudioAdmin::Resolvers::SectionResolver.resolve_widget(
         key: "root",
-        widget_key: "requests.widgets.traffic_preview",
+        widget_key: "widgets.requests.traffic_preview",
         context: context
       )
     end
 
-    assert_equal "requests.widgets.traffic_preview", widget.key
+    assert_equal "widgets.requests.traffic_preview", widget.key
     assert_equal "Weekly traffic", widget.title
     assert_equal [{ name: "week", data: [{ x: "Last 3 days", y: 5 }] }], widget.series
   end
@@ -1259,7 +1285,7 @@ class ResolverTest < Minitest::Test
       Class.new(RecordingStudioAdmin::Section) do
         key "bad-chart-options"
         title "Bad"
-        widget "requests.widgets.total", chart_options: :blue
+        widget "widgets.requests.total", chart_options: :blue
       end
     end
 
@@ -1271,7 +1297,7 @@ class ResolverTest < Minitest::Test
       Class.new(RecordingStudioAdmin::Section) do
         key "bad-widget-params"
         title "Bad"
-        widget "requests.widgets.total", params: :recent
+        widget "widgets.requests.total", params: :recent
       end
     end
 
@@ -1283,7 +1309,7 @@ class ResolverTest < Minitest::Test
       Class.new(RecordingStudioAdmin::Section) do
         key "bad-view-variant"
         title "Bad"
-        widget "requests.widgets.total", view_variant: :tiny
+        widget "widgets.requests.total", view_variant: :tiny
       end
     end
 
@@ -1295,7 +1321,7 @@ class ResolverTest < Minitest::Test
       Class.new(RecordingStudioAdmin::Section) do
         key "legacy-chip-view-variant"
         title "Legacy"
-        widget "requests.widgets.total", view_variant: :chip
+        widget "widgets.requests.total", view_variant: :chip
       end
     end
 

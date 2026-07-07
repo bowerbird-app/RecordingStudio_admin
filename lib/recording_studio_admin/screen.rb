@@ -53,7 +53,7 @@ module RecordingStudioAdmin
                                     )
                                   end
         @widget_usages_value << WidgetUsage.new(
-          key: key.to_s,
+          key: normalize_widget_key(key),
           view_variant: normalized_view_variant,
           title: title,
           chart_type: chart_type,
@@ -112,6 +112,11 @@ module RecordingStudioAdmin
         when :group_by then :group_by
         else :select
         end
+      end
+
+      def normalize_widget_key(value)
+        key = value.to_s
+        key.include?(".") ? key : "widgets.#{self.key}.#{key}"
       end
     end
   end

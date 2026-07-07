@@ -77,7 +77,7 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response_text, "sections are admin landing pages"
     assert_includes response_text, "class userssection"
     assert_includes response_text, "recordingstudioadmin::section"
-    assert_includes response_text, "api_requests.widgets.api_activity"
+    assert_includes response_text, "widgets.api_requests.api_activity"
     assert_includes response.body, "recording_studio_admin_sections"
     assert_includes response_text, "recordable"
     assert_includes response_text, "adminsection"

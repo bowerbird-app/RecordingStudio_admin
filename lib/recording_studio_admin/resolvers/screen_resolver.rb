@@ -476,7 +476,8 @@ module RecordingStudioAdmin
         overrides = {
           view_variant: widget_usage.view_variant,
           title: resolve_usage_value(definition, widget_usage.title, widget_context),
-          chart_type: resolve_usage_value(definition, widget_usage.chart_type, widget_context)
+          chart_type: resolve_usage_value(definition, widget_usage.chart_type, widget_context),
+          link_label: widget.link_label || screen_link_label(definition, widget)
         }.compact
 
         chart_options = resolve_usage_hash(definition, widget_usage.chart_options, widget_context,
@@ -484,6 +485,12 @@ module RecordingStudioAdmin
         overrides[:chart_options] = (widget.chart_options || {}).deep_merge(chart_options) if chart_options.any?
 
         overrides.empty? ? widget : widget.with(**overrides)
+      end
+
+      def screen_link_label(definition, widget)
+        return if widget.link_to.blank?
+
+        definition.evaluate(definition.title, @context)
       end
 
       def resolve_usage_value(definition, value, context)

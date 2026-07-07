@@ -27,17 +27,18 @@ class BlastRadiusTest < Minitest::Test
     end
   end
 
+  SiteTotalWidget = RecordingStudioAdmin::Widget.new("widgets.blast_widget_screen.site_total") do
+    blast_radius :site
+    title "Site total"
+    value 1
+  end
+
   class SiteWidgetScreen < RecordingStudioAdmin::Screen
     key "blast_widget_screen"
     title "Widget reports"
     blast_radius :site
     query { |_context| [] }
-
-    widget :site_total do
-      blast_radius :site
-      title "Site total"
-      value 1
-    end
+    widget "widgets.blast_widget_screen.site_total"
   end
 
   class SiteSection < RecordingStudioAdmin::Section
@@ -50,7 +51,7 @@ class BlastRadiusTest < Minitest::Test
   class RecordingSection < RecordingStudioAdmin::Section
     key "blast_recording_section"
     title "Recording section"
-    widget "blast_widget_screen.widgets.site_total"
+    widget "widgets.blast_widget_screen.site_total"
   end
 
   class SiteResource < RecordingStudioAdmin::Resource
@@ -88,6 +89,7 @@ class BlastRadiusTest < Minitest::Test
     @workspace_recording = Recording.new(recordable: :workspace, parent_recording: @site_recording)
 
     RecordingStudioAdmin.configuration.site_admin_recording_resolver = ->(_context) { @site_recording }
+    RecordingStudioAdmin.register_widget(SiteTotalWidget)
     RecordingStudioAdmin.register_screen(SiteScreen)
     RecordingStudioAdmin.register_screen(RecordingScreen)
     RecordingStudioAdmin.register_screen(SiteWidgetScreen)

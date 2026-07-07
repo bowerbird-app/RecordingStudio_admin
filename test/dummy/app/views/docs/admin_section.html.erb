@@ -38,8 +38,8 @@
       class RootSection < RecordingStudioAdmin::Section
         key "root"
 
-        widget "api_requests.widgets.api_activity", view_variant: :compact
-        widget "users.widgets.active_users", title: "Active users", chart_options: { height: 180 }
+        widget "widgets.api_requests.api_activity", view_variant: :compact
+        widget "widgets.users.active_users", title: "Active users", chart_options: { height: 180 }
       end
     CODE
   ) %>

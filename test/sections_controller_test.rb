@@ -122,7 +122,7 @@ class SectionsControllerTest < Minitest::Test
 
   def test_section_widget_endpoint_resolves_widget_through_parent_section
     controller = build_controller(
-      params: ActionController::Parameters.new(section_key: "users", widget_key: "users.widgets.total")
+      params: ActionController::Parameters.new(section_key: "users", widget_key: "widgets.users.total")
     )
     expected_context = Struct.new(:root_admin_section_key).new("page_views")
     resolved_widget = Object.new
@@ -136,7 +136,7 @@ class SectionsControllerTest < Minitest::Test
     with_singleton_stub(RecordingStudioAdmin::Resolvers::SectionResolver, :resolve_widget,
                         lambda { |key:, widget_key:, view_variant:, context:|
                           assert_equal "users", key
-                          assert_equal "users.widgets.total", widget_key
+                          assert_equal "widgets.users.total", widget_key
                           assert_nil view_variant
                           assert_same expected_context, context
                           resolved_widget
@@ -151,7 +151,7 @@ class SectionsControllerTest < Minitest::Test
 
   def test_screen_widget_endpoint_resolves_widget_through_parent_screen
     controller = build_controller(
-      params: ActionController::Parameters.new(screen_key: "users", widget_key: "users.widgets.total")
+      params: ActionController::Parameters.new(screen_key: "users", widget_key: "widgets.users.total")
     )
     expected_context = Struct.new(:root_admin_section_key).new("page_views")
     resolved_widget = Object.new
@@ -165,7 +165,7 @@ class SectionsControllerTest < Minitest::Test
     with_singleton_stub(RecordingStudioAdmin::Resolvers::ScreenResolver, :resolve_widget,
                         lambda { |key:, widget_key:, view_variant:, context:|
                           assert_equal "users", key
-                          assert_equal "users.widgets.total", widget_key
+                          assert_equal "widgets.users.total", widget_key
                           assert_nil view_variant
                           assert_same expected_context, context
                           resolved_widget

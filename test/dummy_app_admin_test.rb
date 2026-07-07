@@ -68,20 +68,20 @@ class DummyAppAdminTest < Minitest::Test
     assert_includes root_section, 'context.admin_section_path("users")'
     assert_includes root_section, 'context.admin_section_path("jobs")'
     assert_includes root_section, 'context.admin_section_path("admin_activity_logs")'
-    assert_includes api_section, 'widget "api_requests.widgets.api_activity",'
+    assert_includes api_section, 'widget "widgets.api_requests.api_activity",'
     assert_includes root_section, "view_variant: :compact"
-    assert_includes api_section, 'widget "most_common_errors.widgets.error_distribution_chart"'
-    assert_includes jobs_section, 'widget "background_jobs.widgets.job_throughput"'
+    assert_includes api_section, 'widget "widgets.most_common_errors.error_distribution_chart"'
+    assert_includes jobs_section, 'widget "widgets.background_jobs.job_throughput"'
     assert_includes users_manifest, "RecordingStudioAdmin.register_screen(AdminScreens::UserSignIns)"
     assert_includes users_manifest, "RecordingStudioAdmin.register_screen(AdminScreens::UserReviews)"
     assert_includes users_manifest, "RecordingStudioAdmin.register_screen(AdminScreens::UserInvitations)"
     assert_includes users_manifest, "RecordingStudioAdmin.register_screen(AdminScreens::UserGeography)"
-    assert_includes users_section, 'widget "user_sign_ins.widgets.sign_in_activity",'
-    assert_includes users_section, 'widget "user_reviews.widgets.review_volume",'
+    assert_includes users_section, 'widget "widgets.user_sign_ins.sign_in_activity",'
+    assert_includes users_section, 'widget "widgets.user_reviews.review_volume",'
     assert_includes users_section, 'link :geography, text: "View user geography"'
     assert_includes users_section,
-                    'widget "user_geography.widgets.activity_geo_map", params: { preset_key: :this_week }'
-    refute_includes users_section, 'widget "user_invitations.widgets.recent_invites"'
+                    'widget "widgets.user_geography.activity_geo_map", params: { preset_key: :this_week }'
+    refute_includes users_section, 'widget "widgets.user_invitations.recent_invites"'
     assert_includes api_requests_chart, "class ApiRequests"
     assert_includes api_requests_chart, "chart do"
     assert_includes api_requests_table, "class ApiRequests"

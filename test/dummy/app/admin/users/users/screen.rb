@@ -11,6 +11,10 @@ module AdminScreens
     filter :date_range, field: :created_at, default: :last_30_days
     filter :group_by, values: %i[hour day week month year], default: :day
 
+    widget "widgets.users.active_users"
+    widget "widgets.users.review_completion"
+    widget "widgets.users.most_recent_users"
+
     summary do
       label "Total users"
       change_good_when :up

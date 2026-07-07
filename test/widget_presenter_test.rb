@@ -151,11 +151,11 @@ class WidgetPresenterTest < Minitest::Test
 
   def test_helper_builds_async_widget_frame_src_from_current_query
     view = FakeWidgetView.new
-    widget = resolved_widget(key: "users.widgets.total")
+    widget = resolved_widget(key: "widgets.users.total")
 
     assert_equal "/admin/sections/users/widgets/users.widgets.total?anchor_url=%2Froot&widget_view_variant=compact",
                  view.recording_studio_widget_frame_src(parent: :section, parent_key: "users", widget: widget)
-    assert_equal ["users", "users.widgets.total", { "anchor_url" => "/root", widget_view_variant: :compact }],
+    assert_equal ["users", "widgets.users.total", { "anchor_url" => "/root", widget_view_variant: :compact }],
                  view.section_widget_path_args
   end
 
@@ -163,7 +163,7 @@ class WidgetPresenterTest < Minitest::Test
 
   def resolved_widget(**overrides)
     defaults = {
-      key: "activity.widgets.total",
+      key: "widgets.activity.total",
       type: :chart,
       title: "Activity",
       subtitle: "Recent activity",
