@@ -86,19 +86,21 @@ module AdminScreens
       column :status
     end
 
-    widget :api_activity do
-      type :number
-      title "API activity"
-      value { |context| context.query_result.count }
-      link_to { |context| context.admin_screen_path("api_requests") }
-    end
+    widget "widgets.api_requests.api_activity"
+  end
+
+  ApiRequestsActivityWidget = RecordingStudioAdmin::Widget.new("widgets.api_requests.api_activity") do
+    type :number
+    title "API activity"
+    value { |context| context.query_result.count }
+    link_to { |context| context.admin_screen_path("api_requests") }
   end
 
   class RootSection < RecordingStudioAdmin::Section
     key "root"
     title "Admin summary"
     link :requests, text: "View API requests", url: ->(context) { context.admin_screen_path("api_requests") }
-    widget "api_requests.widgets.api_activity", view_variant: :compact
+    widget "widgets.api_requests.api_activity", view_variant: :compact
   end
 end
 
@@ -106,6 +108,7 @@ Rails.application.config.to_prepare do
   load Rails.root.join("app/admin/manifest.rb")
 
   AdminScreens.load!
+  RecordingStudioAdmin.register_widget(AdminScreens::ApiRequestsActivityWidget)
   AdminScreens::Root.register!
   AdminScreens::Api.register!
 end
@@ -274,8 +277,8 @@ There are no catch-all routes.
 
 The engine is driven by three definition types:
 
-- `RecordingStudioAdmin::Screen`: a detailed page with a query, main filters, chart, table, summary, and screen-owned widgets.
-- `RecordingStudioAdmin::Section`: a summary page with links plus a collection of widgets pulled from screens or standalone widget definitions.
+- `RecordingStudioAdmin::Screen`: a detailed page with a query, main filters, chart, table, summary, and referenced standalone widgets.
+- `RecordingStudioAdmin::Section`: a summary page with links plus a collection of standalone widgets referenced by key.
 - `RecordingStudioAdmin::Widget`: a reusable card definition rendered either inside screens or sections.
 
 The runtime flow is:
@@ -337,7 +340,7 @@ RecordingStudioAdmin.register_section(AdminRootSection)
 
 RecordingStudioAdmin.resolve_screen(key: "api_requests", context: context)
 RecordingStudioAdmin.resolve_section(key: "root", context: context)
-RecordingStudioAdmin.resolve_widget(key: "api_requests.widgets.activity_last_24_hours", context: context)
+RecordingStudioAdmin.resolve_widget(key: "widgets.api_requests.activity_last_24_hours", context: context)
 ```
 
 Registries are idempotent for the same key/class pair and raise conflicts for different definitions with the same key.
@@ -360,9 +363,9 @@ For an end-to-end reference, use the dummy app admin definition folders under `t
 
 - a top-level manifest that reloads definition files plus per-capability `register!` methods
 - multiple screen definitions with charts, table filters, row actions, and widgets
-- screen-owned charts and tables split into per-screen `chart.rb` and `table.rb` files
-- screen-owned widgets split into per-screen `widgets/*.rb` files
-- section definitions that reuse screen widgets
+- screen charts and tables split into per-screen `chart.rb` and `table.rb` files
+- referenced standalone widgets split into per-screen `widgets/*.rb` files
+- section definitions that reference standalone widgets
 - `recordable` declarations for section-backed RecordingStudio objects
 - safe registration from `Rails.application.config.to_prepare`
 
@@ -376,7 +379,7 @@ When you include a widget in a section, you can set a display-level `view_varian
 class ApiCallsAdminSection < RecordingStudioAdmin::Section
   key "api_calls"
 
-  widget "api_requests.widgets.activity_last_24_hours", view_variant: :compact
+  widget "widgets.api_requests.activity_last_24_hours", view_variant: :compact
 end
 ```
 
@@ -385,7 +388,7 @@ Supported section widget view variants are `:card` and `:compact`.
 Sections can also override widget presentation or period params at the usage site without changing the shared widget definition:
 
 ```ruby
-widget "api_requests.widgets.activity_last_24_hours",
+widget "widgets.api_requests.activity_last_24_hours",
        view_variant: :compact,
        title: "Request volume",
        chart_type: :bar,
@@ -393,7 +396,7 @@ widget "api_requests.widgets.activity_last_24_hours",
        params: { duration: 7.days, group_by: :day }
 ```
 
-Use those overrides when a section needs a smaller or differently grouped version of a screen-owned widget.
+Use those overrides when a section needs a smaller or differently grouped version of a standalone widget.
 
 Sections can also declare an optional RecordingStudio-backed recordable. This keeps section enablement, the admin UI route, and access control separate: `recording_studio_admin_sections` decides whether a recordable type exposes a section, `/admin/sections/:key` renders the section page, and the engine checks the mandatory current context access recording before creating or resolving the section's backing `recordable` and `recording`.
 
@@ -499,17 +502,11 @@ List widgets accept `items`, while progress widgets require `metadata[:progress_
 
 Legacy `stat` widget definitions are normalized to `number` for compatibility.
 
-Screen-provided widget keys always include `.widgets.`:
+Widget keys are explicit standalone keys:
 
 ```text
-api_requests.widgets.activity_last_24_hours
-api_errors.widgets.recent_failures
-```
-
-Standalone widgets use:
-
-```text
-widgets.system_health
+widgets.api_requests.activity_last_24_hours
+widgets.api_errors.recent_failures
 ```
 
 Use sections for overview and navigation. Use screens for the full analytical surface. Keep business queries in screen definitions or extracted app services instead of controllers or ERB.
@@ -523,7 +520,7 @@ Built-in filters include:
 - date range
 - group by (`hour`, `day`, `week`, `month`, `year`)
 
-Widget-oriented helper methods on `RecordingStudioAdmin::Context` let sections reuse screen widgets while preserving date semantics:
+Widget-oriented helper methods on `RecordingStudioAdmin::Context` let sections reference standalone widgets while preserving date semantics:
 
 ```ruby
 context.widget_period_label(default_preset_key: :this_week)
@@ -557,7 +554,7 @@ Widget rendering helpers accept resolved widgets, so custom controllers can reus
 inheriting from the admin controller:
 
 ```ruby
-widget = RecordingStudioAdmin.resolve_widget(key: "api_requests.widgets.api_activity", context: context)
+widget = RecordingStudioAdmin.resolve_widget(key: "widgets.api_requests.api_activity", context: context)
 render_recording_studio_widget(widget)
 render_recording_studio_widget_body(widget)
 render_recording_studio_chart_widget(widget)

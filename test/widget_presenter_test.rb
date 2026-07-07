@@ -153,7 +153,7 @@ class WidgetPresenterTest < Minitest::Test
     view = FakeWidgetView.new
     widget = resolved_widget(key: "widgets.users.total")
 
-    assert_equal "/admin/sections/users/widgets/users.widgets.total?anchor_url=%2Froot&widget_view_variant=compact",
+    assert_equal "/admin/sections/users/widgets/widgets.users.total?anchor_url=%2Froot&widget_view_variant=compact",
                  view.recording_studio_widget_frame_src(parent: :section, parent_key: "users", widget: widget)
     assert_equal ["users", "widgets.users.total", { "anchor_url" => "/root", widget_view_variant: :compact }],
                  view.section_widget_path_args

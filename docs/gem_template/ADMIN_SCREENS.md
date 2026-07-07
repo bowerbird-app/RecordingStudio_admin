@@ -6,8 +6,8 @@ This guide explains the practical host-app workflow for building admin UI with `
 
 There are four main definition types:
 
-- `RecordingStudioAdmin::Screen`: a detailed analytics page with a query, filters, chart, table, summary, and optional screen-owned widgets
-- `RecordingStudioAdmin::Section`: an overview page with links plus widgets pulled from screens or standalone widget definitions
+- `RecordingStudioAdmin::Screen`: a detailed analytics page with a query, filters, chart, table, summary, and optional referenced standalone widgets
+- `RecordingStudioAdmin::Section`: an overview page with links plus standalone widgets referenced by key
 - `RecordingStudioAdmin::Resource`: a registry for admin actions that are backed by host-app controllers and authorized through an owning admin section
 - `RecordingStudioAdmin::Widget`: a reusable card rendered inside a screen or section
 
@@ -114,21 +114,23 @@ module AdminScreens
       paginate per_page: 25, mode: :infinite
     end
 
-    widget :api_activity do
-      type :chart
-      title "API activity"
-      value { |context| context.query_result.count }
-      chart_type :area
-      series do |context|
-        [
-          {
-            name: "Requests",
-            data: context.query_result.relation.group(:created_at).count.map { |x, y| { x: x, y: y } }
-          }
-        ]
-      end
-      link_to { |context| context.admin_screen_path("api_requests") }
+    widget "widgets.api_requests.api_activity"
+  end
+
+  ApiRequestsActivityWidget = RecordingStudioAdmin::Widget.new("widgets.api_requests.api_activity") do
+    type :chart
+    title "API activity"
+    value { |context| context.query_result.count }
+    chart_type :area
+    series do |context|
+      [
+        {
+          name: "Requests",
+          data: context.query_result.relation.group(:created_at).count.map { |x, y| { x: x, y: y } }
+        }
+      ]
     end
+    link_to { |context| context.admin_screen_path("api_requests") }
   end
 end
 ```
@@ -171,7 +173,7 @@ module AdminScreens
          url: ->(context) { context.admin_screen_path("api_requests") },
          style: :secondary
 
-    widget "api_requests.widgets.api_activity", view_variant: :compact
+    widget "widgets.api_requests.api_activity", view_variant: :compact
   end
 end
 ```
@@ -364,13 +366,13 @@ RecordingStudioAdmin.register_resource(AdminScreens::UsersResource)
 RecordingStudioAdmin.screen_for("api_requests")
 RecordingStudioAdmin.section_for("root")
 RecordingStudioAdmin.resource_for("users")
-RecordingStudioAdmin.widget_for("api_requests.widgets.api_activity")
+RecordingStudioAdmin.widget_for("widgets.api_requests.api_activity")
 
 RecordingStudioAdmin.resolve_sections(context: context)
 RecordingStudioAdmin.resolve_section(key: "root", context: context)
 RecordingStudioAdmin.resolve_screen(key: "api_requests", context: context)
 RecordingStudioAdmin.authorize_resource!(key: "users", action: :edit, context: context, record: user)
-RecordingStudioAdmin.resolve_widget(key: "api_requests.widgets.api_activity", context: context)
+RecordingStudioAdmin.resolve_widget(key: "widgets.api_requests.api_activity", context: context)
 ```
 
 The mounted engine routes line up with those APIs:
@@ -399,21 +401,21 @@ Use a screen when you need:
 - chart and table filters
 - a sortable or paginated table
 - row actions
-- widgets that derive from the same analytical surface
+- widgets referenced from the same analytical surface
 
 ## Widget key rules
 
-Screen-owned widgets are automatically namespaced:
+Widgets use explicit standalone keys namespaced by feature or capability:
 
 ```text
-api_requests.widgets.api_activity
-users.widgets.review_completion
+widgets.api_requests.api_activity
+widgets.users.review_completion
 ```
 
-When a section wants to reuse a screen widget, it must reference the full key:
+When a section or screen wants to show a widget, it references the standalone key:
 
 ```ruby
-widget "api_requests.widgets.api_activity"
+widget "widgets.api_requests.api_activity"
 ```
 
 ## Section widget customization
@@ -421,7 +423,7 @@ widget "api_requests.widgets.api_activity"
 Sections can customize how a widget is displayed without changing the widget definition itself:
 
 ```ruby
-widget "api_requests.widgets.api_activity",
+widget "widgets.api_requests.api_activity",
        view_variant: :compact,
        title: "Request volume",
        chart_type: :bar,
@@ -436,7 +438,7 @@ Supported section widget view variants are:
 
 `params` become widget params on the derived context, which is how sections can request a different duration or grouping than the screen default.
 
-Other usage-level overrides are applied after the widget resolves, so sections can reuse a shared screen widget while changing only presentation details such as title, compact layout, or chart type.
+Other usage-level overrides are applied after the widget resolves, so sections can reuse a shared standalone widget while changing only presentation details such as title, compact layout, or chart type.
 
 Those params pair with context helpers that preserve widget period semantics:
 
@@ -542,7 +544,7 @@ Widget rendering helpers accept already-resolved widgets and can be included in 
 reuse the visual widget views outside the mounted admin controller:
 
 ```ruby
-widget = RecordingStudioAdmin.resolve_widget(key: "api_requests.widgets.api_activity", context: context)
+widget = RecordingStudioAdmin.resolve_widget(key: "widgets.api_requests.api_activity", context: context)
 render_recording_studio_widget(widget)
 render_recording_studio_widget_body(widget)
 render_recording_studio_chart_widget(widget)
@@ -584,7 +586,7 @@ The engine exposes resolver methods that return structured result objects:
 ```ruby
 RecordingStudioAdmin.resolve_screen(key: "api_requests", context: context)
 RecordingStudioAdmin.resolve_section(key: "root", context: context)
-RecordingStudioAdmin.resolve_widget(key: "api_requests.widgets.api_activity", context: context)
+RecordingStudioAdmin.resolve_widget(key: "widgets.api_requests.api_activity", context: context)
 RecordingStudioAdmin.resolve_sections(context: context)
 ```
 
@@ -654,9 +656,9 @@ It includes:
 
 - top-level manifest loading plus per-capability `register!` entrypoints
 - multiple screen types
-- screen-owned charts and tables split into per-screen `chart.rb` and `table.rb` files
-- screen-owned widgets split into per-screen `widgets/*.rb` files
-- reused widgets
+- screen charts and tables split into per-screen `chart.rb` and `table.rb` files
+- referenced standalone widgets split into per-screen `widgets/*.rb` files
+- referenced standalone widgets
 - section links
 - section recordables
 - `to_prepare` registration

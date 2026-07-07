@@ -319,7 +319,7 @@ RecordingStudioAdmin.register_section(MySection)
 
 RecordingStudioAdmin.resolve_screen(key: "api_requests", context: context)
 RecordingStudioAdmin.resolve_section(key: "root", context: context)
-RecordingStudioAdmin.resolve_widget(key: "api_requests.widgets.api_activity", context: context)
+RecordingStudioAdmin.resolve_widget(key: "widgets.api_requests.api_activity", context: context)
 RecordingStudioAdmin.resolve_sections(context: context)
 ```
 

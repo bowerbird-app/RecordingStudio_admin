@@ -143,14 +143,14 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-recording-studio-admin--async-widgets-max-concurrent-value="4"'
     assert_includes response.body, 'id="recording-studio-admin-widget-section-'
     assert_includes response.body, 'loading="lazy"'
-    assert_includes response.body, 'src="/admin/sections/root/widgets/api_requests.widgets.api_activity'
-    assert_includes response.body, "/admin/sections/root/widgets/api_requests.widgets.api_activity"
+    assert_includes response.body, 'src="/admin/sections/root/widgets/widgets.api_requests.api_activity'
+    assert_includes response.body, "/admin/sections/root/widgets/widgets.api_requests.api_activity"
     assert_includes response.body, "min-h-28 max-h-28"
     assert_includes response.body, "min-h-[22rem]"
     assert_includes response.body, "min-h-[15rem]"
     refute_includes response.body, 'data-flat-pack--chart-series-value="[{&quot;name&quot;:&quot;API activity&quot;'
 
-    get "/admin/sections/root/widgets/api_requests.widgets.api_activity", params: { anchor_url: root_url }
+    get "/admin/sections/root/widgets/widgets.api_requests.api_activity", params: { anchor_url: root_url }
 
     assert_response :success
     assert_includes response.body, 'id="recording-studio-admin-widget-section-'
@@ -451,10 +451,10 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "widget_view_variant=compact"
     assert_includes response.body, "widget_view_variant=__default__"
-    assert_operator response.body.scan("/admin/sections/users/widgets/user_geography.widgets.activity_geo_map").count, :>=, 2
+    assert_operator response.body.scan("/admin/sections/users/widgets/widgets.user_geography.activity_geo_map").count, :>=, 2
     assert_includes response.body, 'target="_top"'
 
-    get "/admin/sections/users/widgets/user_activity.widgets.active_users", params: {
+    get "/admin/sections/users/widgets/widgets.user_activity.active_users", params: {
       anchor_url: root_url,
       widget_view_variant: :compact
     }
@@ -468,7 +468,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     UserActivity.create!(email: "compact-user-2@example.com", action: "exported_report", status: "review", created_at: 2.minutes.ago, updated_at: 2.minutes.ago)
     UserActivity.create!(email: "compact-user-3@example.com", action: "invited_user", status: "success", created_at: 3.minutes.ago, updated_at: 3.minutes.ago)
 
-    get "/admin/sections/users/widgets/user_activity.widgets.most_recent_users", params: {
+    get "/admin/sections/users/widgets/widgets.user_activity.most_recent_users", params: {
       anchor_url: root_url,
       widget_view_variant: :compact
     }
@@ -480,7 +480,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-flat-pack--icon-name-value="user-circle"'
     refute_includes response.body, "compact-user-1@example.com, compact-user-2@example.com"
 
-    get "/admin/sections/users/widgets/api_requests.widgets.api_activity_column", params: {
+    get "/admin/sections/users/widgets/widgets.api_requests.api_activity_column", params: {
       anchor_url: root_url,
       widget_view_variant: :compact
     }
@@ -507,7 +507,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "widget_view_variant=compact"
 
-    get "/admin/screens/user_activity/widgets/user_activity.widgets.total_activities", params: {
+    get "/admin/screens/user_activity/widgets/widgets.user_activity.total_activities", params: {
       anchor_url: root_url,
       date_range_preset: :this_week,
       start_date: Date.new(2026, 6, 15),
@@ -541,9 +541,9 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'value="day"'
     assert_includes response.body, 'name="search"'
     assert_includes response.body, "widget_view_variant=compact"
-    assert_includes response.body, "/admin/screens/users/widgets/users.widgets.active_users"
-    assert_includes response.body, "/admin/screens/users/widgets/users.widgets.review_completion"
-    assert_includes response.body, "/admin/screens/users/widgets/users.widgets.most_recent_users"
+    assert_includes response.body, "/admin/screens/users/widgets/widgets.users.active_users"
+    assert_includes response.body, "/admin/screens/users/widgets/widgets.users.review_completion"
+    assert_includes response.body, "/admin/screens/users/widgets/widgets.users.most_recent_users"
     assert_includes response.body, 'id="screen-chart" src="/admin/screens/users/chart?anchor_url='
     assert_includes response.body, 'id="screen-table" src="/admin/screens/users/table?anchor_url='
     assert_includes response.body, "Table data"
@@ -627,7 +627,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "flex flex-wrap items-start gap-4"
     assert_includes response.body, "min-w-64 flex-none"
     assert_includes response.body, "Monthly API usage"
-    assert_includes response.body, "/admin/screens/api_requests/widgets/api_requests.widgets.monthly_api_usage"
+    assert_includes response.body, "/admin/screens/api_requests/widgets/widgets.api_requests.monthly_api_usage"
     assert_includes response.body, 'id="screen-table" src="/admin/screens/api_requests/table?anchor_url='
     refute_includes response.body, "/ 10000 requests"
     refute_includes response.body, 'role="progressbar"'
@@ -694,7 +694,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "screen-results"
     refute_includes response.body, "my-4"
 
-    get "/admin/screens/api_requests/widgets/api_requests.widgets.monthly_api_usage", params: { anchor_url: root_url }
+    get "/admin/screens/api_requests/widgets/widgets.api_requests.monthly_api_usage", params: { anchor_url: root_url }
 
     assert_response :success
     assert_includes response.body, "Monthly API usage"
