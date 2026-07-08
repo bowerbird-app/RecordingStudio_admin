@@ -42,11 +42,7 @@ module RecordingStudioAdmin
     end
 
     def recording_studio_widget_frame_src(parent:, parent_key:, widget:, usage_variant: nil)
-      query = request.query_parameters.except(:controller, :action, "controller", "action")
-      query[:widget_view_variant] = usage_variant || recording_studio_widget_usage_variant_param(widget)
-      usage_index = recording_studio_widget_usage_index(widget)
-      query[:widget_usage_index] = usage_index if usage_index
-      query[:widget_render_variant] = widget.view_variant if parent.to_sym == :screen && widget.view_variant.present?
+      query = recording_studio_widget_frame_query(parent: parent, widget: widget, usage_variant: usage_variant)
 
       if parent.to_sym == :section
         section_widget_path(parent_key, widget.key, query)
@@ -87,6 +83,15 @@ module RecordingStudioAdmin
     end
 
     private
+
+    def recording_studio_widget_frame_query(parent:, widget:, usage_variant: nil)
+      query = request.query_parameters.except(:controller, :action, "controller", "action")
+      query[:widget_view_variant] = usage_variant || recording_studio_widget_usage_variant_param(widget)
+      usage_index = recording_studio_widget_usage_index(widget)
+      query[:widget_usage_index] = usage_index if usage_index
+      query[:widget_render_variant] = widget.view_variant if parent.to_sym == :screen && widget.view_variant.present?
+      query
+    end
 
     def recording_studio_widget_link_policy
       if respond_to?(:widget_link_url, true)

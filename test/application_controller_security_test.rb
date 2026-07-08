@@ -48,11 +48,20 @@ class ApplicationControllerSecurityTest < Minitest::Test
     assert_equal "flat_pack_sidebar", controller.send(:recording_studio_admin_layout)
   end
 
+  def test_engine_layout_defaults_to_recording_studio_default_layout
+    controller = build_controller
+    RecordingStudioAdmin.configuration.engine_layout = nil
+
+    assert_equal "recording_studio/default_layout", controller.send(:recording_studio_admin_layout)
+    assert controller.send(:recording_studio_admin_default_layout?)
+  end
+
   def test_engine_layout_can_be_overridden_by_surface
     RecordingStudioAdmin.configuration.surface(:stats, path: "/stats", engine_layout: "stats_layout")
     controller = build_controller(path: "/stats/sections/page_views", script_name: "/stats")
 
     assert_equal "stats_layout", controller.send(:recording_studio_admin_layout)
+    refute controller.send(:recording_studio_admin_default_layout?)
   end
 
   def test_private_authentication_hook_is_supported

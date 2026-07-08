@@ -88,7 +88,7 @@ module RecordingStudioAdmin
                 "Widget #{widget_key.inspect} is not referenced by screen #{@key.inspect}"
         end
 
-        resolve_screen_widget(definition, widget_usage) || raise(DefinitionNotFound,
+        resolve_screen_widget(definition, widget_usage, usage_index: usage_index) || raise(DefinitionNotFound,
                                                                  "Widget #{widget_key.inspect} is not available")
       end
 
@@ -195,11 +195,15 @@ module RecordingStudioAdmin
         end
 
         export_config = screen_definition&.export_config
+        table_title = definition.title_value || "Table data"
+        table_show_heading = definition.show_table_heading?
 
         Results::ResolvedTable.new(visible_columns, table_filters.map do |entry|
           resolved_filter(entry)
         end, table_result.rows, actions, table_result, definition.columns, selected_column_keys,
-                                   definition.export_key, definition.export_options, export_config)
+                                   definition.export_key, definition.export_options, export_config,
+                                   table_show_heading ? table_title : nil,
+                                   definition.show_columns_button?, definition.show_count?)
       end
 
       def resolve_screen_widget(screen_definition, widget_usage, usage_index: nil)
@@ -208,7 +212,7 @@ module RecordingStudioAdmin
 
         widget_radius = widget_usage.effective_blast_radius(widget_definition)
         return unless RecordingStudioAdmin::BlastRadius.allowed?(widget_radius, context: @context,
-                                                                               container: screen_definition)
+                                                                                container: screen_definition)
 
         widget_context = build_widget_context(screen_definition, widget_usage)
         widget = RecordingStudioAdmin.resolve_widget(key: widget_usage.key, context: widget_context)
@@ -231,7 +235,7 @@ module RecordingStudioAdmin
 
         widget_radius = widget_usage.effective_blast_radius(widget_definition)
         return unless RecordingStudioAdmin::BlastRadius.allowed?(widget_radius, context: @context,
-                                                                               container: screen_definition)
+                                                                                container: screen_definition)
 
         widget_context = build_widget_context(screen_definition, widget_usage)
         chart_type = resolve_usage_value(screen_definition, widget_usage.chart_type, widget_context) ||
@@ -241,7 +245,7 @@ module RecordingStudioAdmin
           type: widget_definition.send(:evaluate, widget_definition.type, widget_context).to_s.downcase.to_sym,
           title: resolve_usage_value(screen_definition, widget_usage.title,
                                      widget_context) || widget_definition.send(:evaluate, widget_definition.title,
-                                                                              widget_context),
+                                                                               widget_context),
           subtitle: widget_definition.send(:evaluate, widget_definition.subtitle, widget_context),
           description: widget_definition.send(:evaluate, widget_definition.description, widget_context),
           value: nil,
@@ -494,6 +498,12 @@ module RecordingStudioAdmin
         chart_options = resolve_usage_hash(definition, widget_usage.chart_options, widget_context,
                                            field_name: :chart_options)
         overrides[:chart_options] = (widget.chart_options || {}).deep_merge(chart_options) if chart_options.any?
+
+        if widget_usage.link_to
+          overrides[:link_to] = RecordingStudioAdmin::UrlSafety.safe_href(
+            resolve_usage_value(definition, widget_usage.link_to, widget_context)
+          )
+        end
 
         overrides.empty? ? widget : widget.with(**overrides)
       end

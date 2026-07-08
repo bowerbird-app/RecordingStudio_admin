@@ -252,10 +252,14 @@ RecordingStudioAdmin.configure do |config|
     surface.authentication_method = :authenticate_user!
     surface.current_actor_method = :current_user
     surface.access_recording_resolver = ->(context) { context.controller.current_user_recording }
-    surface.engine_layout = "application"
+    surface.engine_layout = "application" # optional: override RecordingStudio's default layout
   end
 end
 ```
+
+By default, mounted admin sections and screens use RecordingStudio core's shared `recording_studio/default_layout`.
+Set `config.engine_layout` globally or `surface.engine_layout` per surface when the host app should supply its own
+layout instead.
 
 For legacy or minimal setup, mounting the engine directly still works:
 
@@ -399,6 +403,13 @@ widget "widgets.api_requests.activity_last_24_hours",
        params: { duration: 7.days, group_by: :day }
 ```
 
+A `link_to` override directs the widget to a different admin page than the widget's default:
+
+```ruby
+widget "widgets.most_common_errors.error_distribution_chart",
+       link_to: ->(context) { AdminScreens::Base.widget_link_path(context, screen_key: "api_errors", preset_key: :this_week) }
+```
+
 Use those overrides when a section needs a smaller or differently grouped version of a standalone widget.
 
 Sections can also declare an optional RecordingStudio-backed recordable. This keeps section enablement, the admin UI route, and access control separate: `recording_studio_admin_sections` decides whether a recordable type exposes a section, `/admin/sections/:key` renders the section page, and the engine checks the mandatory current context access recording before creating or resolving the section's backing `recordable` and `recording`.
@@ -500,6 +511,9 @@ Widget field semantics stay separate:
 - `metadata[:period_label]` is the reporting window
 - `metadata[:unit_label]` is the metric unit
 - `progress` widgets use metadata keys such as `:progress_value`, `:progress_max`, `:progress_label`, and `:progress_variant`
+
+Compact widget cards abbreviate large numeric metric values so they fit in the card header, for example `23635.64`
+renders as `23.6K`. The exact formatted value remains available from the metric tooltip.
 
 List widgets accept `items`, while progress widgets require `metadata[:progress_value]` and optionally `metadata[:progress_max]`.
 

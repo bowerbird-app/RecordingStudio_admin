@@ -15,6 +15,7 @@ module RecordingStudioAdmin
 
     helper RecordingStudioAdmin::WidgetRenderingHelper
     helper RecordingStudioAdmin::GeoChartHelper
+    helper ::RecordingStudio::LayoutHelper if defined?(::RecordingStudio::LayoutHelper)
     helper ::RecordingStudioExportable::ExportsHelper if defined?(::RecordingStudioExportable::ExportsHelper)
 
     rescue_from RecordingStudioAdmin::DefinitionNotFound, with: :render_not_found
@@ -27,7 +28,7 @@ module RecordingStudioAdmin
                   :preserve_anchor_url, :widget_link_url, :recording_studio_admin_screen_region_path,
                   :recording_studio_admin_exportable_available?, :recording_studio_admin_export_authorized?,
                   :recording_studio_admin_export_token, :recording_studio_admin_token_export_available?,
-                  :recording_studio_admin_exportable_exports_path
+                  :recording_studio_admin_exportable_exports_path, :recording_studio_admin_default_layout?
 
     private
 
@@ -282,7 +283,13 @@ module RecordingStudioAdmin
     end
 
     def recording_studio_admin_layout
-      recording_studio_admin_surface.engine_layout || RecordingStudioAdmin.configuration.engine_layout
+      recording_studio_admin_surface.engine_layout ||
+        RecordingStudioAdmin.configuration.engine_layout ||
+        RecordingStudioAdmin::Configuration::DEFAULT_ENGINE_LAYOUT
+    end
+
+    def recording_studio_admin_default_layout?
+      recording_studio_admin_layout == RecordingStudioAdmin::Configuration::DEFAULT_ENGINE_LAYOUT
     end
 
     def render_not_found

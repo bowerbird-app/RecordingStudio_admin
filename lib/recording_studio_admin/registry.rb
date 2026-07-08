@@ -73,6 +73,7 @@ module RecordingStudioAdmin
 
     def replaceable_reload?(existing, value)
       return false unless existing
+
       reloadable_definition?(existing, value) || reloadable_widget?(existing, value)
     end
 

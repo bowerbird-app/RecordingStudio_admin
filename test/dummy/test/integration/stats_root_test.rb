@@ -64,6 +64,7 @@ class StatsRootTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Stats"
+    assert_equal 1, response.body.scan("flat-pack-page-nav").count
     assert_includes response.body, "Track workspace content and recording activity"
     assert_includes response.body, 'href="/stats/sections/stats?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
   end

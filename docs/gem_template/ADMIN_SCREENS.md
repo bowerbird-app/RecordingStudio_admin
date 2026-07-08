@@ -431,6 +431,13 @@ widget "widgets.api_requests.api_activity",
        params: { duration: 7.days, group_by: :day }
 ```
 
+A `link_to` override lets a section or screen override the default widget link:
+
+```ruby
+widget "widgets.most_common_errors.error_distribution_chart",
+       link_to: ->(context) { AdminScreens::Base.widget_link_path(context, screen_key: "api_errors", preset_key: :this_week) }
+```
+
 Supported section widget view variants are:
 
 - `:card`
@@ -574,6 +581,9 @@ Widgets can also control header semantics independently of body content:
 - `change_good_when` controls positive/negative trend styling
 - `hide_metric`, `hide_change`, and `hide_period` suppress header fields
 - `metadata[:period_label]` and `metadata[:unit_label]` control period and unit copy used by the shared widget views
+
+Compact widget cards abbreviate large numeric metric values in the header, for example `23635.64` renders as `23.6K`.
+The exact formatted value remains available from the metric tooltip.
 
 Screen summaries are separate from widgets. Each screen resolves a summary from its filtered relation, and the summary
 DSL can override the label, value source, previous value source, or change semantics when the default count-based

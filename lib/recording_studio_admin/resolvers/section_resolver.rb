@@ -90,6 +90,12 @@ module RecordingStudioAdmin
                                            field_name: :chart_options)
         overrides[:chart_options] = (widget.chart_options || {}).deep_merge(chart_options) if chart_options.any?
 
+        if widget_usage.link_to
+          overrides[:link_to] = RecordingStudioAdmin::UrlSafety.safe_href(
+            resolve_usage_value(definition, widget_usage.link_to, widget_context)
+          )
+        end
+
         overrides.empty? ? widget : widget.with(**overrides)
       end
 

@@ -81,6 +81,33 @@ class WidgetPresenterTest < Minitest::Test
     assert_equal "Grace", presenter.list_item_avatar_name(presenter.compact_list_visual_items.last)
   end
 
+  def test_compact_metric_value_shortens_large_numbers_with_exact_tooltip
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(value: 23_635.64)
+    )
+
+    assert_equal "23.6K", presenter.compact_metric_value
+    assert_equal "23,635.64", presenter.compact_metric_tooltip_text
+  end
+
+  def test_compact_metric_value_leaves_small_numbers_without_tooltip
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(value: 999)
+    )
+
+    assert_equal 999, presenter.compact_metric_value
+    assert_nil presenter.compact_metric_tooltip_text
+  end
+
+  def test_compact_metric_value_leaves_nonnumeric_values_without_tooltip
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(value: "pending")
+    )
+
+    assert_equal "pending", presenter.compact_metric_value
+    assert_nil presenter.compact_metric_tooltip_text
+  end
+
   def test_builds_mini_chart_options_without_overwriting_custom_options
     presenter = RecordingStudioAdmin::Widgets::Presenter.new(
       resolved_widget(chart_options: { chart: { height: 96 }, colors: ["#123456"] })

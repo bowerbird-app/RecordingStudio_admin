@@ -7,7 +7,7 @@ class ConfigurationTest < Minitest::Test
     config = RecordingStudioAdmin::Configuration.new
 
     assert_equal "/admin", config.default_mount_path
-    assert_equal "application", config.engine_layout
+    assert_nil config.engine_layout
     assert_equal :authenticate_user!, config.authentication_method
     assert_equal :current_user, config.current_actor_method
     assert_equal :recording_studio_admin_access_recording, config.access_recording_method

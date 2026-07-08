@@ -36,7 +36,7 @@ module RecordingStudioAdmin
       end
 
       def widget(key, view_variant: nil, title: nil, chart_type: nil, chart_options: nil, params: nil,
-                 blast_radius: nil, &block)
+                 blast_radius: nil, link_to: nil, &block)
         if block
           raise InvalidDefinition,
                 "Screen.widget only references standalone widgets. Define widgets with " \
@@ -59,7 +59,8 @@ module RecordingStudioAdmin
           chart_type: chart_type,
           chart_options: Section.normalize_widget_usage_hash(chart_options, field_name: :chart_options),
           params: Section.normalize_widget_usage_hash(params, field_name: :params),
-          blast_radius: normalized_blast_radius
+          blast_radius: normalized_blast_radius,
+          link_to: link_to
         )
       end
 
@@ -164,7 +165,8 @@ module RecordingStudioAdmin
 
   class TableDefinition
     attr_reader :columns, :filters, :actions, :pagination_options, :default_sort_key, :default_direction,
-                :export_key, :export_options, :export_config_value
+                :export_key, :export_options, :export_config_value, :title_value, :show_columns_button_value,
+                :show_count_value
 
     def initialize(&block)
       @columns = []
@@ -174,7 +176,43 @@ module RecordingStudioAdmin
       @export_key = nil
       @export_options = {}
       @pagination_options = { per_page: 50, mode: :infinite }
+      @title_value = "Table data"
+      @show_columns_button_value = true
+      @show_count_value = true
       instance_eval(&block) if block
+    end
+
+    def title(value = nil)
+      @title_value = value if value
+      @title_value
+    end
+
+    def show_table_heading?
+      @title_value.present?
+    end
+
+    def show_columns_button(value = true)
+      @show_columns_button_value = value
+    end
+
+    def hide_columns_button
+      @show_columns_button_value = false
+    end
+
+    def show_count(value = true)
+      @show_count_value = value
+    end
+
+    def hide_count
+      @show_count_value = false
+    end
+
+    def show_columns_button?
+      @show_columns_button_value
+    end
+
+    def show_count?
+      @show_count_value
     end
 
     def filter(name, **options)

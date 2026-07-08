@@ -26,7 +26,7 @@ class RenameVerificationTest < Minitest::Test
     $LOAD_PATH.unshift(File.join(ROOT, "lib")) unless $LOAD_PATH.include?(File.join(ROOT, "lib"))
     require "recording_studio_admin/version"
 
-    assert_equal "1.0.0", RecordingStudioAdmin::VERSION
+    assert_equal "1.0.1", RecordingStudioAdmin::VERSION
   end
 
   private

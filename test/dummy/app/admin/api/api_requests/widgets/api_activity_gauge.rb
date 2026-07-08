@@ -29,14 +29,14 @@ module AdminScreens
       range = context.widget_time_range || AdminScreens::Base.widget_preset_range(context, preset_key: :this_week)
       scope = ApiRequest.where(created_at: range)
       total = scope.count
-      next [0] if total.zero?
+      next [ 0 ] if total.zero?
 
       success_total = scope.where(status: 200...300).count
-      [((success_total.to_f / total) * 100).round]
+      [ ((success_total.to_f / total) * 100).round ]
     end
     chart_options do
       {
-        labels: ["Success rate"],
+        labels: [ "Success rate" ],
         height: 220,
         dataLabels: {
           formatter: "function (value) { return Math.round(value) + '%'; }"

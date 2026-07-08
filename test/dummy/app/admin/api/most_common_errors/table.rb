@@ -3,6 +3,9 @@
 module AdminScreens
   class MostCommonErrors
     table do
+      title "Error breakdown"
+      hide_columns_button
+      hide_count
       filter :search, apply: lambda { |relation, value, _context|
         next relation unless value.present?
 

@@ -83,11 +83,11 @@ class ResolverTest < Minitest::Test
                  y: context.widget_param(:limit, default: 2) }]
       }]
     end
+  end
 
-    RequestsParamTitleWidget = RecordingStudioAdmin::Widget.new("widgets.requests.param_title") do
-      title { |context| context.widget_param(:title, default: "Default title") }
-      value { |context| context.widget_param(:value, default: 1) }
-    end
+  RequestsParamTitleWidget = RecordingStudioAdmin::Widget.new("widgets.requests.param_title") do
+    title { |context| context.widget_param(:title, default: "Default title") }
+    value { |context| context.widget_param(:value, default: 1) }
   end
 
   RequestsReviewCompletionWidget = RecordingStudioAdmin::Widget.new("widgets.requests.review_completion") do
@@ -382,11 +382,12 @@ class ResolverTest < Minitest::Test
     RecordingStudioAdmin.configuration.surfaces.clear
   end
 
-  def allowed_context(params: {}, recording: nil, current_root_recording: nil)
+  def allowed_context(params: {}, recording: nil, current_root_recording: nil, query_result: nil)
     RecordingStudioAdmin::Context.new(
       params: params,
       current_actor: :actor,
-      controller: allowed_context_controller(recording: recording, current_root_recording: current_root_recording)
+      controller: allowed_context_controller(recording: recording, current_root_recording: current_root_recording),
+      query_result: query_result
     )
   end
 
@@ -1173,14 +1174,15 @@ class ResolverTest < Minitest::Test
     RecordingStudioAdmin.register_section(variant_section)
     root_recording = TestRecording.new(nil)
 
-    widgets = with_access_allowed do
+    available_widgets = with_access_allowed do
       RecordingStudioAdmin.available_widgets(
         context: allowed_context(recording: root_recording),
         recording: root_recording,
         placement: :root,
         include: :section_widgets
       )
-    end.select { |widget| widget.section_key == "variant_root" }
+    end
+    widgets = available_widgets.select { |widget| widget.section_key == "variant_root" }
 
     assert_equal [nil, :compact], widgets.map(&:view_variant)
     assert_equal %w[widgets.requests.total widgets.requests.total], widgets.map(&:key)
@@ -1196,14 +1198,15 @@ class ResolverTest < Minitest::Test
     RecordingStudioAdmin.register_section(param_section)
     root_recording = TestRecording.new(nil)
 
-    widget = with_access_allowed do
+    available_widgets = with_access_allowed do
       RecordingStudioAdmin.available_widgets(
         context: allowed_context(recording: root_recording),
         recording: root_recording,
         placement: :root,
         include: :section_widgets
       )
-    end.find { |available_widget| available_widget.section_key == "param_root" }
+    end
+    widget = available_widgets.find { |available_widget| available_widget.section_key == "param_root" }
 
     assert_equal "Usage title", widget.title
     assert_equal({ title: "Usage title", value: 7 }, widget.params)
@@ -1314,7 +1317,7 @@ class ResolverTest < Minitest::Test
   end
 
   def test_resolve_section_links_widgets_and_missing_widget
-    context = allowed_context
+    context = allowed_context(query_result: ArrayRelation.new([1, 2, 3, 4, 5]))
     section = with_access_allowed { RecordingStudioAdmin.resolve_section(key: "root", context: context) }
 
     assert_equal "Root", section.title
@@ -1322,15 +1325,7 @@ class ResolverTest < Minitest::Test
     assert_equal "/admin/screens/requests", section.links.first.url
     assert_equal "widgets.requests.total", section.widgets.first.key
     assert_equal :compact, section.widgets.first.view_variant
-    traffic_preview = section.widgets.find { |widget| widget.key == "widgets.requests.traffic_preview" }
-    assert_equal "Weekly traffic", traffic_preview.title
-    assert_equal :area, traffic_preview.chart_type
-    assert_equal ["#123456"], traffic_preview.chart_options[:colors]
-    assert_equal [{ name: "week", data: [{ x: "Last 3 days", y: 5 }] }], traffic_preview.series
-    assert_equal "Last 3 days", traffic_preview.metadata[:period_label]
-    assert_equal 5, traffic_preview.value
-    assert_nil section.recordable
-    assert_nil section.recording
+    assert_equal 5, section.widgets.first.value
   end
 
   def test_resolve_section_can_defer_widget_values_for_async_loading

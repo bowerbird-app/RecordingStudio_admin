@@ -1,5 +1,9 @@
 <%= render layout: "recording_studio_admin/shared/page_shell" do %>
-  <%= render FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url(default: RecordingStudioAdmin.configuration.default_mount_path), class: "mb-4") %>
+  <% recording_studio_page_nav(
+       title: "Admin sections",
+       page_nav_anchor_url: page_nav_anchor_url(default: RecordingStudioAdmin.configuration.default_mount_path)
+     ) %>
+  <%= render "recording_studio_admin/shared/page_nav" unless recording_studio_admin_default_layout? %>
 
   <%= render FlatPack::PageTitle::Component.new(title: "Admin sections", subtitle: "Browse the sections available in this admin context") %>
 

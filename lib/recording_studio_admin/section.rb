@@ -2,7 +2,8 @@
 
 module RecordingStudioAdmin
   SectionRecordableDefinition = Data.define(:class_name, :find_or_create_by, :parent, :parent_recording, :action)
-  WidgetUsage = Data.define(:key, :view_variant, :title, :chart_type, :chart_options, :params, :blast_radius) do
+  WidgetUsage = Data.define(:key, :view_variant, :title, :chart_type, :chart_options, :params, :blast_radius,
+                            :link_to) do
     def effective_blast_radius(widget_definition)
       RecordingStudioAdmin::BlastRadius.max(widget_definition&.blast_radius, blast_radius)
     end
@@ -29,7 +30,7 @@ module RecordingStudioAdmin
       end
 
       def widget(key, view_variant: nil, title: nil, chart_type: nil, chart_options: nil, params: nil,
-                 blast_radius: nil)
+                 blast_radius: nil, link_to: nil)
         normalized_view_variant = view_variant.nil? ? nil : normalize_view_variant(view_variant)
         normalized_blast_radius = if blast_radius.nil?
                                     nil
@@ -46,7 +47,8 @@ module RecordingStudioAdmin
           chart_type: chart_type,
           chart_options: normalize_widget_usage_hash(chart_options, field_name: :chart_options),
           params: normalize_widget_usage_hash(params, field_name: :params),
-          blast_radius: normalized_blast_radius
+          blast_radius: normalized_blast_radius,
+          link_to: link_to
         )
       end
 
@@ -81,7 +83,7 @@ module RecordingStudioAdmin
             entry
           else
             WidgetUsage.new(key: entry.to_s, view_variant: nil, title: nil, chart_type: nil,
-                            chart_options: nil, params: nil, blast_radius: nil)
+                            chart_options: nil, params: nil, blast_radius: nil, link_to: nil)
           end
         end
       end
