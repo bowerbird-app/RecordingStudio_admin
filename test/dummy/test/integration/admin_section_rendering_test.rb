@@ -670,6 +670,9 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Choose table columns"
     assert_includes response.body, 'name="columns[]"'
     assert_includes response.body, 'id="screen-table-columns-form"'
+
+    table_headers = css_select("th").map { |header| header.text.squish.sub(/\s+[↑↓]\z/, "") }
+
     assert_includes table_headers, "Created at"
     assert_includes table_headers, "Method"
     assert_includes table_headers, "Status"
