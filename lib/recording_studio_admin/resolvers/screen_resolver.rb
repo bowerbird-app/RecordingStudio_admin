@@ -88,8 +88,8 @@ module RecordingStudioAdmin
                 "Widget #{widget_key.inspect} is not referenced by screen #{@key.inspect}"
         end
 
-        resolve_screen_widget(definition, widget_usage, usage_index: usage_index) || raise(DefinitionNotFound,
-                                                                 "Widget #{widget_key.inspect} is not available")
+        resolve_screen_widget(definition, widget_usage, usage_index: usage_index) ||
+          raise(DefinitionNotFound, "Widget #{widget_key.inspect} is not available")
       end
 
       private
