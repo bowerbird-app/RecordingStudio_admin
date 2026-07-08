@@ -122,7 +122,7 @@ class SectionsControllerTest < Minitest::Test
 
   def test_section_widget_endpoint_resolves_widget_through_parent_section
     controller = build_controller(
-      params: ActionController::Parameters.new(section_key: "users", widget_key: "users.widgets.total")
+      params: ActionController::Parameters.new(section_key: "users", widget_key: "widgets.users.total")
     )
     expected_context = Struct.new(:root_admin_section_key).new("page_views")
     resolved_widget = Object.new
@@ -134,10 +134,11 @@ class SectionsControllerTest < Minitest::Test
     end
 
     with_singleton_stub(RecordingStudioAdmin::Resolvers::SectionResolver, :resolve_widget,
-                        lambda { |key:, widget_key:, view_variant:, context:|
+                        lambda { |key:, widget_key:, view_variant:, usage_index:, context:|
                           assert_equal "users", key
-                          assert_equal "users.widgets.total", widget_key
+                          assert_equal "widgets.users.total", widget_key
                           assert_nil view_variant
+                          assert_nil usage_index
                           assert_same expected_context, context
                           resolved_widget
                         }) do
@@ -151,7 +152,11 @@ class SectionsControllerTest < Minitest::Test
 
   def test_screen_widget_endpoint_resolves_widget_through_parent_screen
     controller = build_controller(
-      params: ActionController::Parameters.new(screen_key: "users", widget_key: "users.widgets.total")
+      params: ActionController::Parameters.new(
+        screen_key: "users",
+        widget_key: "widgets.users.total",
+        widget_usage_index: "0"
+      )
     )
     expected_context = Struct.new(:root_admin_section_key).new("page_views")
     resolved_widget = Object.new
@@ -163,10 +168,11 @@ class SectionsControllerTest < Minitest::Test
     end
 
     with_singleton_stub(RecordingStudioAdmin::Resolvers::ScreenResolver, :resolve_widget,
-                        lambda { |key:, widget_key:, view_variant:, context:|
+                        lambda { |key:, widget_key:, view_variant:, usage_index:, context:|
                           assert_equal "users", key
-                          assert_equal "users.widgets.total", widget_key
+                          assert_equal "widgets.users.total", widget_key
                           assert_nil view_variant
+                          assert_equal "0", usage_index
                           assert_same expected_context, context
                           resolved_widget
                         }) do
@@ -176,6 +182,83 @@ class SectionsControllerTest < Minitest::Test
     assert_equal "recording_studio_admin/shared/widget_frame", controller.instance_variable_get(:@rendered_partial)
     assert_equal({ parent: :screen, parent_key: "users", widget: resolved_widget },
                  controller.instance_variable_get(:@rendered_locals))
+  end
+
+  def test_screen_widget_endpoint_applies_render_variant_after_usage_resolution
+    controller = build_controller(
+      params: ActionController::Parameters.new(
+        screen_key: "users",
+        widget_key: "widgets.users.total",
+        widget_view_variant: "__default__",
+        widget_usage_index: "0",
+        widget_render_variant: "compact"
+      )
+    )
+    expected_context = Struct.new(:root_admin_section_key).new("page_views")
+    resolved_widget = Struct.new(:view_variant, keyword_init: true) do
+      def with(**attributes)
+        self.class.new(view_variant: attributes.fetch(:view_variant, view_variant))
+      end
+    end.new
+
+    controller.define_singleton_method(:recording_studio_admin_context) { expected_context }
+    controller.define_singleton_method(:render) do |partial:, locals:|
+      @rendered_partial = partial
+      @rendered_locals = locals
+    end
+
+    with_singleton_stub(RecordingStudioAdmin::Resolvers::ScreenResolver, :resolve_widget,
+                        lambda { |key:, widget_key:, view_variant:, usage_index:, context:|
+                          assert_equal "users", key
+                          assert_equal "widgets.users.total", widget_key
+                          assert_equal "__default__", view_variant
+                          assert_equal "0", usage_index
+                          assert_same expected_context, context
+                          resolved_widget
+                        }) do
+      controller.show
+    end
+
+    widget = controller.instance_variable_get(:@rendered_locals).fetch(:widget)
+    assert_equal :compact, widget.view_variant
+  end
+
+  def test_screen_widget_endpoint_ignores_unsupported_render_variant
+    controller = build_controller(
+      params: ActionController::Parameters.new(
+        screen_key: "users",
+        widget_key: "widgets.users.total",
+        widget_view_variant: "__default__",
+        widget_render_variant: "card"
+      )
+    )
+    expected_context = Struct.new(:root_admin_section_key).new("page_views")
+    resolved_widget = Struct.new(:view_variant, keyword_init: true) do
+      def with(**attributes)
+        self.class.new(view_variant: attributes.fetch(:view_variant, view_variant))
+      end
+    end.new
+
+    controller.define_singleton_method(:recording_studio_admin_context) { expected_context }
+    controller.define_singleton_method(:render) do |partial:, locals:|
+      @rendered_partial = partial
+      @rendered_locals = locals
+    end
+
+    with_singleton_stub(RecordingStudioAdmin::Resolvers::ScreenResolver, :resolve_widget,
+                        lambda { |key:, widget_key:, view_variant:, usage_index:, context:|
+                          assert_equal "users", key
+                          assert_equal "widgets.users.total", widget_key
+                          assert_equal "__default__", view_variant
+                          assert_nil usage_index
+                          assert_same expected_context, context
+                          resolved_widget
+                        }) do
+      controller.show
+    end
+
+    widget = controller.instance_variable_get(:@rendered_locals).fetch(:widget)
+    assert_nil widget.view_variant
   end
 
   private

@@ -24,16 +24,16 @@ class Admin::RootController < Admin::BaseController
                                 recording: @admin_access_recording,
                                 include: %i[sections screens]
                               )
-                            else
+    else
                               []
-                            end
+    end
     @normalized_admin_search_query = @admin_search_query.downcase
     @matching_admin_search_results = if @admin_search_query.present?
                                        @admin_search_results.count do |item|
                                          item.search_text.include?(@normalized_admin_search_query)
                                        end
-                                     else
+    else
                                        0
-                                     end
+    end
   end
 end

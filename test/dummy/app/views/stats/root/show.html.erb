@@ -11,11 +11,13 @@
      0
    end %>
 
-<%= render FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url, class: "mb-4") do |page_nav| %>
-  <% page_nav.right do %>
-    <% if recording_studio_admin_access_recording.present? %>
-      <%= recording_studio_accessible_avatars(recording_studio_admin_access_recording, button_style: :ghost, button_size: :md) %>
-    <% end %>
+<% recording_studio_page_nav(
+  title: "Stats",
+  page_nav_anchor_url: page_nav_anchor_url
+) %>
+<% if recording_studio_admin_access_recording.present? %>
+  <% content_for :page_nav_right do %>
+    <%= recording_studio_accessible_avatars(recording_studio_admin_access_recording, button_style: :ghost, button_size: :md) %>
   <% end %>
 <% end %>
 

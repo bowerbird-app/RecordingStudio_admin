@@ -7,8 +7,8 @@ module RecordingStudioAdmin
         new(key, context, resolve_widgets: resolve_widgets).call
       end
 
-      def self.resolve_widget(key:, widget_key:, context:, view_variant: nil)
-        new(key, context).resolve_widget(widget_key, view_variant: view_variant)
+      def self.resolve_widget(key:, widget_key:, context:, view_variant: nil, usage_index: nil)
+        new(key, context).resolve_widget(widget_key, view_variant: view_variant, usage_index: usage_index)
       end
 
       def initialize(key, context, resolve_widgets: true)
@@ -37,16 +37,21 @@ module RecordingStudioAdmin
         )
       end
 
-      def resolve_widget(widget_key, view_variant: nil)
+      def resolve_widget(widget_key, view_variant: nil, usage_index: nil)
         definition = authorized_definition
-        widget_usage = resolve_widget_usage_entry(definition, widget_key: widget_key, view_variant: view_variant)
+        widget_usage = resolve_widget_usage_entry(
+          definition,
+          widget_key: widget_key,
+          view_variant: view_variant,
+          usage_index: usage_index
+        )
         unless widget_usage
           raise DefinitionNotFound,
                 "Widget #{widget_key.inspect} is not registered for section #{@key.inspect}"
         end
 
-        resolve_widget_usage(definition, widget_usage) || raise(DefinitionNotFound,
-                                                                "Widget #{widget_key.inspect} is not available")
+        resolve_widget_usage(definition, widget_usage, usage_index: usage_index) ||
+          raise(DefinitionNotFound, "Widget #{widget_key.inspect} is not available")
       end
 
       def visible?(definition)
@@ -63,7 +68,7 @@ module RecordingStudioAdmin
         )
       end
 
-      def resolve_widget_usage(definition, widget_usage)
+      def resolve_widget_usage(definition, widget_usage, usage_index: nil)
         widget_definition = RecordingStudioAdmin.widget_for(widget_usage.key)
         return unless widget_definition
 
@@ -77,27 +82,34 @@ module RecordingStudioAdmin
         overrides = {
           view_variant: widget_usage.view_variant,
           title: resolve_usage_value(definition, widget_usage.title, widget_context),
-          chart_type: resolve_usage_value(definition, widget_usage.chart_type, widget_context)
+          chart_type: resolve_usage_value(definition, widget_usage.chart_type, widget_context),
+          metadata: widget.metadata.merge(usage_metadata(usage_index))
         }.compact
 
         chart_options = resolve_usage_hash(definition, widget_usage.chart_options, widget_context,
                                            field_name: :chart_options)
         overrides[:chart_options] = (widget.chart_options || {}).deep_merge(chart_options) if chart_options.any?
 
+        if widget_usage.link_to
+          overrides[:link_to] = RecordingStudioAdmin::UrlSafety.safe_href(
+            resolve_usage_value(definition, widget_usage.link_to, widget_context)
+          )
+        end
+
         overrides.empty? ? widget : widget.with(**overrides)
       end
 
       def resolve_section_widgets(definition)
-        definition.widget_usages.filter_map do |widget_usage|
+        definition.widget_usages.each_with_index.filter_map do |widget_usage, index|
           if @resolve_widgets
-            resolve_widget_usage(definition, widget_usage)
+            resolve_widget_usage(definition, widget_usage, usage_index: index)
           else
-            placeholder_widget(definition, widget_usage)
+            placeholder_widget(definition, widget_usage, usage_index: index)
           end
         end
       end
 
-      def placeholder_widget(definition, widget_usage)
+      def placeholder_widget(definition, widget_usage, usage_index: nil)
         widget_definition = RecordingStudioAdmin.widget_for(widget_usage.key)
         return unless widget_definition
 
@@ -128,7 +140,7 @@ module RecordingStudioAdmin
           list_options: {},
           items: nil,
           rows: nil,
-          metadata: {},
+          metadata: usage_metadata(usage_index),
           view_variant: widget_usage.view_variant,
           show_metric: false,
           show_change: false,
@@ -156,10 +168,15 @@ module RecordingStudioAdmin
         @context.with_widget_params(widget_params)
       end
 
-      def resolve_widget_usage_entry(definition, widget_key:, view_variant:)
+      def resolve_widget_usage_entry(definition, widget_key:, view_variant:, usage_index: nil)
         target_key = widget_key.to_s
         has_variant_selector = view_variant.present?
         normalized_variant = has_variant_selector ? normalize_widget_usage_variant(view_variant) : nil
+        indexed_usage = widget_usage_at(definition, usage_index)
+        if indexed_usage_matches?(indexed_usage, target_key, has_variant_selector, normalized_variant)
+          return indexed_usage
+        end
+        return if usage_index.present?
 
         definition.widget_usages.find do |usage|
           next false unless usage.key == target_key
@@ -173,6 +190,29 @@ module RecordingStudioAdmin
         return nil if value.to_s == "__default__"
 
         RecordingStudioAdmin::Section.normalize_view_variant(value)
+      end
+
+      def widget_usage_at(definition, usage_index)
+        return if usage_index.blank?
+
+        index = Integer(usage_index, exception: false)
+        return if index.nil? || index.negative?
+
+        definition.widget_usages[index]
+      end
+
+      def indexed_usage_matches?(usage, target_key, has_variant_selector, normalized_variant)
+        return false unless usage&.key == target_key
+        return true unless has_variant_selector
+
+        usage.view_variant == normalized_variant
+      end
+
+      def usage_metadata(usage_index)
+        index = Integer(usage_index, exception: false)
+        return {} if index.nil?
+
+        { recording_studio_admin_widget_usage_index: index }
       end
 
       def resolve_usage_value(definition, value, context)

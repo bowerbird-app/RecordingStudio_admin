@@ -4,6 +4,7 @@ module AdminScreens
   module Jobs
     def self.register!
       RecordingStudioAdmin.register_screen(AdminScreens::BackgroundJobs)
+      RecordingStudioAdmin.register_widget(AdminScreens::BackgroundJobsJobThroughputWidget)
       RecordingStudioAdmin.register_section(AdminScreens::JobsSection)
     end
   end

@@ -1,8 +1,10 @@
-<%= render FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url, class: "mb-4") do |page_nav| %>
-  <% page_nav.right do %>
-    <% if @admin_access_recording.present? %>
-      <%= recording_studio_accessible_avatars(@admin_access_recording, button_style: :ghost, button_size: :md) %>
-    <% end %>
+<% recording_studio_page_nav(
+  title: "Admin",
+  page_nav_anchor_url: page_nav_anchor_url
+) %>
+<% if @admin_access_recording.present? %>
+  <% content_for :page_nav_right do %>
+    <%= recording_studio_accessible_avatars(@admin_access_recording, button_style: :ghost, button_size: :md) %>
   <% end %>
 <% end %>
 

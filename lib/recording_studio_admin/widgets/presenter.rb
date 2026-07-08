@@ -63,9 +63,17 @@ module RecordingStudioAdmin
 
       def compact_metric_value
         return unless widget.show_metric
-        return widget.value if widget.value.present?
 
-        list_count if widget.type == :list
+        value = metric_value
+        compact_number(value) || value
+      end
+
+      def compact_metric_tooltip_text
+        value = metric_value
+        return unless value.is_a?(Numeric)
+        return unless compact_number(value)
+
+        exact_number(value)
       end
 
       def compact_unit_label
@@ -165,6 +173,12 @@ module RecordingStudioAdmin
 
       attr_reader :widget, :link_policy
 
+      def metric_value
+        return widget.value if widget.value.present?
+
+        list_count if widget.type == :list
+      end
+
       def list_items
         Array(widget.items)
       end
@@ -175,6 +189,32 @@ module RecordingStudioAdmin
 
       def metadata_value(key)
         widget.metadata&.[](key).presence || widget.metadata&.[](key.to_s).presence
+      end
+
+      def compact_number(value)
+        return unless value.is_a?(Numeric)
+
+        absolute_value = value.abs
+        suffixes = [
+          [1_000_000_000_000, "T"],
+          [1_000_000_000, "B"],
+          [1_000_000, "M"],
+          [1_000, "K"]
+        ]
+        threshold, suffix = suffixes.find { |candidate_threshold, _| absolute_value >= candidate_threshold }
+        return unless threshold
+
+        formatted = format("%.1f", value.to_f / threshold).sub(/\.0\z/, "")
+        "#{formatted}#{suffix}"
+      end
+
+      def exact_number(value)
+        number_string = defined?(BigDecimal) && value.is_a?(BigDecimal) ? value.to_s("F") : value.to_s
+        match = number_string.match(/\A(?<sign>-?)(?<integer>\d+)(?<fraction>\.\d+)?\z/)
+        return number_string unless match
+
+        integer = match[:integer].reverse.gsub(/(\d{3})(?=\d)/, "\\1,").reverse
+        "#{match[:sign]}#{integer}#{match[:fraction]}"
       end
 
       def pie_or_donut_mini_chart_options

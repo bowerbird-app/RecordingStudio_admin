@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class Stats::BaseController < Admin::BaseController
-  layout "flat_pack_sidebar"
-
   private
 
   def recording_studio_admin_context

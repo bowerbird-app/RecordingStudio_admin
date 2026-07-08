@@ -34,6 +34,8 @@ module AdminScreens
     filter :date_range, field: :created_at, default: :last_30_days
     filter :status, options: -> { UserActivity.distinct.order(:status).pluck(:status) }
 
+    widget "widgets.user_geography.activity_geo_map"
+
     summary do
       label "Total activities"
       change_good_when :up

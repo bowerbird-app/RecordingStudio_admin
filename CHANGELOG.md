@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+## 1.0.1
+
+### Changed
+
+- Updated `recording_studio` dependency from `v3.0.0` to `v3.0.2`.
+- Default RecordingStudioAdmin engine sections and screens to RecordingStudio core's shared `recording_studio/default_layout`, while preserving global and per-surface `engine_layout` overrides for host apps.
+
 ## 1.0.0
 
 ### Added
@@ -41,10 +50,10 @@
 
 ### Changed
 
-- **Namespace**: renamed from `GemTemplate` to `RecordingStudioAdmin` across all files, modules, routes, and configuration.
+- **Namespace**: renamed the engine namespace across all files, modules, routes, and configuration.
 - **Dependencies**: added `flat_pack ~> 0.1.103`, `recording_studio_accessible ~> 0.3`; pinned dev/test dependencies to `flat_pack`, `recording_studio`, `recording_studio_accessible`, and `recording_studio_exportable` from GitHub.
 - **Routes**: replaced `HomeController#index` root with `SectionsController#index`; added RESTful routes for sections, screens, widgets, charts, tables, and table counts.
-- **CI**: renamed test database from `gem_template_test` to `recording_studio_admin_test`.
+- **CI**: renamed the test database to `recording_studio_admin_test`.
 - **RuboCop**: expanded exclusions for generated templates, resolvers, helpers, and large core files.
 - **Rake test tasks**: added `bundle install` guard before dummy app test runs.
 - **README**: rewritten from gem template docs to full RecordingStudioAdmin documentation covering quick start, admin root scaffolding, engine screens, and configuration.
@@ -52,4 +61,4 @@
 
 ### Removed
 
-- **Gem template infrastructure**: `GemTemplate::ApplicationController`, `HomeController`, `gem_template` initializer, `rename_gem` script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
+- **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.

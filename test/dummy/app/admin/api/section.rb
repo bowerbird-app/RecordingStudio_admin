@@ -15,15 +15,15 @@ module AdminScreens
          url: ->(context) { context.admin_screen_path("most_common_errors") },
          style: :secondary
 
-    widget "api_requests.widgets.api_activity",
+    widget "widgets.api_requests.api_activity",
            view_variant: :compact,
            params: { preset_key: :this_week }
-    widget "api_errors.widgets.recent_failures",
+    widget "widgets.api_errors.recent_failures",
            view_variant: :compact,
            params: { preset_key: :this_week }
-        widget "most_common_errors.widgets.error_distribution_chart",
+        widget "widgets.most_common_errors.error_distribution_chart",
           view_variant: :compact,
           params: { preset_key: :this_week }
-    widget "most_common_errors.widgets.error_distribution_chart", params: { preset_key: :this_week }
+    widget "widgets.most_common_errors.error_distribution_chart", params: { preset_key: :this_week }
   end
 end

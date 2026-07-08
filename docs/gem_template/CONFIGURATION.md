@@ -13,7 +13,8 @@ The refactored gem keeps configuration, routing, and registration separate:
 ```ruby
 RecordingStudioAdmin.configure do |config|
   config.default_mount_path = "/admin"
-  config.engine_layout = "application"
+  # Leave unset to use RecordingStudio core's shared default layout.
+  # config.engine_layout = "application"
   config.authentication_method = :authenticate_user!
   config.current_actor_method = :current_user
   config.required_access_role = :view
@@ -30,7 +31,7 @@ end
 | Option | Default | Purpose |
 |--------|---------|---------|
 | `default_mount_path` | `"/admin"` | Fallback path used by `Context#admin_screen_path` and related helpers when route helpers are not available |
-| `engine_layout` | `"application"` | Rails layout used by engine controllers (`RecordingStudioAdmin::ApplicationController`) |
+| `engine_layout` | `nil` | Rails layout used by engine controllers. Leave unset to use RecordingStudio core's `recording_studio/default_layout`; set to a host layout name to override it. |
 | `authentication_method` | `:authenticate_user!` | Controller method called before each engine request |
 | `current_actor_method` | `:current_user` | Controller method used to resolve the current actor |
 | `access_recording_method` | `:recording_studio_admin_access_recording` | Optional controller method fallback when no resolver is configured |
@@ -93,10 +94,15 @@ RecordingStudioAdmin.configure do |config|
     surface.authentication_method = :authenticate_user!
     surface.current_actor_method = :current_user
     surface.access_recording_resolver = ->(context) { context.controller.current_user_recording }
-    surface.engine_layout = "application"
+    surface.engine_layout = "application" # optional: override RecordingStudio's default layout for this surface
   end
 end
 ```
+
+When neither global nor per-surface `engine_layout` is set, RecordingStudioAdmin sections and screens use
+RecordingStudio core's shared `recording_studio/default_layout`. That layout provides the standard PageNav shell,
+flash rendering, head slots, and SEO metadata helpers. Host apps can still choose their own layout by setting
+`config.engine_layout` globally or `surface.engine_layout` for a named surface.
 
 Surfaces do not own section definitions. Sections remain globally registered, and recordable classes opt into section keys with `recording_studio_admin_sections`.
 
@@ -319,7 +325,7 @@ RecordingStudioAdmin.register_section(MySection)
 
 RecordingStudioAdmin.resolve_screen(key: "api_requests", context: context)
 RecordingStudioAdmin.resolve_section(key: "root", context: context)
-RecordingStudioAdmin.resolve_widget(key: "api_requests.widgets.api_activity", context: context)
+RecordingStudioAdmin.resolve_widget(key: "widgets.api_requests.api_activity", context: context)
 RecordingStudioAdmin.resolve_sections(context: context)
 ```
 

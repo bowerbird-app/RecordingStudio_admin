@@ -20,44 +20,44 @@ module AdminScreens
            url: ->(context) { context.admin_section_path("admin_activity_logs") },
            style: :secondary
 
-    widget "api_requests.widgets.api_activity",
+    widget "widgets.api_requests.api_activity",
            view_variant: :compact,
            params: { preset_key: :this_week }
-    widget "api_requests.widgets.api_activity", params: { preset_key: :this_week }
-    widget "api_errors.widgets.recent_failures",
+    widget "widgets.api_requests.api_activity", params: { preset_key: :this_week }
+    widget "widgets.api_errors.recent_failures",
            view_variant: :compact,
            params: { preset_key: :this_week }
-    widget "api_errors.widgets.recent_failures", params: { preset_key: :this_week }
-    widget "most_common_errors.widgets.error_distribution_chart",
+    widget "widgets.api_errors.recent_failures", params: { preset_key: :this_week }
+    widget "widgets.most_common_errors.error_distribution_chart",
            view_variant: :compact,
            params: { preset_key: :this_week }
-    widget "most_common_errors.widgets.error_distribution_chart", params: { preset_key: :this_week }
-    widget "api_requests.widgets.api_activity_column",
+    widget "widgets.most_common_errors.error_distribution_chart", params: { preset_key: :this_week }
+    widget "widgets.api_requests.api_activity_column",
            view_variant: :compact,
            params: { preset_key: :this_week }
-    widget "api_requests.widgets.api_activity_column", params: { preset_key: :this_week }
-    widget "api_requests.widgets.api_activity_donut",
+    widget "widgets.api_requests.api_activity_column", params: { preset_key: :this_week }
+    widget "widgets.api_requests.api_activity_donut",
            view_variant: :compact,
            params: { preset_key: :this_week }
-    widget "api_requests.widgets.api_activity_donut", params: { preset_key: :this_week }
-    widget "api_requests.widgets.api_activity_radar",
+    widget "widgets.api_requests.api_activity_donut", params: { preset_key: :this_week }
+    widget "widgets.api_requests.api_activity_radar",
            view_variant: :compact,
            params: { preset_key: :this_week }
-    widget "api_requests.widgets.api_activity_radar", params: { preset_key: :this_week }
-    widget "api_requests.widgets.api_activity_gauge",
+    widget "widgets.api_requests.api_activity_radar", params: { preset_key: :this_week }
+    widget "widgets.api_requests.api_activity_gauge",
            view_variant: :compact,
            params: { preset_key: :this_week }
-    widget "api_requests.widgets.api_activity_gauge", params: { preset_key: :this_week }
-    widget "user_activity.widgets.review_completion",
+    widget "widgets.api_requests.api_activity_gauge", params: { preset_key: :this_week }
+    widget "widgets.user_activity.review_completion",
            view_variant: :compact,
            params: { preset_key: :this_week }
-    widget "user_activity.widgets.active_users", params: { preset_key: :this_week }
-    widget "user_activity.widgets.most_recent_users",
+    widget "widgets.user_activity.active_users", params: { preset_key: :this_week }
+    widget "widgets.user_activity.most_recent_users",
            view_variant: :compact
-    widget "user_activity.widgets.most_recent_users"
-    widget "background_jobs.widgets.job_throughput",
+    widget "widgets.user_activity.most_recent_users"
+    widget "widgets.background_jobs.job_throughput",
            view_variant: :compact,
            params: { preset_key: :this_week }
-    widget "background_jobs.widgets.job_throughput", params: { preset_key: :this_week }
+    widget "widgets.background_jobs.job_throughput", params: { preset_key: :this_week }
   end
 end

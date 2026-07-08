@@ -80,8 +80,10 @@
 <div data-controller="recording-studio-admin--screen-filters">
   <div class="mb-4 flex items-center justify-between gap-3">
     <div>
-      <h3 class="text-lg font-semibold text-(--surface-content-color)">Table data</h3>
-      <% if table_result %>
+      <% if screen.table.title %>
+        <h3 class="text-lg font-semibold text-(--surface-content-color)"><%= screen.table.title %></h3>
+      <% end %>
+      <% if screen.table.show_count && table_result %>
         <%= turbo_frame_tag "screen-table-count", src: (recording_studio_admin_screen_region_path(screen.key, :table_count, query: base_query) if table_result.count_pending) do %>
           <p class="mt-1 text-sm text-(--surface-muted-content-color)">
             <%= table_result.count_pending ? "Counting rows..." : pluralize(table_result.total_count, "row") %>
@@ -90,7 +92,8 @@
       <% end %>
     </div>
 
-    <% if selectable_columns.many? || export_button_available %>
+    <% columns_button_visible = screen.table.show_columns_button && selectable_columns.many? %>
+    <% if columns_button_visible || export_button_available %>
       <div class="flex items-center gap-2">
         <% if export_button_available %>
           <% if export_button_authorized %>
@@ -141,7 +144,7 @@
           <% end %>
         <% end %>
 
-        <% if selectable_columns.many? %>
+        <% if columns_button_visible %>
           <%= render FlatPack::Button::Component.new(
             text: "Columns",
             icon: "table-cells",
@@ -159,7 +162,7 @@
     <% end %>
   </div>
 
-  <% if selectable_columns.many? %>
+  <% if columns_button_visible %>
     <%= render FlatPack::Modal::Component.new(id: columns_modal_id, title: "Table columns", size: :sm) do |modal| %>
       <% modal.body do %>
         <%= form_with url: recording_studio_admin_screen_region_path(screen.key, :table, query: {}), method: :get, id: columns_form_id, data: { turbo_frame: "screen-table" } do %>

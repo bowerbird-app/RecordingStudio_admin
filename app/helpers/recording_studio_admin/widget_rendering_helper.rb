@@ -19,9 +19,16 @@ module RecordingStudioAdmin
              locals: { widget: renderable_widget, presenter: presenter }
     end
 
-    def render_recording_studio_async_widget_frame(widget, parent:, parent_key:)
+    def render_recording_studio_async_widget_frame(widget, parent:, parent_key:, variant: nil)
+      renderable_widget = variant ? widget.with(view_variant: variant) : widget
+
       render partial: "recording_studio_admin/shared/widget_async_frame",
-             locals: { widget: widget, parent: parent, parent_key: parent_key }
+             locals: {
+               widget: renderable_widget,
+               parent: parent,
+               parent_key: parent_key,
+               usage_variant: recording_studio_widget_usage_variant_param(widget)
+             }
     end
 
     def recording_studio_widget_frame_id(parent:, parent_key:, widget:)
@@ -29,14 +36,13 @@ module RecordingStudioAdmin
         parent,
         parent_key,
         widget.key,
-        recording_studio_widget_usage_variant_param(widget)
+        recording_studio_widget_identity_param(widget)
       ].join(":"))[0, 16]
       "recording-studio-admin-widget-#{parent}-#{digest}"
     end
 
-    def recording_studio_widget_frame_src(parent:, parent_key:, widget:)
-      query = request.query_parameters.except(:controller, :action, "controller", "action")
-      query[:widget_view_variant] = recording_studio_widget_usage_variant_param(widget)
+    def recording_studio_widget_frame_src(parent:, parent_key:, widget:, usage_variant: nil)
+      query = recording_studio_widget_frame_query(parent: parent, widget: widget, usage_variant: usage_variant)
 
       if parent.to_sym == :section
         section_widget_path(parent_key, widget.key, query)
@@ -47,6 +53,14 @@ module RecordingStudioAdmin
 
     def recording_studio_widget_usage_variant_param(widget)
       widget.view_variant.presence || "__default__"
+    end
+
+    def recording_studio_widget_identity_param(widget)
+      recording_studio_widget_usage_index(widget) || recording_studio_widget_usage_variant_param(widget)
+    end
+
+    def recording_studio_widget_usage_index(widget)
+      widget.metadata[:recording_studio_admin_widget_usage_index] if widget.metadata.respond_to?(:[])
     end
 
     def recording_studio_async_widgets_data
@@ -69,6 +83,15 @@ module RecordingStudioAdmin
     end
 
     private
+
+    def recording_studio_widget_frame_query(parent:, widget:, usage_variant: nil)
+      query = request.query_parameters.except(:controller, :action, "controller", "action")
+      query[:widget_view_variant] = usage_variant || recording_studio_widget_usage_variant_param(widget)
+      usage_index = recording_studio_widget_usage_index(widget)
+      query[:widget_usage_index] = usage_index if usage_index
+      query[:widget_render_variant] = widget.view_variant if parent.to_sym == :screen && widget.view_variant.present?
+      query
+    end
 
     def recording_studio_widget_link_policy
       if respond_to?(:widget_link_url, true)

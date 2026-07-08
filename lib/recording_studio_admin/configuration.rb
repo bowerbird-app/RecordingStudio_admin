@@ -22,6 +22,7 @@ module RecordingStudioAdmin
 
   class Configuration
     DEFAULT_SURFACE_KEY = "default"
+    DEFAULT_ENGINE_LAYOUT = "recording_studio/default_layout"
 
     attr_accessor :authentication_method, :current_actor_method, :access_recording_method,
                   :access_recording_resolver, :site_admin_recording_resolver, :admin_sections_resolver,
@@ -30,7 +31,7 @@ module RecordingStudioAdmin
 
     def initialize
       @default_mount_path = "/admin"
-      @engine_layout = "application"
+      @engine_layout = nil
       @authentication_method = :authenticate_user!
       @current_actor_method = :current_user
       @access_recording_method = :recording_studio_admin_access_recording

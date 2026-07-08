@@ -3,12 +3,14 @@
 require "test_helper"
 
 class RegistryTest < Minitest::Test
+  ExampleWidget = RecordingStudioAdmin::Widget.new("widgets.example.summary") do
+    title "Summary"
+    value { 1 }
+  end
+
   class ExampleScreen < RecordingStudioAdmin::Screen
     key "example"
-    widget :summary do
-      title "Summary"
-      value { 1 }
-    end
+    widget "widgets.example.summary"
   end
 
   class DuplicateScreen < RecordingStudioAdmin::Screen
@@ -17,7 +19,7 @@ class RegistryTest < Minitest::Test
 
   class RootSection < RecordingStudioAdmin::Section
     key "root"
-    widget "example.widgets.summary"
+    widget "widgets.example.summary"
   end
 
   class DuplicateSection < RecordingStudioAdmin::Section
@@ -28,12 +30,12 @@ class RegistryTest < Minitest::Test
     @registry = RecordingStudioAdmin::Registry.new
   end
 
-  def test_register_screen_is_idempotent_and_registers_namespaced_widgets
+  def test_register_screen_is_idempotent_and_does_not_register_widgets
     @registry.register_screen(ExampleScreen)
     @registry.register_screen(ExampleScreen)
 
     assert_equal ExampleScreen, @registry.screen_for("example")
-    assert @registry.widget_for("example.widgets.summary")
+    assert_nil @registry.widget_for("widgets.example.summary")
     assert_equal 1, @registry.screens.size
   end
 
@@ -48,10 +50,7 @@ class RegistryTest < Minitest::Test
   def test_register_screen_replaces_reloaded_definition_with_same_name
     reloaded_screen = Class.new(RecordingStudioAdmin::Screen) do
       key "example"
-      widget :summary do
-        title "Reloaded summary"
-        value { 2 }
-      end
+      widget "widgets.example.summary"
     end
     reloaded_screen.define_singleton_method(:name) { "RegistryTest::ExampleScreen" }
 
@@ -59,8 +58,27 @@ class RegistryTest < Minitest::Test
     @registry.register_screen(reloaded_screen)
 
     assert_equal reloaded_screen, @registry.screen_for("example")
-    assert_equal reloaded_screen.widgets.fetch("example.widgets.summary"),
-                 @registry.widget_for("example.widgets.summary")
+    assert_nil @registry.widget_for("widgets.example.summary")
+  end
+
+  def test_screen_widget_with_block_raises_invalid_definition
+    error = assert_raises(RecordingStudioAdmin::InvalidDefinition) do
+      Class.new(RecordingStudioAdmin::Screen) do
+        key "inline_widget"
+        widget :summary do
+          title "Summary"
+        end
+      end
+    end
+
+    assert_includes error.message, "standalone widgets"
+  end
+
+  def test_register_widget_is_idempotent_for_same_widget
+    @registry.register_widget(ExampleWidget)
+    @registry.register_widget(ExampleWidget)
+
+    assert_equal ExampleWidget, @registry.widget_for("widgets.example.summary")
   end
 
   def test_register_section

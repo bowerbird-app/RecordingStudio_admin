@@ -12,6 +12,11 @@ module AdminScreens
     filter :date_range, field: :created_at, default: :last_30_days
     filter :group_by, values: %i[day week month], default: :day
 
+    widget "widgets.workspace_stats.total_items"
+    widget "widgets.workspace_stats.total_pages"
+    widget "widgets.workspace_stats.total_folders"
+    widget "widgets.workspace_stats.content_activity"
+
     summary do
       label "Workspace items"
       change_good_when :up

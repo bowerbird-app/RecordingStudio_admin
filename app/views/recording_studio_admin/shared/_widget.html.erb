@@ -23,6 +23,7 @@
       <% progress_label = presenter.progress_label %>
       <% progress_variant = presenter.progress_variant %>
       <% compact_metric_value = presenter.compact_metric_value %>
+      <% compact_metric_tooltip_text = presenter.compact_metric_tooltip_text %>
       <% compact_unit_label = presenter.compact_unit_label %>
       <% compact_list_text_summary = presenter.compact_list_text_summary if widget.type == :list %>
       <% mini_chart_type = presenter.mini_chart_type %>
@@ -38,7 +39,16 @@
                 <% if compact_metric_value.present? %>
                   <div class="shrink-0">
                     <p class="flex items-baseline gap-1 leading-none">
-                      <span class="text-4xl font-bold"><%= compact_metric_value %></span>
+                      <% compact_metric_span = capture do %>
+                        <span class="whitespace-nowrap text-4xl font-bold tabular-nums"><%= compact_metric_value %></span>
+                      <% end %>
+                      <% if compact_metric_tooltip_text.present? %>
+                        <%= render FlatPack::Tooltip::Component.new(text: compact_metric_tooltip_text) do %>
+                          <%= compact_metric_span %>
+                        <% end %>
+                      <% else %>
+                        <%= compact_metric_span %>
+                      <% end %>
                       <% if compact_unit_label.present? %>
                         <span class="text-xs text-(--surface-muted-content-color)"><%= compact_unit_label %></span>
                       <% end %>

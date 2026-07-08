@@ -71,13 +71,13 @@ begin
 
   {
     root_recording => {
-      "Analytics" => ["Weekly KPI Dashboard", "Revenue Snapshot"],
-      "Marketing" => ["Campaign Brief", "Launch Checklist"],
-      "Onboarding" => ["Support Runbook", "Welcome Guide"]
+      "Analytics" => [ "Weekly KPI Dashboard", "Revenue Snapshot" ],
+      "Marketing" => [ "Campaign Brief", "Launch Checklist" ],
+      "Onboarding" => [ "Support Runbook", "Welcome Guide" ]
     },
     accessible_root_recording => {
-      "Client Reports" => ["Q1 Summary", "Renewal Notes"],
-      "Operations" => ["Escalation Paths", "Status Update"]
+      "Client Reports" => [ "Q1 Summary", "Renewal Notes" ],
+      "Operations" => [ "Escalation Paths", "Status Update" ]
     }
   }.each_with_index do |(current_root_recording, folders), root_index|
     folders.each_with_index do |(folder_name, page_titles), folder_index|
@@ -269,7 +269,7 @@ admin_audit_templates = [
     user_agent: "DummyAdminSeed/1.0",
     metadata: {
       source: "db/seeds.rb",
-      changed_fields: index.even? ? ["email"] : ["status", "role"],
+      changed_fields: index.even? ? [ "email" ] : [ "status", "role" ],
       note: "Demo audit entry #{index + 1}"
     },
     error_class: (outcome == "failed" ? "StandardError" : nil),

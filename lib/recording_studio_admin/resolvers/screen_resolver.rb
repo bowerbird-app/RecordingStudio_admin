@@ -17,8 +17,8 @@ module RecordingStudioAdmin
         ).call
       end
 
-      def self.resolve_widget(key:, widget_key:, context:, view_variant: nil)
-        new(key, context).resolve_widget(widget_key, view_variant: view_variant)
+      def self.resolve_widget(key:, widget_key:, context:, view_variant: nil, usage_index: nil)
+        new(key, context).resolve_widget(widget_key, view_variant: view_variant, usage_index: usage_index)
       end
 
       def initialize(key, context, resolve_widgets: true, resolve_summary: true, resolve_chart: true,
@@ -74,19 +74,22 @@ module RecordingStudioAdmin
         )
       end
 
-      def resolve_widget(widget_key, view_variant: nil)
+      def resolve_widget(widget_key, view_variant: nil, usage_index: nil)
         definition = authorized_definition
         build_query_state(definition, resolve_query_count: true)
-        widget = definition.widgets.values.find { |candidate| candidate.key == widget_key.to_s }
-        unless widget
+        widget_usage = resolve_widget_usage_entry(
+          definition,
+          widget_key: widget_key,
+          view_variant: view_variant,
+          usage_index: usage_index
+        )
+        unless widget_usage
           raise DefinitionNotFound,
-                "Widget #{widget_key.inspect} is not registered for screen #{@key.inspect}"
+                "Widget #{widget_key.inspect} is not referenced by screen #{@key.inspect}"
         end
 
-        resolved_widget = resolve_screen_widget(definition, widget)
-        raise DefinitionNotFound, "Widget #{widget_key.inspect} is not available" unless resolved_widget
-
-        apply_view_variant(resolved_widget, view_variant)
+        resolve_screen_widget(definition, widget_usage, usage_index: usage_index) ||
+          raise(DefinitionNotFound, "Widget #{widget_key.inspect} is not available")
       end
 
       private
@@ -192,53 +195,72 @@ module RecordingStudioAdmin
         end
 
         export_config = screen_definition&.export_config
+        table_title = definition.title_value || "Table data"
+        table_show_heading = definition.show_table_heading?
 
         Results::ResolvedTable.new(visible_columns, table_filters.map do |entry|
           resolved_filter(entry)
         end, table_result.rows, actions, table_result, definition.columns, selected_column_keys,
-                                   definition.export_key, definition.export_options, export_config)
+                                   definition.export_key, definition.export_options, export_config,
+                                   table_show_heading ? table_title : nil,
+                                   definition.show_columns_button?, definition.show_count?)
       end
 
-      def resolve_screen_widget(screen_definition, widget)
-        return unless RecordingStudioAdmin::BlastRadius.allowed?(widget, context: @context,
-                                                                         container: screen_definition)
+      def resolve_screen_widget(screen_definition, widget_usage, usage_index: nil)
+        widget_definition = RecordingStudioAdmin.widget_for(widget_usage.key)
+        return unless widget_definition
 
-        widget.resolve(@context)
+        widget_radius = widget_usage.effective_blast_radius(widget_definition)
+        return unless RecordingStudioAdmin::BlastRadius.allowed?(widget_radius, context: @context,
+                                                                                container: screen_definition)
+
+        widget_context = build_widget_context(screen_definition, widget_usage)
+        widget = RecordingStudioAdmin.resolve_widget(key: widget_usage.key, context: widget_context)
+        apply_usage_overrides(screen_definition, widget_usage, widget_context, widget, usage_index: usage_index)
       end
 
       def resolve_screen_widgets(definition)
-        definition.widgets.values.filter_map do |widget|
+        definition.widget_usages.each_with_index.filter_map do |widget_usage, index|
           if @resolve_widgets
-            resolve_screen_widget(definition, widget)
+            resolve_screen_widget(definition, widget_usage, usage_index: index)
           else
-            placeholder_widget(definition, widget)
+            placeholder_widget(definition, widget_usage, usage_index: index)
           end
         end
       end
 
-      def placeholder_widget(screen_definition, widget)
-        return unless RecordingStudioAdmin::BlastRadius.allowed?(widget, context: @context,
-                                                                         container: screen_definition)
+      def placeholder_widget(screen_definition, widget_usage, usage_index: nil)
+        widget_definition = RecordingStudioAdmin.widget_for(widget_usage.key)
+        return unless widget_definition
 
+        widget_radius = widget_usage.effective_blast_radius(widget_definition)
+        return unless RecordingStudioAdmin::BlastRadius.allowed?(widget_radius, context: @context,
+                                                                                container: screen_definition)
+
+        widget_context = build_widget_context(screen_definition, widget_usage)
+        chart_type = resolve_usage_value(screen_definition, widget_usage.chart_type, widget_context) ||
+                     widget_definition.send(:evaluate, widget_definition.chart_type, widget_context)
         Results::ResolvedWidget.new(
-          key: widget.key,
-          type: widget.send(:evaluate, widget.type, @context).to_s.downcase.to_sym,
-          title: widget.send(:evaluate, widget.title, @context),
-          subtitle: widget.send(:evaluate, widget.subtitle, @context),
-          description: widget.send(:evaluate, widget.description, @context),
+          key: widget_definition.key,
+          type: widget_definition.send(:evaluate, widget_definition.type, widget_context).to_s.downcase.to_sym,
+          title: resolve_usage_value(screen_definition, widget_usage.title,
+                                     widget_context) || widget_definition.send(:evaluate, widget_definition.title,
+                                                                               widget_context),
+          subtitle: widget_definition.send(:evaluate, widget_definition.subtitle, widget_context),
+          description: widget_definition.send(:evaluate, widget_definition.description, widget_context),
           value: nil,
           change: nil,
           change_good_when: :neutral,
           link_to: nil,
-          link_label: widget.send(:evaluate, widget.link_label, @context),
+          link_label: widget_definition.send(:evaluate, widget_definition.link_label, widget_context),
           series: nil,
-          chart_type: widget.send(:evaluate, widget.chart_type, @context),
+          chart_type: chart_type,
           chart_options: {},
           list_options: {},
           items: nil,
           rows: nil,
-          metadata: {},
-          view_variant: nil,
+          metadata: usage_metadata(usage_index),
+          view_variant: widget_usage.view_variant,
           show_metric: false,
           show_change: false,
           show_period: false
@@ -308,19 +330,6 @@ module RecordingStudioAdmin
         return "0%" if value.to_f.zero?
 
         format("%+.1f%%", value.to_f).sub(".0%", "%")
-      end
-
-      def apply_view_variant(widget, view_variant)
-        normalized_variant = normalize_widget_view_variant(view_variant)
-        return widget if normalized_variant.nil?
-
-        widget.with(view_variant: normalized_variant)
-      end
-
-      def normalize_widget_view_variant(value)
-        return nil if value.blank? || value.to_s == "__default__"
-
-        RecordingStudioAdmin::Section.normalize_view_variant(value)
       end
 
       def normalize_change_good_when(value)
@@ -444,6 +453,100 @@ module RecordingStudioAdmin
 
       def evaluate(value)
         value.respond_to?(:call) ? value.call(@context) : value
+      end
+
+      def resolve_widget_usage_entry(definition, widget_key:, view_variant:, usage_index: nil)
+        target_key = widget_key.to_s
+        has_variant_selector = view_variant.present?
+        normalized_variant = has_variant_selector ? normalize_widget_usage_variant(view_variant) : nil
+        indexed_usage = widget_usage_at(definition, usage_index)
+        if indexed_usage_matches?(indexed_usage, target_key, has_variant_selector, normalized_variant)
+          return indexed_usage
+        end
+        return if usage_index.present?
+
+        definition.widget_usages.find do |usage|
+          next false unless usage.key == target_key
+          next true unless has_variant_selector
+
+          usage.view_variant == normalized_variant
+        end
+      end
+
+      def normalize_widget_usage_variant(value)
+        return nil if value.to_s == "__default__"
+
+        RecordingStudioAdmin::Section.normalize_view_variant(value)
+      end
+
+      def build_widget_context(definition, widget_usage)
+        widget_params = resolve_usage_hash(definition, widget_usage.params, @context, field_name: :params)
+        return @context if widget_params.empty?
+
+        @context.with_widget_params(widget_params)
+      end
+
+      def apply_usage_overrides(definition, widget_usage, widget_context, widget, usage_index: nil)
+        overrides = {
+          view_variant: widget_usage.view_variant,
+          title: resolve_usage_value(definition, widget_usage.title, widget_context),
+          chart_type: resolve_usage_value(definition, widget_usage.chart_type, widget_context),
+          link_label: widget.link_label || screen_link_label(definition, widget),
+          metadata: widget.metadata.merge(usage_metadata(usage_index))
+        }.compact
+
+        chart_options = resolve_usage_hash(definition, widget_usage.chart_options, widget_context,
+                                           field_name: :chart_options)
+        overrides[:chart_options] = (widget.chart_options || {}).deep_merge(chart_options) if chart_options.any?
+
+        if widget_usage.link_to
+          overrides[:link_to] = RecordingStudioAdmin::UrlSafety.safe_href(
+            resolve_usage_value(definition, widget_usage.link_to, widget_context)
+          )
+        end
+
+        overrides.empty? ? widget : widget.with(**overrides)
+      end
+
+      def screen_link_label(definition, widget)
+        return if widget.link_to.blank?
+
+        definition.evaluate(definition.title, @context)
+      end
+
+      def resolve_usage_value(definition, value, context)
+        definition.evaluate(value, context)
+      end
+
+      def resolve_usage_hash(definition, value, context, field_name:)
+        resolved = resolve_usage_value(definition, value, context)
+        return {} if resolved.nil?
+        return resolved.to_h.deep_symbolize_keys if resolved.respond_to?(:to_h)
+
+        raise InvalidDefinition, "Screen widget #{field_name} must resolve to a Hash"
+      end
+
+      def widget_usage_at(definition, usage_index)
+        return if usage_index.blank?
+
+        index = Integer(usage_index, exception: false)
+        return if index.nil? || index.negative?
+
+        definition.widget_usages[index]
+      end
+
+      def indexed_usage_matches?(usage, target_key, has_variant_selector, normalized_variant)
+        return false unless usage&.key == target_key
+        return true unless has_variant_selector
+
+        usage.view_variant == normalized_variant
+      end
+
+      def usage_metadata(usage_index)
+        index = Integer(usage_index, exception: false)
+        return {} if index.nil?
+
+        { recording_studio_admin_widget_usage_index: index }
       end
 
       def visible?(definition)

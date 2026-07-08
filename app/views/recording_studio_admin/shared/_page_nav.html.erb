@@ -1,0 +1,22 @@
+<% page_nav_options = {
+     back_icon: content_for(:page_nav_back_icon).presence || "chevron-left",
+     back_label: content_for(:page_nav_back_label).presence || "Go back",
+     back_style: (content_for(:page_nav_back_style).presence || "secondary").to_s.to_sym,
+     back_size: (content_for(:page_nav_back_size).presence || "md").to_s.to_sym,
+     anchor_icon: content_for(:page_nav_anchor_icon).presence || "x-mark",
+     anchor_label: content_for(:page_nav_anchor_label).presence || "Close"
+   } %>
+<% back_url = content_for(:page_nav_back_url).presence %>
+<% anchor_url = content_for(:page_nav_anchor_url).presence %>
+<% page_nav_options[:back_url] = back_url if back_url.present? %>
+<% page_nav_options[:anchor_url] = anchor_url if anchor_url.present? %>
+
+<% if content_for?(:page_nav_right) %>
+  <%= render FlatPack::PageNav::Component.new(**page_nav_options, class: "mb-4") do |page_nav| %>
+    <% page_nav.right_slot do %>
+      <%= yield :page_nav_right %>
+    <% end %>
+  <% end %>
+<% else %>
+  <%= render FlatPack::PageNav::Component.new(**page_nav_options, class: "mb-4") %>
+<% end %>

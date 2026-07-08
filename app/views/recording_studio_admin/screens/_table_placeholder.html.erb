@@ -17,11 +17,15 @@
 <div data-controller="recording-studio-admin--screen-filters">
   <div class="mb-4 flex items-center justify-between gap-3">
     <div>
-      <h3 class="text-lg font-semibold text-(--surface-content-color)">Table data</h3>
-      <%= turbo_frame_tag "screen-table-count" do %>
-        <div class="mt-1">
-          <%= render FlatPack::Skeleton::Component.new(variant: :text, width: "4rem", shimmer: true) %>
-        </div>
+      <% if screen.table.title %>
+        <h3 class="text-lg font-semibold text-(--surface-content-color)"><%= screen.table.title %></h3>
+      <% end %>
+      <% if screen.table.show_count %>
+        <%= turbo_frame_tag "screen-table-count" do %>
+          <div class="mt-1">
+            <%= render FlatPack::Skeleton::Component.new(variant: :text, width: "4rem", shimmer: true) %>
+          </div>
+        <% end %>
       <% end %>
     </div>
   </div>

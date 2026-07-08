@@ -15,7 +15,7 @@ class AdminApiRequestsExport
       KEY,
       label: "API requests",
       description: "Exports API request rows from the admin table.",
-      context_types: ["AdminRoot"],
+      context_types: [ "AdminRoot" ],
       context_key: "api_requests",
       columns: COLUMNS,
       default_columns: %i[created_at method status path],

@@ -3,7 +3,7 @@
 class Admin::BaseController < ApplicationController
   include RecordingStudioAdmin::AdminActionAuditing
 
-  layout "admin"
+  include RecordingStudio::UsesDefaultLayout
 
   skip_before_action :authorize_dummy_page_access!
 

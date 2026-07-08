@@ -1,16 +1,19 @@
-<%= render FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url(default: RecordingStudioAdmin.configuration.default_mount_path), class: "mb-4") %>
-
-<%= render FlatPack::PageTitle::Component.new(title: @screen.title, subtitle: @screen.subtitle) do |page_title| %>
-  <% if @screen.buttons.any? %>
-    <% page_title.slot do %>
-      <%= render FlatPack::ButtonGroup::Component.new do |group| %>
-        <% @screen.buttons.each do |button| %>
-          <% group.button(render(FlatPack::Button::Component.new(text: button.text, href: button.url, style: button.style))) %>
-        <% end %>
+<% recording_studio_page_nav(
+     title: @screen.title,
+     page_nav_anchor_url: page_nav_anchor_url(default: RecordingStudioAdmin.configuration.default_mount_path)
+   ) %>
+<% if @screen.buttons.any? %>
+  <% recording_studio_page_nav_right do %>
+    <%= render FlatPack::ButtonGroup::Component.new do |group| %>
+      <% @screen.buttons.each do |button| %>
+        <% group.button(render(FlatPack::Button::Component.new(text: button.text, href: button.url, style: button.style))) %>
       <% end %>
     <% end %>
   <% end %>
 <% end %>
+<%= render "recording_studio_admin/shared/page_nav" unless recording_studio_admin_default_layout? %>
+
+<%= render FlatPack::PageTitle::Component.new(title: @screen.title, subtitle: @screen.subtitle) %>
 
 <% if @screen.widgets.any? %>
   <% if RecordingStudioAdmin.configuration.async_widgets.enabled %>
@@ -19,10 +22,10 @@
          data-recording-studio-admin--async-widgets-retry-count-value="<%= RecordingStudioAdmin.configuration.async_widgets.retry_count %>">
   <% end %>
 
-    <%= render FlatPack::Grid::Component.new(cols: :auto, gap: :md, class: "mb-6") do %>
+    <%= render FlatPack::Grid::Component.new(cols: 3, gap: :md, class: "mb-6") do %>
       <% @screen.widgets.each do |widget| %>
         <% if RecordingStudioAdmin.configuration.async_widgets.enabled %>
-          <%= render_recording_studio_async_widget_frame(widget.with(view_variant: :compact), parent: :screen, parent_key: @screen.key) %>
+          <%= render_recording_studio_async_widget_frame(widget, parent: :screen, parent_key: @screen.key, variant: :compact) %>
         <% else %>
           <%= render_recording_studio_widget(widget, variant: :compact) %>
         <% end %>
@@ -111,4 +114,3 @@
     <%= render "table_placeholder", screen: @screen %>
   <% end %>
 <% end %>
-

@@ -7,6 +7,7 @@ module RecordingStudioAdmin
         key: params[:section_key],
         widget_key: params[:widget_key],
         view_variant: params[:widget_view_variant],
+        usage_index: params[:widget_usage_index],
         context: recording_studio_admin_context
       )
 

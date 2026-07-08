@@ -81,6 +81,33 @@ class WidgetPresenterTest < Minitest::Test
     assert_equal "Grace", presenter.list_item_avatar_name(presenter.compact_list_visual_items.last)
   end
 
+  def test_compact_metric_value_shortens_large_numbers_with_exact_tooltip
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(value: 23_635.64)
+    )
+
+    assert_equal "23.6K", presenter.compact_metric_value
+    assert_equal "23,635.64", presenter.compact_metric_tooltip_text
+  end
+
+  def test_compact_metric_value_leaves_small_numbers_without_tooltip
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(value: 999)
+    )
+
+    assert_equal 999, presenter.compact_metric_value
+    assert_nil presenter.compact_metric_tooltip_text
+  end
+
+  def test_compact_metric_value_leaves_nonnumeric_values_without_tooltip
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(value: "pending")
+    )
+
+    assert_equal "pending", presenter.compact_metric_value
+    assert_nil presenter.compact_metric_tooltip_text
+  end
+
   def test_builds_mini_chart_options_without_overwriting_custom_options
     presenter = RecordingStudioAdmin::Widgets::Presenter.new(
       resolved_widget(chart_options: { chart: { height: 96 }, colors: ["#123456"] })
@@ -151,19 +178,58 @@ class WidgetPresenterTest < Minitest::Test
 
   def test_helper_builds_async_widget_frame_src_from_current_query
     view = FakeWidgetView.new
-    widget = resolved_widget(key: "users.widgets.total")
+    widget = resolved_widget(key: "widgets.users.total")
 
-    assert_equal "/admin/sections/users/widgets/users.widgets.total?anchor_url=%2Froot&widget_view_variant=compact",
+    assert_equal "/admin/sections/users/widgets/widgets.users.total?anchor_url=%2Froot&widget_view_variant=compact",
                  view.recording_studio_widget_frame_src(parent: :section, parent_key: "users", widget: widget)
-    assert_equal ["users", "users.widgets.total", { "anchor_url" => "/root", widget_view_variant: :compact }],
+    assert_equal ["users", "widgets.users.total", { "anchor_url" => "/root", widget_view_variant: :compact }],
                  view.section_widget_path_args
+  end
+
+  def test_helper_builds_screen_async_frame_src_with_separate_usage_and_render_variants
+    view = FakeWidgetView.new
+    widget = resolved_widget(
+      key: "widgets.users.total",
+      metadata: { recording_studio_admin_widget_usage_index: 0 }
+    )
+    expected_src = "/admin/screens/users/widgets/widgets.users.total?" \
+                   "anchor_url=%2Froot&widget_render_variant=compact&" \
+                   "widget_usage_index=0&widget_view_variant=__default__"
+
+    assert_equal expected_src, view.recording_studio_widget_frame_src(
+      parent: :screen,
+      parent_key: "users",
+      widget: widget,
+      usage_variant: "__default__"
+    )
+    assert_equal [
+      "users",
+      "widgets.users.total",
+      {
+        "anchor_url" => "/root",
+        widget_view_variant: "__default__",
+        widget_usage_index: 0,
+        widget_render_variant: :compact
+      }
+    ], view.screen_widget_path_args
+  end
+
+  def test_helper_uses_usage_index_for_distinct_frame_ids
+    view = FakeWidgetView.new
+    first = resolved_widget(metadata: { recording_studio_admin_widget_usage_index: 0 })
+    second = resolved_widget(metadata: { recording_studio_admin_widget_usage_index: 1 })
+
+    refute_equal(
+      view.recording_studio_widget_frame_id(parent: :screen, parent_key: "users", widget: first),
+      view.recording_studio_widget_frame_id(parent: :screen, parent_key: "users", widget: second)
+    )
   end
 
   private
 
   def resolved_widget(**overrides)
     defaults = {
-      key: "activity.widgets.total",
+      key: "widgets.activity.total",
       type: :chart,
       title: "Activity",
       subtitle: "Recent activity",
@@ -192,7 +258,7 @@ class WidgetPresenterTest < Minitest::Test
   class FakeWidgetView
     include RecordingStudioAdmin::WidgetRenderingHelper
 
-    attr_reader :rendered_partial, :rendered_locals, :section_widget_path_args
+    attr_reader :rendered_partial, :rendered_locals, :section_widget_path_args, :screen_widget_path_args
 
     def render(partial:, locals:)
       @rendered_partial = partial
@@ -210,6 +276,7 @@ class WidgetPresenterTest < Minitest::Test
     end
 
     def screen_widget_path(parent_key, widget_key, query)
+      @screen_widget_path_args = [parent_key, widget_key, query]
       "/admin/screens/#{parent_key}/widgets/#{widget_key}?#{query.to_query}"
     end
   end

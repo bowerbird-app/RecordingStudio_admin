@@ -25,6 +25,30 @@ module AdminScreens
     UsersArea
     UsersResource
     UsersSection
+    ApiErrorsRecentFailuresWidget
+    ApiRequestsApiActivityWidget
+    ApiRequestsApiActivityColumnWidget
+    ApiRequestsApiActivityDonutWidget
+    ApiRequestsApiActivityGaugeWidget
+    ApiRequestsApiActivityRadarWidget
+    ApiRequestsMonthlyApiUsageWidget
+    MostCommonErrorsErrorDistributionChartWidget
+    BackgroundJobsJobThroughputWidget
+    WorkspaceStatsContentActivityWidget
+    WorkspaceStatsTotalFoldersWidget
+    WorkspaceStatsTotalItemsWidget
+    WorkspaceStatsTotalPagesWidget
+    UserActivityActiveUsersWidget
+    UserActivityMostRecentUsersWidget
+    UserActivityReviewCompletionWidget
+    UserActivityTotalActivitiesWidget
+    UserGeographyActivityGeoMapWidget
+    UserInvitationsRecentInvitesWidget
+    UserReviewsReviewVolumeWidget
+    UserSignInsSignInActivityWidget
+    UsersActiveUsersWidget
+    UsersMostRecentUsersWidget
+    UsersReviewCompletionWidget
   ].freeze unless const_defined?(:RELOADABLE_CONSTANTS, false)
 
   DEFINITION_FILES = %w[

@@ -13,9 +13,9 @@ module AdminScreens
          url: ->(context) { context.admin_screen_path("background_jobs") },
          style: :secondary
 
-    widget "background_jobs.widgets.job_throughput",
+    widget "widgets.background_jobs.job_throughput",
            view_variant: :compact,
            params: { preset_key: :this_week }
-    widget "background_jobs.widgets.job_throughput", params: { preset_key: :this_week }
+    widget "widgets.background_jobs.job_throughput", params: { preset_key: :this_week }
   end
 end

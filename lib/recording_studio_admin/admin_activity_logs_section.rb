@@ -13,7 +13,7 @@ module RecordingStudioAdmin
          url: ->(context) { context.admin_screen_path("admin_activity_logs") },
          style: :secondary
 
-    widget "admin_activity_logs.widgets.activity_overview",
+    widget "widgets.admin_activity_logs.activity_overview",
            view_variant: :compact,
            params: { preset_key: :this_week }
   end
