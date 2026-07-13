@@ -162,8 +162,10 @@ export default class extends Controller {
         pickerRoot.dataset.flatPackFlatpackDatePickerPresetKeyValue = presetKey
       }
     })
-      this.refreshTableFrame()
 
+    if (this.element instanceof HTMLFormElement) {
+      this.refreshTableFrame()
+    }
   }
 
   scheduleViewportCleanup() {

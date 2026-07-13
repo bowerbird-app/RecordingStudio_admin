@@ -647,6 +647,19 @@ class ResolverTest < Minitest::Test
     RequestsScreen.instance_variable_set(:@filter_presentation_value, original_presentation)
   end
 
+  def test_screen_filter_presentation_stays_inline_with_two_filters
+    original_filters = HiddenSummaryScreen.filters.dup
+    HiddenSummaryScreen.filter :group_by, default: :day
+
+    result = with_access_allowed do
+      RecordingStudioAdmin.resolve_screen(key: "hidden_summary", context: allowed_context)
+    end
+
+    assert_equal :inline, result.filter_presentation
+  ensure
+    HiddenSummaryScreen.instance_variable_set(:@filters_value, original_filters)
+  end
+
   def test_screen_filter_presentation_rejects_unknown_values
     error = assert_raises(RecordingStudioAdmin::InvalidDefinition) do
       RequestsScreen.filter_presentation :drawer

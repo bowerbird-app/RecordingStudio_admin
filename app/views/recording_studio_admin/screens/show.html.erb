@@ -88,9 +88,9 @@
       turbo_frame: "screen-chart",
       recording_studio_admin_screen_filters_modal_filters_value: modal_filters,
       action: [
-        "change->recording-studio-admin--screen-filters#showTableSkeletons",
+        ("change->recording-studio-admin--screen-filters#showTableSkeletons" unless modal_filters),
         ("change->flat-pack--auto-submit#queueSubmit" unless modal_filters),
-        "input->recording-studio-admin--screen-filters#showTableSkeletons",
+        ("input->recording-studio-admin--screen-filters#showTableSkeletons" unless modal_filters),
         ("input->flat-pack--auto-submit#queueSubmit" unless modal_filters),
         "submit->recording-studio-admin--screen-filters#showTableSkeletons",
         "submit->recording-studio-admin--screen-filters#refreshTableFrame",

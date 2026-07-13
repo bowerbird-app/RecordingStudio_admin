@@ -622,7 +622,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "flat-pack--auto-submit"
     assert_includes response.body, "recording-studio-admin--screen-filters"
     assert_includes response.body, 'data-turbo-frame="screen-chart"'
-    assert_includes response.body, "change-&gt;recording-studio-admin--screen-filters#showTableSkeletons"
+    refute_includes response.body, "change-&gt;recording-studio-admin--screen-filters#showTableSkeletons"
     assert_includes response.body, "submit-&gt;recording-studio-admin--screen-filters#showTableSkeletons"
     assert_includes response.body, "click-&gt;recording-studio-admin--screen-filters#queueDateRangeSubmit"
     assert_includes response.body, 'id="screen-chart" src="/admin/screens/api_requests/chart?anchor_url='
@@ -732,6 +732,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'name="columns_present"'
     assert_includes response.body, "flat-pack--tooltip"
     refute_includes response.body, 'title="0ms total request time"'
+    assert_includes response.body, "Total request time in milliseconds"
 
     get "/admin/screens/api_requests", params: {
       columns_present: "1"

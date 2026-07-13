@@ -20,7 +20,10 @@ module AdminScreens
         }
       end
       column :path
-      column :latency_ms, title: "Latency", tooltip: ->(row, _context) { "#{row.latency_ms}ms total request time" }
+      column :latency_ms,
+             title: "Latency",
+             tooltip: ->(row, _context) { "#{row.latency_ms}ms total request time" },
+             header_tooltip: "Total request time in milliseconds"
       default_columns :created_at, :method, :status, :path
       action :filter_path,
         text: "Filter path",
