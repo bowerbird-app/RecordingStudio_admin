@@ -70,6 +70,7 @@ module RecordingStudioAdmin
       :subtitle,
       :buttons,
       :filters,
+      :filter_presentation,
       :query_result,
       :summary,
       :chart,

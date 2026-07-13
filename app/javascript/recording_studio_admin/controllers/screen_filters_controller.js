@@ -3,6 +3,8 @@ import { Controller } from "@hotwired/stimulus"
 const SCREEN_FRAME_IDS = new Set(["screen-chart", "screen-table"])
 
 export default class extends Controller {
+  static values = { modalFilters: Boolean }
+
   connect() {
     this.boundDocumentClick = this.queueDateRangeSubmit.bind(this)
     this.boundTurboFrameLoad = this.handleTurboFrameLoad.bind(this)
@@ -83,6 +85,10 @@ export default class extends Controller {
   }
 
   queueDateRangeSubmit(event) {
+    if (this.modalFiltersValue) {
+      return
+    }
+
     const applyButton = event.target.closest("[data-flat-pack-date-picker-command='apply']")
     if (!applyButton) {
       return

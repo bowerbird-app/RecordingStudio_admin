@@ -39,6 +39,9 @@
 
 <% if @screen.filters.any? %>
   <% base_query = request.query_parameters.symbolize_keys.except(:page) %>
+  <% modal_filters = @screen.filter_presentation == :modal %>
+  <% filters_modal_id = "screen-filters-modal" %>
+  <% filters_form_id = "screen-filters-form" %>
   <% filter_param_keys = @screen.filters.flat_map do |filter|
        if filter.type == :date_range
          [filter.start_param, filter.end_param, filter.preset_param]
@@ -47,11 +50,54 @@
        end
      end.map(&:to_sym) %>
   <% hidden_query = base_query.except(*filter_param_keys) %>
-  <%= form_with url: request.path, method: :get, id: "screen-filters-form", data: {
-    controller: "flat-pack--auto-submit recording-studio-admin--screen-filters",
-    turbo_frame: "screen-chart",
-    action: "change->recording-studio-admin--screen-filters#showTableSkeletons change->flat-pack--auto-submit#queueSubmit input->recording-studio-admin--screen-filters#showTableSkeletons input->flat-pack--auto-submit#queueSubmit submit->recording-studio-admin--screen-filters#showTableSkeletons submit->recording-studio-admin--screen-filters#refreshTableFrame click->recording-studio-admin--screen-filters#queueDateRangeSubmit"
-  } do %>
+  <% filter_fields = capture do %>
+    <% @screen.filters.each do |filter| %>
+     <div class="min-w-64 flex-none">
+       <% if filter.type == :date_range %>
+         <%= render FlatPack::DateRangeInput::Component.new(
+           start_name: filter.start_param,
+           end_name: filter.end_param,
+           start_value: filter.value&.start_date,
+           end_value: filter.value&.end_date
+         ) %>
+         <%= hidden_field_tag filter.preset_param, filter.value&.preset_key %>
+       <% else %>
+         <% select_options = Array(filter.options[:values] || filter.options[:options]).map { |value| { label: value.to_s.humanize, value: value } } %>
+         <% select_search_options = filter.options.slice(:searchable, :search_mode, :search_param, :search_endpoint).compact %>
+         <% if select_options.any? %>
+           <%= render FlatPack::Select::Component.new(
+             name: filter.param_key,
+             options: select_options,
+             value: filter.value,
+             placeholder: "All",
+             **select_search_options
+           ) %>
+         <% else %>
+           <%= render FlatPack::SearchInput::Component.new(
+             name: filter.param_key,
+             value: filter.value,
+             placeholder: filter.key.to_s.humanize
+           ) %>
+         <% end %>
+       <% end %>
+     </div>
+    <% end %>
+  <% end %>
+  <% filter_form_data = {
+      controller: [("flat-pack--auto-submit" unless modal_filters), "recording-studio-admin--screen-filters"].compact.join(" "),
+      turbo_frame: "screen-chart",
+      recording_studio_admin_screen_filters_modal_filters_value: modal_filters,
+      action: [
+        "change->recording-studio-admin--screen-filters#showTableSkeletons",
+        ("change->flat-pack--auto-submit#queueSubmit" unless modal_filters),
+        "input->recording-studio-admin--screen-filters#showTableSkeletons",
+        ("input->flat-pack--auto-submit#queueSubmit" unless modal_filters),
+        "submit->recording-studio-admin--screen-filters#showTableSkeletons",
+        "submit->recording-studio-admin--screen-filters#refreshTableFrame",
+        "click->recording-studio-admin--screen-filters#queueDateRangeSubmit"
+      ].compact.join(" ")
+     } %>
+  <%= form_with url: request.path, method: :get, id: filters_form_id, data: filter_form_data do %>
     <% hidden_query.each do |key, value| %>
       <% if value.is_a?(Array) %>
         <% value.each do |entry| %>
@@ -62,37 +108,38 @@
       <% end %>
     <% end %>
 
-    <div class="mb-6 flex flex-wrap items-start gap-4">
-      <% @screen.filters.each do |filter| %>
-        <div class="min-w-64 flex-none">
-          <% if filter.type == :date_range %>
-            <%= render FlatPack::DateRangeInput::Component.new(
-              start_name: filter.start_param,
-              end_name: filter.end_param,
-              start_value: filter.value&.start_date,
-              end_value: filter.value&.end_date
-            ) %>
-            <%= hidden_field_tag filter.preset_param, filter.value&.preset_key %>
-          <% else %>
-            <% select_options = Array(filter.options[:values] || filter.options[:options]).map { |value| { label: value.to_s.humanize, value: value } } %>
-            <% if select_options.any? %>
-              <%= render FlatPack::Select::Component.new(
-                name: filter.param_key,
-                options: select_options,
-                value: filter.value,
-                placeholder: "All"
-              ) %>
-            <% else %>
-              <%= render FlatPack::SearchInput::Component.new(
-                name: filter.param_key,
-                value: filter.value,
-                placeholder: filter.key.to_s.humanize
-              ) %>
-            <% end %>
-          <% end %>
-        </div>
+    <% if modal_filters %>
+      <div class="mb-6">
+        <%= render FlatPack::Button::Component.new(
+          text: "Filters",
+          icon: "funnel",
+          style: :secondary,
+          size: :md,
+          data: { modal_id: filters_modal_id }
+        ) %>
+      </div>
+      <%= render FlatPack::Modal::Component.new(id: filters_modal_id, title: "Filters", size: :md) do |modal| %>
+        <% modal.body do %>
+          <div class="flex flex-wrap items-start gap-4">
+            <%= filter_fields %>
+          </div>
+        <% end %>
+        <% modal.footer do %>
+          <%= render FlatPack::Button::Component.new(
+            text: "Apply",
+            style: :primary,
+            size: :md,
+            type: "submit",
+            form: filters_form_id,
+            data: { action: "click->flat-pack--modal#close" }
+          ) %>
+        <% end %>
       <% end %>
-    </div>
+    <% else %>
+      <div class="mb-6 flex flex-wrap items-start gap-4">
+        <%= filter_fields %>
+      </div>
+    <% end %>
   <% end %>
 <% end %>
 

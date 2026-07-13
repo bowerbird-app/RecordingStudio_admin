@@ -64,6 +64,7 @@ module RecordingStudioAdmin
           subtitle: definition.evaluate(definition.subtitle, @context),
           buttons: definition.buttons_value.filter_map { |button| button.resolve(@context) },
           filters: filters.map { |entry| resolved_filter(entry) },
+          filter_presentation: resolve_filter_presentation(definition, filters),
           query_result: query_result,
           summary: summary,
           chart: (@resolve_chart ? resolve_chart(definition.chart_value) : nil),
@@ -155,6 +156,13 @@ module RecordingStudioAdmin
           definition.options.fetch(:end_param, :end_date).to_sym,
           definition.options.fetch(:preset_param, :date_range_preset).to_sym
         )
+      end
+
+      def resolve_filter_presentation(definition, filters)
+        presentation = definition.filter_presentation
+        return presentation unless presentation == :auto
+
+        filters.size >= 3 ? :modal : :inline
       end
 
       def resolve_chart(definition)

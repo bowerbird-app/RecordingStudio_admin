@@ -628,8 +628,12 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'id="screen-chart" src="/admin/screens/api_requests/chart?anchor_url='
     assert_includes response.body, 'id="screen-filters-form"'
     assert_includes response.body, 'name="search"'
-    assert_includes response.body, "flex flex-wrap items-start gap-4"
-    assert_includes response.body, "min-w-64 flex-none"
+    assert_includes response.body, 'data-modal-id="screen-filters-modal"'
+    assert_includes response.body, 'id="screen-filters-modal"'
+    assert_includes response.body, "Filters"
+    assert_includes response.body, "Apply"
+    assert_includes response.body, "data-recording-studio-admin-screen-filters-modal-filters-value"
+    assert_includes response.body, "searchable"
     assert_includes response.body, "Monthly API usage"
     assert_includes response.body, "/admin/screens/api_requests/widgets/widgets.api_requests.monthly_api_usage"
     assert_includes response.body, 'id="screen-table" src="/admin/screens/api_requests/table?anchor_url='
@@ -726,6 +730,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     refute_includes selected_headers, "Path"
     assert_includes response.body, "Reset"
     assert_includes response.body, 'name="columns_present"'
+    assert_includes response.body, "flat-pack--tooltip"
+    refute_includes response.body, 'title="0ms total request time"'
 
     get "/admin/screens/api_requests", params: {
       columns_present: "1"

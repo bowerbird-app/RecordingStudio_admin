@@ -4,7 +4,7 @@ module RecordingStudioAdmin
   class Screen < Definitions::Base
     class << self
       attr_reader :query_value, :filters_value, :chart_value, :table_value, :widget_usages_value, :summary_value,
-                  :availability_scope_value, :export_config_value
+                  :availability_scope_value, :export_config_value, :filter_presentation_value
 
       def inherited(subclass)
         super
@@ -23,6 +23,11 @@ module RecordingStudioAdmin
       def filter(name, **options)
         type = builtin_filter_type(name)
         @filters_value << Definitions::FilterDefinition.new(name.to_sym, type, options)
+      end
+
+      def filter_presentation(value = nil)
+        @filter_presentation_value = normalize_filter_presentation(value) unless value.nil?
+        @filter_presentation_value || :auto
       end
 
       def chart(&block)
@@ -105,6 +110,13 @@ module RecordingStudioAdmin
         return normalized if SECTION_AVAILABILITY_SCOPES.include?(normalized)
 
         raise InvalidDefinition, "Screen availability_scope has unsupported value #{value.inspect}"
+      end
+
+      def normalize_filter_presentation(value)
+        normalized = value.to_s.downcase.to_sym
+        return normalized if %i[auto inline modal].include?(normalized)
+
+        raise InvalidDefinition, "Screen filter_presentation has unsupported value #{value.inspect}"
       end
 
       def builtin_filter_type(name)

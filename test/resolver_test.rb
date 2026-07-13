@@ -155,7 +155,7 @@ class ResolverTest < Minitest::Test
     end
     filter :date_range, field: :created_at, default: :last_30_days
     filter :group_by, default: :day
-    filter :state, options: -> { %w[open closed] }
+    filter :state, options: -> { %w[open closed] }, searchable: true, search_mode: :local
 
     summary do
       label "Total requests"
@@ -535,6 +535,7 @@ class ResolverTest < Minitest::Test
     assert_equal %w[name status], result.table.selected_column_keys
     assert_equal "admin.requests", result.table.export_key
     assert_equal({ text: "Export requests" }, result.table.export_options)
+    assert_equal :modal, result.filter_presentation
     assert_equal :day, context.filter_value(:group_by)
     assert_equal 2, result.widgets.first.value
     assert_equal :number, result.widgets.first.type
@@ -624,6 +625,34 @@ class ResolverTest < Minitest::Test
     assert_equal 1, result.query_result.count
     assert_equal 1, result.table.result.total_count
     assert_equal ["a"], result.table.rows.map(&:name)
+  end
+
+  def test_screen_filter_presentation_can_override_the_automatic_default
+    original_presentation = RequestsScreen.instance_variable_get(:@filter_presentation_value)
+    RequestsScreen.filter_presentation :inline
+
+    result = with_access_allowed do
+      RecordingStudioAdmin.resolve_screen(key: "requests", context: allowed_context)
+    end
+
+    assert_equal :inline, result.filter_presentation
+
+    RequestsScreen.filter_presentation :modal
+    result = with_access_allowed do
+      RecordingStudioAdmin.resolve_screen(key: "requests", context: allowed_context)
+    end
+
+    assert_equal :modal, result.filter_presentation
+  ensure
+    RequestsScreen.instance_variable_set(:@filter_presentation_value, original_presentation)
+  end
+
+  def test_screen_filter_presentation_rejects_unknown_values
+    error = assert_raises(RecordingStudioAdmin::InvalidDefinition) do
+      RequestsScreen.filter_presentation :drawer
+    end
+
+    assert_includes error.message, "unsupported value"
   end
 
   def test_table_uses_default_columns_until_request_overrides_them
@@ -902,7 +931,11 @@ class ResolverTest < Minitest::Test
   def test_proc_backed_filter_options_are_resolved
     result = with_access_allowed { RecordingStudioAdmin.resolve_screen(key: "requests", context: allowed_context) }
 
-    assert_equal %w[open closed], result.filters.find { |filter| filter.key == :state }.options[:values]
+    state_filter = result.filters.find { |filter| filter.key == :state }
+
+    assert_equal %w[open closed], state_filter.options[:values]
+    assert state_filter.options[:searchable]
+    assert_equal :local, state_filter.options[:search_mode]
   end
 
   def test_context_fallback_paths_use_configured_default_mount_path

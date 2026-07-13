@@ -246,7 +246,9 @@
            tooltip = column.tooltip_for(row, recording_studio_admin_context)
 
            if tooltip.present?
-             content = tag.span(content, title: tooltip, class: "inline-flex")
+             content = render FlatPack::Tooltip::Component.new(text: tooltip, class: "inline-flex") do
+               content
+             end
            else
              content
            end
