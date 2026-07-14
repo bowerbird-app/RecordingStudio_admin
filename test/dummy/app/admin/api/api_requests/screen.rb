@@ -13,6 +13,7 @@ module AdminScreens
     filter :status,
            options: -> { ApiRequest.distinct.order(:status).pluck(:status) },
            searchable: true
+    filter_presentation :modal, inline_count: 2
 
     widget "widgets.api_requests.api_activity"
     widget "widgets.api_requests.api_activity_column"

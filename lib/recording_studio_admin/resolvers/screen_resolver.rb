@@ -65,6 +65,7 @@ module RecordingStudioAdmin
           buttons: definition.buttons_value.filter_map { |button| button.resolve(@context) },
           filters: filters.map { |entry| resolved_filter(entry) },
           filter_presentation: resolve_filter_presentation(definition, filters),
+          inline_filter_count: resolve_inline_filter_count(definition, filters),
           query_result: query_result,
           summary: summary,
           chart: (@resolve_chart ? resolve_chart(definition.chart_value) : nil),
@@ -163,6 +164,12 @@ module RecordingStudioAdmin
         return presentation unless presentation == :auto
 
         filters.size >= 3 ? :modal : :inline
+      end
+
+      def resolve_inline_filter_count(definition, filters)
+        return 0 unless resolve_filter_presentation(definition, filters) == :modal
+
+        [definition.inline_filter_count, filters.size].min
       end
 
       def resolve_chart(definition)

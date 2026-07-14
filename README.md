@@ -544,6 +544,13 @@ filters use a FlatPack modal by default. Override that behavior in the screen de
 filter_presentation :inline # also supports :modal and :auto (the default)
 ```
 
+To keep the leading filters visible while placing the remaining filters in the FlatPack modal, nominate an
+`inline_count`. Filters retain their declaration order, and each form preserves the other form's active values:
+
+```ruby
+filter_presentation :modal, inline_count: 2
+```
+
 Select filters pass FlatPack select search options through to the component. Use `searchable`, `search_mode`,
 `search_param`, and `search_endpoint` with a declared `values` or `options` collection:
 

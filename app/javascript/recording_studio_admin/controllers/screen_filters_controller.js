@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 const SCREEN_FRAME_IDS = new Set(["screen-chart", "screen-table"])
 
 export default class extends Controller {
-  static values = { modalFilters: Boolean }
+  static values = { modalFilters: Boolean, inlineFilterNames: Array }
 
   connect() {
     this.boundDocumentClick = this.queueDateRangeSubmit.bind(this)
@@ -72,20 +72,85 @@ export default class extends Controller {
     })
   }
 
-  refreshTableFrame() {
-    const tableFrame = document.getElementById("screen-table")
-    const tableSrc = tableFrame?.getAttribute("src")
-    if (!tableFrame || !tableSrc) {
+  refreshResultFrames(event) {
+    const form = event.target.closest("form")
+    if (!form) {
       return
     }
 
-    const url = new URL(tableSrc, window.location.href)
-    url.search = new URLSearchParams(new FormData(this.element)).toString()
-    tableFrame.src = url.toString()
+    const query = new URLSearchParams(new FormData(form)).toString()
+    this.refreshFrame("screen-chart", query)
+    this.refreshFrame("screen-table", query)
+  }
+
+  resetResultFrames(event) {
+    const resetLink = event.target.closest("a[data-turbo-frame='screen-filters']")
+    if (!resetLink || !this.element.contains(resetLink)) {
+      return
+    }
+
+    const query = new URL(resetLink.href, window.location.href).searchParams.toString()
+    this.refreshFrame("screen-chart", query)
+    this.refreshFrame("screen-table", query)
+  }
+
+  syncInlineFilters(event) {
+    if (!this.modalFiltersValue) {
+      return
+    }
+
+    const modalForm = event.target.closest("form")
+    const inlineForm = document.getElementById("screen-inline-filters-form")
+    if (!modalForm || !inlineForm) {
+      return
+    }
+
+    const inlineFormData = new FormData(inlineForm)
+    this.inlineFilterNamesValue.forEach((name) => {
+      const values = inlineFormData.getAll(name)
+      const existingInputs = Array.from(modalForm.querySelectorAll(`[name='${CSS.escape(name)}']`))
+
+      existingInputs.forEach((input, index) => {
+        if (index < values.length) {
+          input.value = values[index]
+        } else {
+          input.remove()
+        }
+      })
+
+      values.slice(existingInputs.length).forEach((value) => {
+        const input = document.createElement("input")
+        input.type = "hidden"
+        input.name = name
+        input.value = value
+        modalForm.append(input)
+      })
+    })
+  }
+
+  refreshTableFrame(event) {
+    const form = event.target.closest("form")
+    if (!form) {
+      return
+    }
+
+    this.refreshFrame("screen-table", new URLSearchParams(new FormData(form)).toString())
+  }
+
+  refreshFrame(frameId, query) {
+    const frame = document.getElementById(frameId)
+    const src = frame?.getAttribute("src")
+    if (!frame || !src) {
+      return
+    }
+
+    const url = new URL(src, window.location.href)
+    url.search = query
+    frame.src = url.toString()
   }
 
   queueDateRangeSubmit(event) {
-    if (this.modalFiltersValue) {
+    if (event.recordingStudioAdminDateSubmitQueued) {
       return
     }
 
@@ -93,6 +158,13 @@ export default class extends Controller {
     if (!applyButton) {
       return
     }
+
+    const form = applyButton.closest("form")
+    if (!form || form.id === "screen-filters-mobile-form") {
+      return
+    }
+
+    event.recordingStudioAdminDateSubmitQueued = true
 
     const panel = applyButton.closest("[role='dialog']")
     const panelId = panel ? panel.id : ""
@@ -108,7 +180,7 @@ export default class extends Controller {
     this.showTableSkeletons()
 
     const autoSubmit = this.application.getControllerForElementAndIdentifier(
-      this.element,
+      form,
       "flat-pack--auto-submit"
     )
 
@@ -117,12 +189,12 @@ export default class extends Controller {
       return
     }
 
-    if (this.element.requestSubmit) {
-      this.element.requestSubmit()
+    if (form.requestSubmit) {
+      form.requestSubmit()
       return
     }
 
-    this.element.submit()
+    form.submit()
   }
 
   syncPresetLabelsFromHiddenFields() {
@@ -163,9 +235,6 @@ export default class extends Controller {
       }
     })
 
-    if (this.element instanceof HTMLFormElement) {
-      this.refreshTableFrame()
-    }
   }
 
   scheduleViewportCleanup() {

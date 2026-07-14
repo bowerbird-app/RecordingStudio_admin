@@ -252,7 +252,7 @@
 
            if tooltip.present?
              content = render FlatPack::Tooltip::Component.new(text: tooltip, class: "inline-flex") do
-               content
+               concat(content)
              end
            else
              content

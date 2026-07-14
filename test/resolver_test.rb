@@ -660,12 +660,44 @@ class ResolverTest < Minitest::Test
     HiddenSummaryScreen.instance_variable_set(:@filters_value, original_filters)
   end
 
+  def test_screen_filter_presentation_can_keep_leading_filters_inline
+    original_presentation = RequestsScreen.instance_variable_get(:@filter_presentation_value)
+    original_inline_count = RequestsScreen.instance_variable_get(:@inline_filter_count_value)
+    RequestsScreen.filter_presentation :modal, inline_count: 2
+
+    result = with_access_allowed do
+      RecordingStudioAdmin.resolve_screen(key: "requests", context: allowed_context)
+    end
+
+    assert_equal :modal, result.filter_presentation
+    assert_equal 2, result.inline_filter_count
+  ensure
+    RequestsScreen.instance_variable_set(:@filter_presentation_value, original_presentation)
+    RequestsScreen.instance_variable_set(:@inline_filter_count_value, original_inline_count)
+  end
+
   def test_screen_filter_presentation_rejects_unknown_values
     error = assert_raises(RecordingStudioAdmin::InvalidDefinition) do
       RequestsScreen.filter_presentation :drawer
     end
 
     assert_includes error.message, "unsupported value"
+  end
+
+  def test_screen_filter_presentation_rejects_an_invalid_inline_count
+    error = assert_raises(RecordingStudioAdmin::InvalidDefinition) do
+      RequestsScreen.filter_presentation :modal, inline_count: -1
+    end
+
+    assert_includes error.message, "inline_count"
+  end
+
+  def test_screen_filter_presentation_rejects_inline_count_for_inline_filters
+    error = assert_raises(RecordingStudioAdmin::InvalidDefinition) do
+      RequestsScreen.filter_presentation :inline, inline_count: 1
+    end
+
+    assert_includes error.message, "only supported for modal filters"
   end
 
   def test_table_uses_default_columns_until_request_overrides_them

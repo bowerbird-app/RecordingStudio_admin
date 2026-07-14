@@ -13,6 +13,18 @@ module RecordingStudioAdmin
         return
       end
 
+      if request.headers["Turbo-Frame"] == "screen-filters"
+        @screen = resolve_screen(
+          resolve_summary: false,
+          resolve_chart: false,
+          resolve_table: false,
+          resolve_widgets: false
+        )
+
+        render partial: "recording_studio_admin/screens/filters", locals: { screen: @screen }
+        return
+      end
+
       @screen = resolve_screen(
         resolve_summary: false,
         resolve_chart: false,
