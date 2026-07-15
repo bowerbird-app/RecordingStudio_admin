@@ -10,7 +10,10 @@ module AdminScreens
     query { |_context| ApiRequest.all }
     filter :date_range, field: :created_at, default: :last_30_days
     filter :group_by, values: %i[hour day week month year], default: :day
-    filter :status, options: -> { ApiRequest.distinct.order(:status).pluck(:status) }
+    filter :status,
+           options: -> { ApiRequest.distinct.order(:status).pluck(:status) },
+           searchable: true
+    filter_presentation :modal, inline_count: 2
 
     widget "widgets.api_requests.api_activity"
     widget "widgets.api_requests.api_activity_column"

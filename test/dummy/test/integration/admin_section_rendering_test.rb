@@ -538,7 +538,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Users"
     assert_includes response.body, "Manage user accounts"
-    assert_includes response.body, 'id="screen-filters-form"'
+    assert_includes response.body, 'id="screen-filters-mobile-form"'
     assert_includes response.body, 'name="date_range_preset"'
     assert_includes response.body, 'name="group_by"'
     assert_includes response.body, 'value="day"'
@@ -557,7 +557,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes table_headers, "Email"
     assert_includes table_headers, "Created at"
     assert_equal 4, css_select("#screen-table tbody tr").size
-    assert_includes response.body, "submit-&gt;recording-studio-admin--screen-filters#refreshTableFrame"
+    assert_includes response.body, "submit-&gt;recording-studio-admin--screen-filters#refreshResultFrames"
 
     get "/admin/screens/users/chart", params: { anchor_url: root_url }
 
@@ -609,6 +609,29 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "/hidden"
   end
 
+  test "admin screen keeps nominated filters inline and preserves modal filter values" do
+    sign_in_admin_user
+
+    get "/admin/screens/api_requests", params: {
+      anchor_url: root_url,
+      group_by: :week,
+      status: "500"
+    }
+
+    assert_response :success
+    assert_select "#screen-inline-filters-form label", text: "Date range"
+    assert_select "#screen-inline-filters-form label", text: "Group by"
+    assert_select "#screen-inline-filters-form label", text: "Status", count: 0
+    assert_select "#screen-inline-filters-form label", text: "Search", count: 0
+    assert_select "#screen-inline-filters-form input[type='hidden'][name='status'][value='500']"
+    assert_select "#screen-filters-mobile-form label", text: "Status"
+    assert_select "#screen-filters-mobile-form label", text: "Search"
+    assert_select "#screen-filters-mobile-form label", text: "Date range", count: 0
+    assert_select "#screen-filters-mobile-form label", text: "Group by", count: 0
+    assert_select "#screen-filters-mobile-form input[type='hidden'][name='group_by'][value='week']"
+    assert_includes response.body, "!w-auto"
+  end
+
   test "admin screen renders streamlined filters with table results" do
     sign_in_admin_user
 
@@ -619,17 +642,24 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'href="http://www.example.com/"'
     assert_includes response.body, 'name="anchor_url"'
     assert_includes response.body, 'value="http://www.example.com/"'
-    assert_includes response.body, "flat-pack--auto-submit"
     assert_includes response.body, "recording-studio-admin--screen-filters"
-    assert_includes response.body, 'data-turbo-frame="screen-chart"'
+    assert_includes response.body, 'data-turbo-frame="screen-filters"'
     assert_includes response.body, "change-&gt;recording-studio-admin--screen-filters#showTableSkeletons"
     assert_includes response.body, "submit-&gt;recording-studio-admin--screen-filters#showTableSkeletons"
-    assert_includes response.body, "click-&gt;recording-studio-admin--screen-filters#queueDateRangeSubmit"
+    assert_includes response.body, "click->recording-studio-admin--screen-filters#queueDateRangeSubmit"
     assert_includes response.body, 'id="screen-chart" src="/admin/screens/api_requests/chart?anchor_url='
-    assert_includes response.body, 'id="screen-filters-form"'
+    assert_includes response.body, 'id="screen-filters-mobile-form"'
     assert_includes response.body, 'name="search"'
-    assert_includes response.body, "flex flex-wrap items-start gap-4"
-    assert_includes response.body, "min-w-64 flex-none"
+    assert_includes response.body, 'data-modal-id="screen-filters-modal"'
+    assert_includes response.body, 'id="screen-filters-modal"'
+    assert_includes response.body, "Filters"
+    assert_includes response.body, "Apply"
+    assert_includes response.body, "data-recording-studio-admin--screen-filters-modal-filters-value"
+    assert_includes response.body, 'name="status"'
+    assert_select "#screen-inline-filters-form label", text: "Date range"
+    assert_select "#screen-inline-filters-form label", text: "Group by"
+    assert_select "#screen-filters label", text: "Status"
+    assert_select "#screen-filters label", text: "Search"
     assert_includes response.body, "Monthly API usage"
     assert_includes response.body, "/admin/screens/api_requests/widgets/widgets.api_requests.monthly_api_usage"
     assert_includes response.body, 'id="screen-table" src="/admin/screens/api_requests/table?anchor_url='
@@ -706,6 +736,27 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'role="progressbar"'
   end
 
+  test "admin screen modal filters use FlatPack's active-count badge" do
+    sign_in_admin_user
+
+    get "/admin/screens/api_requests", params: { anchor_url: root_url, search: "requests" }
+
+    assert_response :success
+    assert_includes response.body, 'id="screen-filters"'
+    assert_includes response.body, 'id="screen-filters-modal"'
+    assert_includes response.body, 'id="screen-filters-mobile-form"'
+    assert_includes response.body, 'data-turbo-frame="screen-filters"'
+    assert_includes response.body, "px-[var(--button-padding-x-lg)]"
+    assert_select "#screen-filters button[data-modal-id='screen-filters-modal'] span.rounded-full", text: "1"
+
+    get "/admin/screens/api_requests", params: { anchor_url: root_url, search: "requests" }, headers: { "Turbo-Frame" => "screen-filters" }
+
+    assert_response :success
+    assert_includes response.body, '<turbo-frame id="screen-filters">'
+    assert_includes response.body, "px-[var(--button-padding-x-lg)]"
+    assert_select "#screen-filters button[data-modal-id='screen-filters-modal'] span.rounded-full", text: "1"
+  end
+
   test "admin screen column picker shows selected columns and falls back to defaults" do
     sign_in_admin_user
 
@@ -720,12 +771,15 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     selected_headers = css_select("th").map { |header| header.text.squish.sub(/\s+[↑↓]\z/, "") }
 
     assert_includes selected_headers, "Created at"
-    assert_includes selected_headers, "Latency"
+    assert selected_headers.any? { |header| header.start_with?("Latency") }
     refute_includes selected_headers, "Method"
     refute_includes selected_headers, "Status"
     refute_includes selected_headers, "Path"
     assert_includes response.body, "Reset"
     assert_includes response.body, 'name="columns_present"'
+    assert_includes response.body, "flat-pack--tooltip"
+    refute_includes response.body, 'title="0ms total request time"'
+    assert_includes response.body, "Total request time in milliseconds"
 
     get "/admin/screens/api_requests", params: {
       columns_present: "1"
@@ -776,6 +830,33 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_equal 31, response.body.lines.size
     assert_includes response.body, "/v1/export-all/0"
     assert_includes response.body, "/v1/export-all/29"
+  end
+
+  test "admin screen renders a tooltip-wrapped table cell value" do
+    sign_in_admin_user
+    ApiRequest.delete_all
+    ApiRequest.create!(
+      path: "/v1/tooltip",
+      method: "GET",
+      status: 200,
+      latency_ms: 123,
+      created_at: Time.current,
+      updated_at: Time.current
+    )
+
+    get "/admin/screens/api_requests/table", params: {
+      columns: [ "latency_ms" ],
+      columns_present: "1"
+    }
+
+    assert_response :success
+
+    latency_tooltip = css_select('[data-controller="flat-pack--tooltip"]').find do |element|
+      element.at_css('[role="tooltip"]')&.text == "123ms total request time"
+    end
+
+    assert latency_tooltip, "expected a latency tooltip"
+    assert_includes latency_tooltip.children.select(&:text?).map(&:text).join, "123"
   end
 
   test "admin screen trusted export token includes selected columns and all filtered rows" do

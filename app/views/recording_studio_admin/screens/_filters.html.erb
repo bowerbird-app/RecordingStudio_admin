@@ -1,0 +1,94 @@
+<% base_query = request.query_parameters.symbolize_keys.except(:page) %>
+<% filter_param_keys_for = ->(filters) { filters.flat_map { |filter| filter.type == :date_range ? [filter.start_param, filter.end_param, filter.preset_param] : [filter.param_key] }.map(&:to_sym) } %>
+<% inline_filter_count = screen.filter_presentation == :modal ? screen.inline_filter_count : screen.filters.size %>
+<% inline_filters = screen.filters.first(inline_filter_count) %>
+<% modal_filters = screen.filters.drop(inline_filter_count) %>
+<% inline_filter_param_keys = filter_param_keys_for.call(inline_filters) %>
+<% modal_filter_param_keys = filter_param_keys_for.call(modal_filters) %>
+<% non_filter_query = base_query.except(*filter_param_keys_for.call(screen.filters)) %>
+<% inline_hidden_query = base_query.except(*inline_filter_param_keys) %>
+<% modal_hidden_query = base_query.except(*modal_filter_param_keys) %>
+<% reset_url = non_filter_query.any? ? "#{request.path}?#{non_filter_query.to_query}" : request.path %>
+<%
+  active_filter_count = modal_filters.count do |filter|
+    case filter.type
+    when :date_range
+      base_query[filter.start_param].present? ||
+        base_query[filter.end_param].present? ||
+        (base_query[filter.preset_param].present? &&
+         base_query[filter.preset_param].to_s != filter.options[:default].to_s)
+    when :group_by
+      filter.value.to_s != filter.options.fetch(:default, :day).to_s
+    else
+      filter.value.present?
+    end
+  end
+%>
+
+<%= turbo_frame_tag "screen-filters" do %>
+  <div
+    class="mb-6 flex flex-wrap items-end gap-4"
+    data-controller="recording-studio-admin--screen-filters"
+    data-action="click->recording-studio-admin--screen-filters#queueDateRangeSubmit click->recording-studio-admin--screen-filters#resetResultFrames"
+    data-recording-studio-admin--screen-filters-modal-filters-value="<%= modal_filters.any? %>"
+    data-recording-studio-admin--screen-filters-inline-filter-names-value="<%= inline_filter_param_keys.to_json %>">
+    <% if inline_filters.any? %>
+      <%= form_with(
+        url: request.path,
+        method: :get,
+        id: modal_filters.any? ? "screen-inline-filters-form" : "screen-filters-form",
+        class: "flex flex-wrap items-end gap-4",
+        data: {
+          controller: "flat-pack--auto-submit",
+          turbo_frame: "screen-filters",
+          action: "change->recording-studio-admin--screen-filters#showTableSkeletons change->flat-pack--auto-submit#queueSubmit input->recording-studio-admin--screen-filters#showTableSkeletons input->flat-pack--auto-submit#queueSubmit submit->recording-studio-admin--screen-filters#showTableSkeletons submit->recording-studio-admin--screen-filters#refreshResultFrames"
+        }
+      ) do %>
+        <% inline_hidden_query.each do |key, value| %>
+          <% if value.is_a?(Array) %>
+            <% value.each do |entry| %>
+              <%= hidden_field_tag "#{key}[]", entry %>
+            <% end %>
+          <% else %>
+            <%= hidden_field_tag key, value %>
+          <% end %>
+        <% end %>
+
+        <%= render "filter_fields", filters: inline_filters, wrapper_class: "min-w-64 flex-none" %>
+      <% end %>
+    <% end %>
+
+    <% if modal_filters.any? %>
+      <%= render FlatPack::ModalFilter::Component.new(
+        id: "screen-filters",
+        form_url: request.path,
+        turbo_frame: "screen-filters",
+        active_count: active_filter_count,
+        trigger_label: "Filters",
+        button_size: :lg,
+        reset_url: reset_url,
+        mobile_form_class: "space-y-4",
+        class: "!w-auto flex-none",
+        data: {
+          action: "submit->recording-studio-admin--screen-filters#syncInlineFilters submit->recording-studio-admin--screen-filters#showTableSkeletons submit->recording-studio-admin--screen-filters#refreshResultFrames"
+        }
+      ) do |modal_filter| %>
+        <% modal_filter.filter_body do %>
+          <% modal_hidden_query.each do |key, value| %>
+            <% if value.is_a?(Array) %>
+              <% value.each do |entry| %>
+                <%= hidden_field_tag "#{key}[]", entry %>
+              <% end %>
+            <% else %>
+              <%= hidden_field_tag key, value %>
+            <% end %>
+          <% end %>
+
+          <div class="grid gap-4">
+            <%= render "filter_fields", filters: modal_filters, wrapper_class: "" %>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

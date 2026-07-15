@@ -241,12 +241,19 @@
          else
            column.title
          end %>
+      <% if column.header_tooltip.present? %>
+        <% title = render FlatPack::Tooltip::Component.new(text: column.header_tooltip, class: "inline-flex") do %>
+          <%= title %>
+        <% end %>
+      <% end %>
       <% table.column(title: title, html: ->(row) do
            content = cell_content.call(column, row)
            tooltip = column.tooltip_for(row, recording_studio_admin_context)
 
            if tooltip.present?
-             content = tag.span(content, title: tooltip, class: "inline-flex")
+             content = render FlatPack::Tooltip::Component.new(text: tooltip, class: "inline-flex") do
+               concat(content)
+             end
            else
              content
            end

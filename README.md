@@ -537,6 +537,32 @@ Built-in filters include:
 - date range
 - group by (`hour`, `day`, `week`, `month`, `year`)
 
+Screen filters display inline when there are fewer than three filters. Screens with three or more main and table
+filters use a FlatPack modal by default. Override that behavior in the screen definition when needed:
+
+```ruby
+filter_presentation :inline # also supports :modal and :auto (the default)
+```
+
+To keep the leading filters visible while placing the remaining filters in the FlatPack modal, nominate an
+`inline_count`. Filters retain their declaration order, and each form preserves the other form's active values:
+
+```ruby
+filter_presentation :modal, inline_count: 2
+```
+
+Select filters pass FlatPack select search options through to the component. Use `searchable`, `search_mode`,
+`search_param`, and `search_endpoint` with a declared `values` or `options` collection:
+
+```ruby
+filter :status,
+       options: -> { ApiRequest.distinct.order(:status).pluck(:status) },
+       searchable: true,
+       search_mode: :remote,
+       search_param: :query,
+       search_endpoint: "/admin/filter-options/statuses"
+```
+
 Widget-oriented helper methods on `RecordingStudioAdmin::Context` let sections reference standalone widgets while preserving date semantics:
 
 ```ruby

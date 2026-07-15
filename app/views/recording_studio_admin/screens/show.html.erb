@@ -37,64 +37,7 @@
   <% end %>
 <% end %>
 
-<% if @screen.filters.any? %>
-  <% base_query = request.query_parameters.symbolize_keys.except(:page) %>
-  <% filter_param_keys = @screen.filters.flat_map do |filter|
-       if filter.type == :date_range
-         [filter.start_param, filter.end_param, filter.preset_param]
-       else
-         [filter.param_key]
-       end
-     end.map(&:to_sym) %>
-  <% hidden_query = base_query.except(*filter_param_keys) %>
-  <%= form_with url: request.path, method: :get, id: "screen-filters-form", data: {
-    controller: "flat-pack--auto-submit recording-studio-admin--screen-filters",
-    turbo_frame: "screen-chart",
-    action: "change->recording-studio-admin--screen-filters#showTableSkeletons change->flat-pack--auto-submit#queueSubmit input->recording-studio-admin--screen-filters#showTableSkeletons input->flat-pack--auto-submit#queueSubmit submit->recording-studio-admin--screen-filters#showTableSkeletons submit->recording-studio-admin--screen-filters#refreshTableFrame click->recording-studio-admin--screen-filters#queueDateRangeSubmit"
-  } do %>
-    <% hidden_query.each do |key, value| %>
-      <% if value.is_a?(Array) %>
-        <% value.each do |entry| %>
-          <%= hidden_field_tag "#{key}[]", entry %>
-        <% end %>
-      <% else %>
-        <%= hidden_field_tag key, value %>
-      <% end %>
-    <% end %>
-
-    <div class="mb-6 flex flex-wrap items-start gap-4">
-      <% @screen.filters.each do |filter| %>
-        <div class="min-w-64 flex-none">
-          <% if filter.type == :date_range %>
-            <%= render FlatPack::DateRangeInput::Component.new(
-              start_name: filter.start_param,
-              end_name: filter.end_param,
-              start_value: filter.value&.start_date,
-              end_value: filter.value&.end_date
-            ) %>
-            <%= hidden_field_tag filter.preset_param, filter.value&.preset_key %>
-          <% else %>
-            <% select_options = Array(filter.options[:values] || filter.options[:options]).map { |value| { label: value.to_s.humanize, value: value } } %>
-            <% if select_options.any? %>
-              <%= render FlatPack::Select::Component.new(
-                name: filter.param_key,
-                options: select_options,
-                value: filter.value,
-                placeholder: "All"
-              ) %>
-            <% else %>
-              <%= render FlatPack::SearchInput::Component.new(
-                name: filter.param_key,
-                value: filter.value,
-                placeholder: filter.key.to_s.humanize
-              ) %>
-            <% end %>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
-  <% end %>
-<% end %>
+<%= render "filters", screen: @screen if @screen.filters.any? %>
 
 <% if @screen.has_chart %>
   <%= turbo_frame_tag "screen-chart", src: recording_studio_admin_screen_region_path(@screen.key, :chart) do %>

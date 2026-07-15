@@ -3,8 +3,11 @@
 module RecordingStudioAdmin
   class Screen < Definitions::Base
     class << self
+      include ScreenFilterPresentation
+
       attr_reader :query_value, :filters_value, :chart_value, :table_value, :widget_usages_value, :summary_value,
-                  :availability_scope_value, :export_config_value
+                  :availability_scope_value, :export_config_value, :filter_presentation_value,
+                  :inline_filter_count_value
 
       def inherited(subclass)
         super
@@ -13,16 +16,12 @@ module RecordingStudioAdmin
         subclass.instance_variable_set(:@summary_value, SummaryDefinition.new)
         subclass.instance_variable_set(:@availability_scope_value, nil)
         subclass.instance_variable_set(:@export_config_value, nil)
+        subclass.instance_variable_set(:@inline_filter_count_value, nil)
       end
 
       def query(&block)
         @query_value = block if block
         @query_value
-      end
-
-      def filter(name, **options)
-        type = builtin_filter_type(name)
-        @filters_value << Definitions::FilterDefinition.new(name.to_sym, type, options)
       end
 
       def chart(&block)
@@ -105,14 +104,6 @@ module RecordingStudioAdmin
         return normalized if SECTION_AVAILABILITY_SCOPES.include?(normalized)
 
         raise InvalidDefinition, "Screen availability_scope has unsupported value #{value.inspect}"
-      end
-
-      def builtin_filter_type(name)
-        case name.to_sym
-        when :date_range then :date_range
-        when :group_by then :group_by
-        else :select
-        end
       end
 
       def normalize_widget_key(value)

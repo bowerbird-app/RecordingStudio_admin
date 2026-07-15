@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## 1.1.0
+
+### Added
+
+- **Modal screen filters**: screens with filters now use a FlatPack modal filter control by default, including an active-filter count badge and a mobile form.
+- **Configurable filter presentation**: `filter_presentation` supports `:auto`, `:inline`, and `:modal` layouts. Modal screens can keep a leading set of filters visible with `inline_count`.
+- **Coordinated filter updates**: inline and modal filter forms preserve each other's active query values while refreshing the chart, table, and count Turbo frames.
+
+### Changed
+
+- Updated the FlatPack dependency to `~> 0.1.124`.
+- Improved filter interactions to submit date ranges consistently and reset result frames before refreshed content arrives.
+
 ## 1.0.1
 
 ### Changed
