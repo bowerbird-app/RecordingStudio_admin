@@ -21,7 +21,7 @@
     hover: (compact_card ? :subtle : nil),
     clickable: compact_card_href.present? && widget.info.blank?,
     href: (widget.info.blank? ? compact_card_href : nil),
-    class: (compact_card ? "relative w-full min-h-28 max-h-28" : "w-full")
+    class: (compact_card ? "#{'relative ' if widget.info.present?}w-full min-h-28 max-h-28" : "w-full")
   ) do |card| %>
     <% card.body do %>
       <% if compact_card && compact_card_href.present? && widget.info.present? %>

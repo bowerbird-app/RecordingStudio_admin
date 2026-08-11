@@ -179,6 +179,12 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     compact_tooltip = info_tooltips.find { |tooltip| tooltip.ancestors.any? { |ancestor| ancestor["class"].to_s.include?("min-h-28") } }
     assert compact_tooltip, "expected a compact widget info tooltip"
     refute compact_tooltip.ancestors.any? { |ancestor| ancestor.name == "a" }
+
+    recent_failures_heading = css_select("h3").find { |heading| heading.text.strip == "Recent failures" }
+    recent_failures_card = recent_failures_heading.ancestors.find do |ancestor|
+      ancestor["class"].to_s.include?("min-h-28")
+    end
+    refute recent_failures_card.at_css('[data-flat-pack--icon-name-value="information-circle"]')
   ensure
     RecordingStudioAdmin.configuration.async_widgets.enabled = original_async_enabled
   end
