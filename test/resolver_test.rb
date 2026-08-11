@@ -804,6 +804,15 @@ class ResolverTest < Minitest::Test
     assert_nil widget.resolve(RecordingStudioAdmin::Context.new).info
   end
 
+  def test_widget_info_can_be_blank
+    widget = RecordingStudioAdmin::Widget.new("blank-info") do
+      info " "
+      value 1
+    end
+
+    assert_predicate widget.resolve(RecordingStudioAdmin::Context.new).info, :blank?
+  end
+
   def test_widget_change_good_when_is_resolved
     widget = with_access_allowed do
       RecordingStudioAdmin.resolve_widget(key: "widgets.requests.churn", context: allowed_context)
