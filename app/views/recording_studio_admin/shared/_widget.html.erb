@@ -3,10 +3,9 @@
 <% widget_href = presenter.href %>
 <% compact_card_href = presenter.compact_href %>
 <% widget_link_label = presenter.link_label %>
-<% compact_tooltip_text = presenter.compact_tooltip_text %>
 <% info_label = widget.title.present? ? "More information about #{widget.title}" : "More information about this widget" %>
 <% info_trigger = capture do %>
-  <%= render FlatPack::Tooltip::Component.new(text: widget.info, class: "relative z-10 shrink-0 pointer-events-auto") do %>
+  <%= render FlatPack::Tooltip::Component.new(text: widget.info, placement: :bottom, class: "relative z-10 shrink-0 pointer-events-auto") do %>
     <%= button_tag type: "button",
                    class: "inline-flex size-5 items-center justify-center rounded-sm text-(--surface-muted-content-color) hover:text-(--surface-content-color) focus:outline-none focus:ring-2 focus:ring-(--color-primary)",
                    aria: { label: info_label } do %>
@@ -73,7 +72,7 @@
                   <% if widget.info.present? %>
                     <div class="flex items-start gap-1">
                       <% if widget.title.present? %>
-                        <h3 class="min-w-0 flex-1 overflow-hidden text-lg font-semibold leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"><%= widget.title %></h3>
+                        <h3 class="min-w-0 overflow-hidden text-lg font-semibold leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"><%= widget.title %></h3>
                       <% end %>
                       <%= info_trigger %>
                     </div>
@@ -207,10 +206,4 @@
   <% end %>
 <% end %>
 
-<% if compact_tooltip_text.present? %>
-  <%= render FlatPack::Tooltip::Component.new(text: compact_tooltip_text, class: "flex w-full") do %>
-    <%= widget_card %>
-  <% end %>
-<% else %>
-  <%= widget_card %>
-<% end %>
+<%= widget_card %>

@@ -179,6 +179,9 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     compact_tooltip = info_tooltips.find { |tooltip| tooltip.ancestors.any? { |ancestor| ancestor["class"].to_s.include?("min-h-28") } }
     assert compact_tooltip, "expected a compact widget info tooltip"
     refute compact_tooltip.ancestors.any? { |ancestor| ancestor.name == "a" }
+    refute compact_tooltip.ancestors.any? { |ancestor|
+      ancestor["data-controller"].to_s.split.include?("flat-pack--tooltip")
+    }
 
     recent_failures_heading = css_select("h3").find { |heading| heading.text.strip == "Recent failures" }
     recent_failures_card = recent_failures_heading.ancestors.find do |ancestor|

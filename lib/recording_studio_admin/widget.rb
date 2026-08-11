@@ -42,8 +42,10 @@ module RecordingStudioAdmin
       instance_eval(&block) if block
     end
 
-    %i[type title subtitle description info value change change_good_when link_to link_label series chart_type chart_options
-       list_options items rows metadata].each do |name|
+    %i[
+      type title subtitle description info value change change_good_when link_to link_label series chart_type
+      chart_options list_options items rows metadata
+    ].each do |name|
       define_method(name) do |value = nil, &block|
         instance_variable_set("@#{name}", block || value) if value || block
         instance_variable_get("@#{name}")

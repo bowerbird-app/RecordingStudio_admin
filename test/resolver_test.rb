@@ -201,6 +201,8 @@ class ResolverTest < Minitest::Test
 
     widget "widgets.requests.traffic_preview"
 
+    widget "widgets.requests.param_title", params: { value: 7 }
+
     widget "widgets.requests.review_completion"
 
     widget "widgets.requests.churn"
@@ -789,7 +791,7 @@ class ResolverTest < Minitest::Test
       RecordingStudioAdmin::Resolvers::ScreenResolver.resolve_widget(
         key: "requests",
         widget_key: "widgets.requests.param_title",
-        context: allowed_context(params: { value: 7 })
+        context: allowed_context
       )
     end
 

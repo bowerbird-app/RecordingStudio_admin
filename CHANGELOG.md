@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 1.2.0
+
+### Added
+
+- **Widget information tooltips**: widgets can define static or callable `info` text, resolved with the widget context and rendered as an accessible contextual tooltip.
+
 ## 1.1.0
 
 ### Added
