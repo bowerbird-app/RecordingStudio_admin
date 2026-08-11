@@ -159,6 +159,30 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"API activity"'
   end
 
+  test "widget info tooltips render accessible triggers for card and compact variants" do
+    sign_in_admin_user
+    original_async_enabled = RecordingStudioAdmin.configuration.async_widgets.enabled
+    RecordingStudioAdmin.configuration.async_widgets.enabled = false
+
+    get "/admin/sections/root", params: { anchor_url: root_url }
+
+    assert_response :success
+    info_tooltips = css_select('[data-controller="flat-pack--tooltip"]').select do |element|
+      element.at_css('[role="tooltip"]')&.text == "Counts all API requests received during the selected reporting period."
+    end
+    assert_equal 2, info_tooltips.size
+    info_tooltips.each do |tooltip|
+      assert tooltip.at_css('[data-flat-pack--icon-name-value="information-circle"]')
+      assert_equal "More information about API activity", tooltip.at_css("button")["aria-label"]
+    end
+
+    compact_tooltip = info_tooltips.find { |tooltip| tooltip.ancestors.any? { |ancestor| ancestor["class"].to_s.include?("min-h-28") } }
+    assert compact_tooltip, "expected a compact widget info tooltip"
+    refute compact_tooltip.ancestors.any? { |ancestor| ancestor.name == "a" }
+  ensure
+    RecordingStudioAdmin.configuration.async_widgets.enabled = original_async_enabled
+  end
+
   test "admin sections index lists sections available to the current user" do
     sign_in_admin_user
 

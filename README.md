@@ -508,6 +508,8 @@ Widgets can also call `hide_metric`, `hide_change`, or `hide_period` to suppress
 Widget field semantics stay separate:
 
 - `subtitle` is descriptive copy
+- `description` remains the full-card title tooltip
+- `info` is optional contextual help rendered behind an information icon tooltip; it accepts a static value or a block evaluated with the widget context
 - `metadata[:period_label]` is the reporting window
 - `metadata[:unit_label]` is the metric unit
 - `progress` widgets use metadata keys such as `:progress_value`, `:progress_max`, `:progress_label`, and `:progress_variant`

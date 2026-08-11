@@ -4,16 +4,29 @@
 <% compact_card_href = presenter.compact_href %>
 <% widget_link_label = presenter.link_label %>
 <% compact_tooltip_text = presenter.compact_tooltip_text %>
+<% info_label = widget.title.present? ? "More information about #{widget.title}" : "More information about this widget" %>
+<% info_trigger = capture do %>
+  <%= render FlatPack::Tooltip::Component.new(text: widget.info, class: "relative z-10 shrink-0 pointer-events-auto") do %>
+    <%= button_tag type: "button",
+                   class: "inline-flex size-5 items-center justify-center rounded-sm text-(--surface-muted-content-color) hover:text-(--surface-content-color) focus:outline-none focus:ring-2 focus:ring-(--color-primary)",
+                   aria: { label: info_label } do %>
+      <%= render FlatPack::Shared::IconComponent.new(name: "information-circle", size: :sm) %>
+    <% end %>
+  <% end %>
+<% end if widget.info.present? %>
 
 <% widget_card = capture do %>
   <%= render FlatPack::Card::Component.new(
     style: :outlined,
     hover: (compact_card ? :subtle : nil),
-    clickable: compact_card_href.present?,
-    href: compact_card_href,
-    class: (compact_card ? "w-full min-h-28 max-h-28" : "w-full")
+    clickable: compact_card_href.present? && widget.info.blank?,
+    href: (widget.info.blank? ? compact_card_href : nil),
+    class: (compact_card ? "relative w-full min-h-28 max-h-28" : "w-full")
   ) do |card| %>
     <% card.body do %>
+      <% if compact_card && compact_card_href.present? && widget.info.present? %>
+        <%= link_to "", compact_card_href, class: "absolute inset-0 z-0 rounded-lg", aria: { label: "Open #{widget_link_label}" } %>
+      <% end %>
       <% change_text_class = presenter.change_text_class %>
       <% period_label = presenter.period_label %>
       <% compact_period_label = presenter.compact_period_label %>
@@ -33,7 +46,7 @@
       <% header_subtitle = %i[list progress].include?(widget.type) ? nil : presenter.header_subtitle %>
 
       <% if compact_card %>
-          <div class="flex h-full items-start gap-3 overflow-hidden">
+          <div class="relative flex h-full items-start gap-3 overflow-hidden <%= "z-10 pointer-events-none" if compact_card_href.present? && widget.info.present? %>">
             <div class="min-w-0 flex-1 space-y-2 text-left">
               <div class="flex items-start gap-3">
                 <% if compact_metric_value.present? %>
@@ -57,7 +70,14 @@
                 <% end %>
 
                 <div class="min-w-0 flex-1 space-y-2 text-left">
-                  <% if widget.title.present? %>
+                  <% if widget.info.present? %>
+                    <div class="flex items-start gap-1">
+                      <% if widget.title.present? %>
+                        <h3 class="min-w-0 flex-1 overflow-hidden text-lg font-semibold leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"><%= widget.title %></h3>
+                      <% end %>
+                      <%= info_trigger %>
+                    </div>
+                  <% elsif widget.title.present? %>
                     <h3 class="overflow-hidden text-lg font-semibold leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"><%= widget.title %></h3>
                   <% end %>
 
@@ -119,11 +139,22 @@
         </div>
       <% else %>
         <div class="space-y-4">
-          <% if header_subtitle.present? || unit_label.present? || widget.title.present? || (widget.show_metric && widget.value.present?) || (widget.show_change && widget.change.present?) || widget_href.present? || period_label.present? %>
+          <% if header_subtitle.present? || unit_label.present? || widget.title.present? || widget.info.present? || (widget.show_metric && widget.value.present?) || (widget.show_change && widget.change.present?) || widget_href.present? || period_label.present? %>
             <div class="flex items-start justify-between gap-3">
-              <% if header_subtitle.present? || unit_label.present? || widget.title.present? || (widget.show_metric && widget.value.present?) || (widget.show_change && widget.change.present?) || period_label.present? %>
+              <% if header_subtitle.present? || unit_label.present? || widget.title.present? || widget.info.present? || (widget.show_metric && widget.value.present?) || (widget.show_change && widget.change.present?) || period_label.present? %>
                 <div class="space-y-2">
-                  <% if widget.title.present? %>
+                  <% if widget.info.present? %>
+                    <div class="flex items-start gap-1">
+                      <% if widget.title.present? && widget.description.present? %>
+                        <%= render FlatPack::Tooltip::Component.new(text: widget.description) do %>
+                          <h3 class="text-xl font-semibold"><%= widget.title %></h3>
+                        <% end %>
+                      <% elsif widget.title.present? %>
+                        <h3 class="text-xl font-semibold"><%= widget.title %></h3>
+                      <% end %>
+                      <%= info_trigger %>
+                    </div>
+                  <% elsif widget.title.present? %>
                     <% if widget.description.present? %>
                       <%= render FlatPack::Tooltip::Component.new(text: widget.description) do %>
                         <h3 class="text-xl font-semibold"><%= widget.title %></h3>

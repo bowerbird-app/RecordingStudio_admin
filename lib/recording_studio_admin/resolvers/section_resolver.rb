@@ -129,6 +129,7 @@ module RecordingStudioAdmin
                                                                                widget_context),
           subtitle: widget_definition.send(:evaluate, widget_definition.subtitle, widget_context),
           description: widget_definition.send(:evaluate, widget_definition.description, widget_context),
+          info: widget_definition.send(:evaluate, widget_definition.info, widget_context),
           value: nil,
           change: nil,
           change_good_when: :neutral,

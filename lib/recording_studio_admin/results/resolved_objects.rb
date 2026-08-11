@@ -17,6 +17,7 @@ module RecordingStudioAdmin
       :title,
       :subtitle,
       :description,
+      :info,
       :value,
       :change,
       :change_good_when,

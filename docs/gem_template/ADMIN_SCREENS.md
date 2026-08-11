@@ -120,6 +120,7 @@ module AdminScreens
   ApiRequestsActivityWidget = RecordingStudioAdmin::Widget.new("widgets.api_requests.api_activity") do
     type :chart
     title "API activity"
+    info "Counts all requests received during the selected reporting period."
     value { |context| context.query_result.count }
     chart_type :area
     series do |context|
@@ -134,6 +135,8 @@ module AdminScreens
   end
 end
 ```
+
+Use `info` for optional contextual help that appears in a tooltip beside the widget title. It accepts a static value or a block evaluated with the widget context. Keep `subtitle` for visible descriptive copy and `description` for the existing full-card title tooltip behavior.
 
 ## Table exports
 
