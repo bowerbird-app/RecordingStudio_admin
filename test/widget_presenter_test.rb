@@ -234,6 +234,7 @@ class WidgetPresenterTest < Minitest::Test
       title: "Activity",
       subtitle: "Recent activity",
       description: nil,
+      info: nil,
       value: 42,
       change: "+10%",
       change_good_when: :up,

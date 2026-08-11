@@ -44,6 +44,7 @@ class ResolverTest < Minitest::Test
   RequestsTotalWidget = RecordingStudioAdmin::Widget.new("widgets.requests.total") do
     title "Total"
     description "Total requests returned by the current query."
+    info "Counts all requests received during the selected reporting period."
     value { |context| context.query_result.count }
     link_to { |context| context.admin_screen_path("requests") }
   end
@@ -87,6 +88,7 @@ class ResolverTest < Minitest::Test
 
   RequestsParamTitleWidget = RecordingStudioAdmin::Widget.new("widgets.requests.param_title") do
     title { |context| context.widget_param(:title, default: "Default title") }
+    info { |context| "Includes #{context.widget_param(:value, default: 1)} selected requests." }
     value { |context| context.widget_param(:value, default: 1) }
   end
 
@@ -198,6 +200,8 @@ class ResolverTest < Minitest::Test
     widget "widgets.requests.recent_statuses"
 
     widget "widgets.requests.traffic_preview"
+
+    widget "widgets.requests.param_title", params: { value: 7 }
 
     widget "widgets.requests.review_completion"
 
@@ -605,6 +609,18 @@ class ResolverTest < Minitest::Test
     assert_equal({ chart: 0, count: 0 }, events)
   end
 
+  def test_screen_placeholder_widgets_preserve_info
+    result = with_access_allowed do
+      RecordingStudioAdmin.resolve_screen(
+        key: "requests",
+        context: allowed_context,
+        resolve_widgets: false
+      )
+    end
+
+    assert_equal "Counts all requests received during the selected reporting period.", result.widgets.first.info
+  end
+
   def test_screen_summary_visibility_can_hide_metric_change_and_period
     result = with_access_allowed do
       RecordingStudioAdmin.resolve_screen(key: "hidden_summary", context: allowed_context)
@@ -766,7 +782,37 @@ class ResolverTest < Minitest::Test
     end
 
     assert_equal "Total requests returned by the current query.", widget.description
+    assert_equal "Counts all requests received during the selected reporting period.", widget.info
     assert_equal "Requests", widget.link_label
+  end
+
+  def test_widget_info_callable_is_resolved_with_widget_context
+    widget = with_access_allowed do
+      RecordingStudioAdmin::Resolvers::ScreenResolver.resolve_widget(
+        key: "requests",
+        widget_key: "widgets.requests.param_title",
+        context: allowed_context
+      )
+    end
+
+    assert_equal "Includes 7 selected requests.", widget.info
+  end
+
+  def test_widget_info_is_nil_when_not_defined
+    widget = RecordingStudioAdmin::Widget.new("without-info") do
+      value 1
+    end
+
+    assert_nil widget.resolve(RecordingStudioAdmin::Context.new).info
+  end
+
+  def test_widget_info_can_be_blank
+    widget = RecordingStudioAdmin::Widget.new("blank-info") do
+      info " "
+      value 1
+    end
+
+    assert_predicate widget.resolve(RecordingStudioAdmin::Context.new).info, :blank?
   end
 
   def test_widget_change_good_when_is_resolved
@@ -1419,6 +1465,7 @@ class ResolverTest < Minitest::Test
     assert_equal :area, traffic_preview.chart_type
     assert_nil traffic_preview.value
     assert_nil traffic_preview.series
+    assert_equal "Counts all requests received during the selected reporting period.", section.widgets.first.info
   end
 
   def test_section_resolver_resolves_one_widget_through_parent_section

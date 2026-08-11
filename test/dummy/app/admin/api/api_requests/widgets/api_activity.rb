@@ -5,6 +5,7 @@ module AdminScreens
     type :chart
     title "API activity"
     description "Seven-day request volume with the current period total and percentage change."
+    info "Counts all API requests received during the selected reporting period."
     metadata do |context|
       {
         period_label: AdminScreens::Base.widget_preset_label(
