@@ -20,18 +20,18 @@ module DummyAccessTestHelpers
     end
 
     previous_access_authorizer = RecordingStudioAccessible.configuration.access_management_authorizer
-    RecordingStudioAccessible.configuration.access_management_authorizer = ->(recording:, **) { recording.present? }
+    begin
+      RecordingStudioAccessible.configuration.access_management_authorizer = ->(recording:, **) { recording.present? }
 
-    result = RecordingStudioAccessible.grant_access(
-      recording: recording,
-      actor: actor,
-      role: role,
-      manager_actor: actor
-    )
+      result = RecordingStudioAccessible.grant_access(
+        recording: recording,
+        actor: actor,
+        role: role,
+        manager_actor: actor
+      )
 
-    raise "Failed to grant access in test: #{result.error}" if result.failure?
-  ensure
-    if defined?(previous_access_authorizer)
+      raise "Failed to grant access in test: #{result.error}" if result.failure?
+    ensure
       RecordingStudioAccessible.configuration.access_management_authorizer = previous_access_authorizer
     end
   end
