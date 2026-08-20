@@ -720,13 +720,15 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-turbo-frame="screen-table"'
     assert_includes response.body, 'data-action="click-&gt;recording-studio-admin--screen-filters#showTableSkeletons"'
     assert_includes response.body, 'data-pagination-content="true"'
-    assert_includes response.body, 'action="/recording_studio_exportable/exports"'
-    assert_includes response.body, 'name="export_token"'
-    assert_includes response.body, 'name="format"'
-    assert_includes response.body, 'value="csv"'
-    refute_includes response.body, 'name="export_key"'
-    assert_includes response.body, 'data-turbo="false"'
-    assert_includes response.body, "Export"
+    if defined?(RecordingStudioExportable::Engine)
+      assert_includes response.body, 'action="/recording_studio_exportable/exports"'
+      assert_includes response.body, 'name="export_token"'
+      assert_includes response.body, 'name="format"'
+      assert_includes response.body, 'value="csv"'
+      refute_includes response.body, 'name="export_key"'
+      assert_includes response.body, 'data-turbo="false"'
+      assert_includes response.body, "Export"
+    end
     assert_includes response.body, "Columns"
     assert_includes response.body, 'data-modal-id="screen-table-columns-modal"'
     assert_includes response.body, 'id="screen-table-columns-modal"'
@@ -831,6 +833,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
   end
 
   test "admin screen export includes all filtered rows instead of the paginated table page" do
+    skip "recording_studio_exportable is not on the RS 4.1 stack yet" unless defined?(RecordingStudioExportable::Engine)
+
     sign_in_admin_user
     ApiRequest.delete_all
 
@@ -893,6 +897,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
   end
 
   test "admin screen trusted export token includes selected columns and all filtered rows" do
+    skip "recording_studio_exportable is not on the RS 4.1 stack yet" unless defined?(RecordingStudioExportable::Engine)
+
     sign_in_admin_user
     ApiRequest.delete_all
 

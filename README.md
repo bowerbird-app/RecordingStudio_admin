@@ -186,22 +186,21 @@ widgets = recording_studio_admin_context.available_admin_widgets(
 ## Requirements
 
 - Rails 8.1+
-- RecordingStudio
-- RecordingStudioAccessible
-- FlatPack
+- RecordingStudio `~> 4.1`
+- RecordingStudioAccessible `~> 0.6`
+- FlatPack `~> 0.1.129`
 
-`RecordingStudioAccessible` is required. The generated admin root includes `RecordingStudioAccessible::AllowsAccessibleChildren` by default.
+`RecordingStudioAccessible` is required. Enable Accessible on the admin root (and any other recordable that should hold grants) with `RecordingStudio.enable_capability(:accessible, on: self)`. Keep the admin root owned (`shared: false`).
 
 Recordable types opt into admin sections with `RecordingStudioAdmin::AllowsAdminSections`:
 
 ```ruby
 class AdminRoot < ApplicationRecord
   include RecordingStudio::Recordable
-  include RecordingStudioAccessible::AllowsAccessibleChildren
   include RecordingStudioAdmin::AllowsAdminSections
 
-  recording_studio_recordable label: "Admin", root: true
-  recording_studio_accessible_children :access
+  recording_studio_recordable label: "Admin", root: true, shared: false
+  RecordingStudio.enable_capability(:accessible, on: self)
 
   recording_studio_admin_sections do
     section :root
@@ -211,6 +210,17 @@ class AdminRoot < ApplicationRecord
   end
 end
 ```
+
+For the first staff grant on an empty owned admin root, use Accessible bootstrap (no ENV authorizer):
+
+```ruby
+RecordingStudioAccessible.bootstrap_owner_access!(
+  recording: RecordingStudio.root_recording_for(admin_root),
+  actor: first_staff_user
+)
+```
+
+After that, continue with `grant_access` for additional staff. Configure `access_actor_types` in the Accessible initializer.
 
 Registering a section defines the reusable admin capability. Enabling it on a recordable type decides where it appears.
 
@@ -430,10 +440,9 @@ The backing class is app-owned or supplied by a third-party gem and must be a co
 ```ruby
 class ApiCallsAdminArea < ApplicationRecord
   include RecordingStudio::Recordable
-  include RecordingStudioAccessible::AllowsAccessibleChildren
 
   recording_studio_recordable label: "API calls admin", root: false, allowed_parent_types: [ "AdminRoot" ]
-  recording_studio_accessible_children :access
+  RecordingStudio.enable_capability(:accessible, on: self)
 end
 ```
 

@@ -2,6 +2,50 @@
 
 ## Unreleased
 
+## 2.0.0
+
+### ⚠ BREAKING CHANGES
+
+- Requires `recording_studio_accessible ~> 0.6` (and RecordingStudio `~> 4.1` via that stack). Hosts still on Accessible `0.3` must upgrade Accessible and RecordingStudio before installing Admin `2.0.0`.
+- Removed the `AllowsAccessibleChildren` / `recording_studio_accessible_children` compatibility bridge. Enable Accessible with `RecordingStudio.enable_capability(:accessible, on: …)` on each recordable that should hold grants.
+- Generated `AdminRoot` is an owned root (`shared: false`) and enables `:accessible` via the capability API.
+
+### Added
+
+- Dummy and docs guidance for first-staff seeding with `RecordingStudioAccessible.bootstrap_owner_access!` on an empty owned admin root (no ENV bootstrap authorizer).
+- RecordingStudio `4.1` harden indexes migration in the dummy app.
+
+### Changed
+
+- Bumped FlatPack to `~> 0.1.129`.
+- Dummy pins: RecordingStudio `v4.1.0`, Accessible `0.6.1` (PR branch until tagged), Root Switchable `v0.5.0`, FlatPack `v0.1.129`.
+- Dummy Tailwind sources aligned with sibling dummies so FlatPack / engine classes are included in the build.
+- Dummy Accessible initializer sets `access_actor_types = ["User"]`.
+
+### Removed
+
+- Optional `recording_studio_exportable` companion from the dummy Gemfile until that gem supports RecordingStudio `~> 4.1`. Table export demos remain gated behind `defined?(RecordingStudioExportable)`.
+
+### Upgrade Notes
+
+1. Upgrade RecordingStudio to `~> 4.1` and Accessible to `~> 0.6` (prefer `0.6.1` once tagged for `bootstrap_owner_access!`).
+2. Replace mixin enablement:
+
+   ```ruby
+   # Before
+   include RecordingStudioAccessible::AllowsAccessibleChildren
+   recording_studio_accessible_children :access
+
+   # After
+   RecordingStudio.enable_capability(:accessible, on: self)
+   ```
+
+3. Keep AdminRoot owned (`shared: false`). Do not make the admin root a shared root; Accessible refuses new grants on shared roots.
+4. Configure `RecordingStudioAccessible.configuration.access_actor_types` (for example `["User"]`).
+5. For the first staff grant on an empty owned admin root, call `RecordingStudioAccessible.bootstrap_owner_access!(recording:, actor:)`. Use `grant_access` for later invites.
+6. Run `rails g recording_studio:migrations` (or install the harden indexes migration) and `db:migrate` if upgrading from RecordingStudio 3.x.
+7. Re-run `recording_studio_admin:admin_root` only if you want the updated generator template; otherwise apply the enablement change by hand.
+
 ## 1.2.0
 
 ### Added

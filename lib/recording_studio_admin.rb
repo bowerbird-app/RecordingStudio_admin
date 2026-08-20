@@ -5,7 +5,6 @@ require "recording_studio_admin/errors"
 require "recording_studio_admin/surface"
 require "recording_studio_admin/configuration"
 require "recording_studio_admin/url_safety"
-require "recording_studio_admin/recording_studio_accessible_compatibility"
 require "recording_studio_admin/authorization"
 require "recording_studio_admin/admin_action_audit"
 require "recording_studio_admin/blast_radius"
@@ -45,8 +44,6 @@ require "recording_studio_admin/resolvers/resource_resolver"
 require "recording_studio_admin/resolvers/widget_resolver"
 require "recording_studio_admin/routing" if defined?(Rails)
 require "recording_studio_admin/engine" if defined?(Rails)
-
-RecordingStudioAdmin::RecordingStudioAccessibleCompatibility.install!
 
 module RecordingStudioAdmin
   class << self
