@@ -143,3 +143,7 @@ Style/OptionalBooleanParameter:
 Style/ClassAndModuleChildren:
   Exclude:
     - 'lib/generators/recording_studio_admin/admin_root/templates/app/controllers/admin/*.rb'
+
+# Data.define members intentionally mirror HTTP/display field names.
+Lint/DataDefineOverride:
+  Enabled: false
