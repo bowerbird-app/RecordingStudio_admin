@@ -31,4 +31,21 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "## Upgrading"
     assert_includes readme, "docs/UPGRADING.md"
   end
+
+  def test_docs_cover_frame_endpoints_and_the_2_0_1_page_load_redirect
+    upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
+    changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
+    readme = File.read(File.join(ROOT, "README.md"))
+
+    assert_includes upgrading, "## Upgrading to 2.0.1"
+    assert_includes upgrading, "Sec-Fetch-Dest: document"
+    assert_includes upgrading, "### Verify the upgrade"
+
+    assert_includes changelog, "## 2.0.1"
+    assert_includes changelog, "docs/UPGRADING.md#upgrading-to-201"
+
+    assert_includes readme, "### Frame endpoints"
+    assert_includes readme, "/admin/screens/:key/table_count"
+    assert_includes readme, "`Sec-Fetch-Dest: document`"
+  end
 end

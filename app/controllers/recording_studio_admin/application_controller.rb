@@ -11,6 +11,9 @@ module RecordingStudioAdmin
     end
     include RecordingStudioAdmin::AdminActionAuditing
 
+    # Only meaningful to a widget frame request, so they are dropped when redirecting to a page.
+    FRAME_ONLY_QUERY_PARAMS = %w[widget_view_variant widget_usage_index widget_render_variant].freeze
+
     layout :recording_studio_admin_layout
 
     helper RecordingStudioAdmin::WidgetRenderingHelper
@@ -105,6 +108,20 @@ module RecordingStudioAdmin
       "#{path}?#{query_string}"
     end
     # rubocop:enable Metrics/MethodLength
+
+    # Region and widget endpoints answer Turbo Frame fetches with a bare partial. Browsers set
+    # Sec-Fetch-Dest to "document" when a URL is loaded as the whole page (typed, bookmarked,
+    # refreshed, opened in a new tab), which would show that partial with no admin layout around
+    # it, so those visits are sent to the page that owns the frame instead.
+    def recording_studio_admin_page_visit?
+      request.headers["Sec-Fetch-Dest"] == "document"
+    end
+
+    def redirect_to_recording_studio_admin_page(path)
+      query = request.query_parameters.except(*FRAME_ONLY_QUERY_PARAMS).to_query
+
+      redirect_to(query.present? ? "#{path}?#{query}" : path)
+    end
 
     def recording_studio_admin_exportable_available?
       defined?(::RecordingStudioExportable::ExportsHelper)
