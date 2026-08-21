@@ -10,6 +10,29 @@ Those page loads now redirect to the screen or section page that owns the frame,
 
 Frame fetches are unaffected. Admin recognises a page load by the browser's `Sec-Fetch-Dest: document` request header, which browsers send only for top-level navigation; Turbo frame loads, XHR, and server-side requests never set it. Custom JavaScript that fetches these endpoints keeps receiving the fragment.
 
+### Verify the upgrade
+
+Add this integration test to your host app, replacing the screen key with one of your own:
+
+```ruby
+test "opening a screen table endpoint as a page lands on the screen" do
+  sign_in admin_user
+
+  get "/admin/screens/users/table",
+      params: { sort: "email", direction: "asc" },
+      headers: { "Sec-Fetch-Dest" => "document" }
+
+  assert_redirected_to "/admin/screens/users?direction=asc&sort=email"
+
+  get "/admin/screens/users/table", headers: { "Turbo-Frame" => "screen-table" }
+
+  assert_response :success
+  assert_includes response.body, '<turbo-frame id="screen-table">'
+end
+```
+
+If your app has custom JavaScript that fetches a frame endpoint, confirm it still receives the fragment. It will, unless it somehow sets `Sec-Fetch-Dest` itself, which browsers forbid.
+
 ## Upgrading to 2.0.0
 
 Admin `2.0.0` is a clean break onto Accessible `~> 0.6` and RecordingStudio `~> 4.1`. Hosts still on Accessible `0.3` (or RecordingStudio 3.x) must stay on Admin `1.2.x` until that stack is upgraded.
@@ -99,7 +122,8 @@ Tagged 1.x consumers are not broken by publishing 2.0. Anything that floats this
 
 ## Related
 
-- [CHANGELOG.md](../CHANGELOG.md#200)
+- [CHANGELOG.md](../CHANGELOG.md#201)
 - [README.md](../README.md#requirements)
+- [README.md](../README.md#frame-endpoints) for the frame endpoints and how a page load is told apart from a frame fetch
 - RecordingStudio `docs/UPGRADING.md` for 3.x to 4.1
 - Accessible CHANGELOG for 0.6.0 and 0.6.1

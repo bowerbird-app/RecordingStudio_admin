@@ -8,6 +8,14 @@
 
 - Loading a screen chart, table, table count, or widget endpoint as a whole page (typed URL, bookmark, refresh, or a new tab) no longer renders a bare unstyled fragment. Those page loads now redirect to the screen or section page that owns the frame, keeping the current query (sort, filters, page, columns). Turbo Frame and XHR fetches are unchanged.
 
+### Documentation
+
+- README documents the frame endpoints under "Routing and surfaces", including how a page load is told apart from a frame fetch.
+
+### Upgrade Notes
+
+See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-201). Drop-in patch release: no configuration, API, or dependency changes. Custom JavaScript that fetches the frame endpoints keeps receiving the fragment.
+
 ## 2.0.0
 
 ### ⚠ BREAKING CHANGES

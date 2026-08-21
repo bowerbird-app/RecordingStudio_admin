@@ -294,6 +294,22 @@ The surface root resolves that surface's `root_section`, which defaults to `root
 
 There are no catch-all routes.
 
+### Frame endpoints
+
+Screens load their chart, table, row count, and widgets through Turbo Frames, so the engine also routes the endpoints those frames fetch:
+
+```text
+/admin/screens/:key/chart
+/admin/screens/:key/table
+/admin/screens/:key/table_count
+/admin/screens/:screen_key/widgets/:widget_key
+/admin/sections/:section_key/widgets/:widget_key
+```
+
+These answer with a bare partial and no layout, because Turbo splices the response into a frame on a page that is already rendered. Loading one as a whole page — typing the URL, opening a bookmark, refreshing, or opening a frame in a new tab — redirects to the screen or section page that owns the frame, carrying the query string across so sort, filters, page, and columns are preserved.
+
+The engine treats a request as a page load when the browser sends `Sec-Fetch-Dest: document`, which happens only for top-level navigation. Turbo Frame loads, XHR, and server-side requests never set it, so anything fetching these endpoints programmatically keeps receiving the partial.
+
 ## How admin screens are assembled
 
 The engine is driven by three definition types:
