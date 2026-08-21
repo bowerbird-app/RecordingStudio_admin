@@ -5,9 +5,7 @@ gem "recording_studio_admin", path: "../.."
 
 # RecordingStudio engine
 gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.1.0"
-# Accessible 0.6.1 is on main (PR #15 merged) but not tagged yet; pin the merge commit.
-gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible",
-                                    ref: "f1d777f047aca9eefbdedbb8f0a54eea29838384"
+gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.6.1"
 
 # Root switcher for the top nav
 gem "recording_studio_root_switchable", github: "bowerbird-app/RecordingStudio_root_switchable",

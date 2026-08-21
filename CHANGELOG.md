@@ -18,7 +18,7 @@
 ### Changed
 
 - Bumped FlatPack to `~> 0.1.129`.
-- Dummy pins: RecordingStudio `v4.1.0`, Accessible `0.6.1` (merged main commit until tagged), Root Switchable `v0.5.0`, FlatPack `v0.1.129`.
+- Dummy pins: RecordingStudio `v4.1.0`, Accessible `v0.6.1`, Root Switchable `v0.5.0`, FlatPack `v0.1.129`.
 - Dummy Tailwind sources aligned with sibling dummies so FlatPack / engine classes are included in the build.
 - Dummy Accessible initializer sets `access_actor_types = ["User"]`.
 
@@ -28,7 +28,7 @@
 
 ### Upgrade Notes
 
-1. Upgrade RecordingStudio to `~> 4.1` and Accessible to `~> 0.6` (prefer `0.6.1` once tagged; it is already on Accessible `main`).
+1. Upgrade RecordingStudio to `~> 4.1` and Accessible to `~> 0.6` (this release is tested with Accessible `v0.6.1`).
 2. Replace mixin enablement:
 
    ```ruby

@@ -8,9 +8,7 @@ gemspec
 # Private RecordingStudio ecosystem dependencies used by the engine during development/test.
 gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.129"
 gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.1.0"
-# Accessible 0.6.1 is on main (PR #15 merged) but not tagged yet; pin the merge commit.
-gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible",
-                                   ref: "f1d777f047aca9eefbdedbb8f0a54eea29838384"
+gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.6.1"
 
 gem "devise"
 gem "puma"
