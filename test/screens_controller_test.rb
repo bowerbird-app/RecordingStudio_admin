@@ -14,7 +14,8 @@ class ScreensControllerTest < Minitest::Test
   def test_table_endpoint_sends_a_page_visit_to_the_screen_page
     controller = build_screens_controller(
       params: { key: "recording_studio_users" },
-      query_string: "sort=email&direction=asc"
+      query_string: "sort=email&direction=asc",
+      sec_fetch_dest: "document"
     )
 
     controller.table
@@ -25,7 +26,7 @@ class ScreensControllerTest < Minitest::Test
   end
 
   def test_chart_endpoint_sends_a_page_visit_to_the_screen_page
-    controller = build_screens_controller(params: { key: "recording_studio_users" })
+    controller = build_screens_controller(params: { key: "recording_studio_users" }, sec_fetch_dest: "document")
 
     controller.chart
 
@@ -33,7 +34,7 @@ class ScreensControllerTest < Minitest::Test
   end
 
   def test_table_count_endpoint_sends_a_page_visit_to_the_screen_page
-    controller = build_screens_controller(params: { key: "recording_studio_users" })
+    controller = build_screens_controller(params: { key: "recording_studio_users" }, sec_fetch_dest: "document")
 
     controller.table_count
 
@@ -72,6 +73,18 @@ class ScreensControllerTest < Minitest::Test
     assert_equal "recording_studio_admin/screens/table_frame", controller.rendered_partial
   end
 
+  def test_table_endpoint_renders_the_frame_for_a_client_that_sends_no_fetch_metadata
+    controller = build_screens_controller(params: { key: "recording_studio_users" }, sec_fetch_dest: nil)
+    resolved_screen = Object.new
+
+    with_singleton_stub(RecordingStudioAdmin, :resolve_screen, ->(**) { resolved_screen }) do
+      controller.table
+    end
+
+    assert_nil controller.response.location
+    assert_equal "recording_studio_admin/screens/table_frame", controller.rendered_partial
+  end
+
   def test_screen_widget_endpoint_sends_a_page_visit_to_the_screen_page
     controller = build_widget_controller(
       RecordingStudioAdmin::ScreenWidgetsController,
@@ -97,22 +110,24 @@ class ScreensControllerTest < Minitest::Test
 
   private
 
-  def build_screens_controller(params:, query_string: "", turbo_frame: nil, xhr: false)
+  def build_screens_controller(params:, query_string: "", turbo_frame: nil, xhr: false, sec_fetch_dest: "empty")
     build_controller(
       RecordingStudioAdmin::ScreensController,
       params: params,
       query_string: query_string,
       turbo_frame: turbo_frame,
-      xhr: xhr
+      xhr: xhr,
+      sec_fetch_dest: sec_fetch_dest
     )
   end
 
   def build_widget_controller(controller_class, params:, query_string: "")
-    build_controller(controller_class, params: params, query_string: query_string)
+    build_controller(controller_class, params: params, query_string: query_string, sec_fetch_dest: "document")
   end
 
-  def build_controller(controller_class, params:, query_string:, turbo_frame: nil, xhr: false)
+  def build_controller(controller_class, params:, query_string:, turbo_frame: nil, xhr: false, sec_fetch_dest: nil)
     env = { "QUERY_STRING" => query_string }
+    env["HTTP_SEC_FETCH_DEST"] = sec_fetch_dest if sec_fetch_dest
     env["HTTP_TURBO_FRAME"] = turbo_frame if turbo_frame
     env["HTTP_X_REQUESTED_WITH"] = "XMLHttpRequest" if xhr
 

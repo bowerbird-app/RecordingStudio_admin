@@ -609,6 +609,46 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     RecordingStudioAdmin.configuration.async_widgets.enabled = original_async_enabled
   end
 
+  test "opening a frame endpoint as a page lands on the screen or section page" do
+    sign_in_admin_user
+    page_load = { "Sec-Fetch-Dest" => "document" }
+
+    get "/admin/screens/users/table", params: { sort: "email", direction: "asc" }, headers: page_load
+
+    assert_redirected_to "/admin/screens/users?direction=asc&sort=email"
+    follow_redirect!
+    assert_response :success
+    assert_includes response.body, 'id="screen-table" src="/admin/screens/users/table?'
+
+    get "/admin/screens/users/chart", headers: page_load
+
+    assert_redirected_to "/admin/screens/users"
+
+    get "/admin/screens/users/table_count", headers: page_load
+
+    assert_redirected_to "/admin/screens/users"
+
+    get "/admin/screens/users/widgets/widgets.users.active_users",
+        params: { widget_render_variant: "compact" },
+        headers: page_load
+
+    assert_redirected_to "/admin/screens/users"
+
+    get "/admin/sections/users/widgets/widgets.user_activity.active_users", headers: page_load
+
+    assert_redirected_to "/admin/sections/users"
+  end
+
+  test "frame endpoints still answer Turbo Frame fetches with the bare frame" do
+    sign_in_admin_user
+
+    get "/admin/screens/users/table", headers: { "Sec-Fetch-Dest" => "empty", "Turbo-Frame" => "screen-table" }
+
+    assert_response :success
+    assert_includes response.body, '<turbo-frame id="screen-table">'
+    refute_includes response.body, "<html"
+  end
+
   test "mounted access page renders for the admin root recording" do
     sign_in_admin_user
 

@@ -109,11 +109,12 @@ module RecordingStudioAdmin
     end
     # rubocop:enable Metrics/MethodLength
 
-    # Region and widget endpoints answer Turbo Frame fetches with a bare partial. A browser that
-    # lands on one as a page (direct visit, bookmark, or JS-less link) would render that partial
-    # without the admin layout, so those visits are sent to the page that owns the frame.
+    # Region and widget endpoints answer Turbo Frame fetches with a bare partial. Browsers set
+    # Sec-Fetch-Dest to "document" when a URL is loaded as the whole page (typed, bookmarked,
+    # refreshed, opened in a new tab), which would show that partial with no admin layout around
+    # it, so those visits are sent to the page that owns the frame instead.
     def recording_studio_admin_page_visit?
-      request.headers["Turbo-Frame"].blank? && !request.xhr?
+      request.headers["Sec-Fetch-Dest"] == "document"
     end
 
     def redirect_to_recording_studio_admin_page(path)
