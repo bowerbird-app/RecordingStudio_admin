@@ -36,14 +36,20 @@ module RecordingStudioAdmin
     end
 
     def chart
+      return redirect_to_screen if recording_studio_admin_page_visit?
+
       render_chart
     end
 
     def table
+      return redirect_to_screen if recording_studio_admin_page_visit?
+
       render_table
     end
 
     def table_count
+      return redirect_to_screen if recording_studio_admin_page_visit?
+
       @screen = resolve_screen(
         resolve_summary: false,
         resolve_chart: false,
@@ -57,6 +63,10 @@ module RecordingStudioAdmin
     end
 
     private
+
+    def redirect_to_screen
+      redirect_to_recording_studio_admin_page(recording_studio_admin_context.admin_screen_path(params[:key]))
+    end
 
     def render_chart
       @screen = resolve_screen(

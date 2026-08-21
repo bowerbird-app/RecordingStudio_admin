@@ -1,5 +1,19 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.0.1
+
+Drop-in bug fix. No configuration, API, or dependency changes.
+
+Screen region endpoints (`/screens/:key/chart`, `/screens/:key/table`, `/screens/:key/table_count`) and widget endpoints (`/screens/:key/widgets/:widget_key`, `/sections/:key/widgets/:widget_key`) exist to answer Turbo Frame fetches. Reaching one as a page used to return the bare partial, which the browser rendered without the admin layout or any styling. Those requests now redirect to the screen or section page that owns the frame, carrying the query string across so the sort, filters, page, and columns are preserved.
+
+A request counts as a frame fetch when it carries a `Turbo-Frame` header (Turbo sets this for lazy frame `src` loads and `data-turbo-frame` links) or is an XHR (`X-Requested-With: XMLHttpRequest`, which FlatPack infinite pagination sends). Everything else is treated as a page visit and redirected.
+
+If you fetch these endpoints from your own JavaScript, send one of those two headers so you keep getting the fragment:
+
+```js
+fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+```
+
 ## Upgrading to 2.0.0
 
 Admin `2.0.0` is a clean break onto Accessible `~> 0.6` and RecordingStudio `~> 4.1`. Hosts still on Accessible `0.3` (or RecordingStudio 3.x) must stay on Admin `1.2.x` until that stack is upgraded.

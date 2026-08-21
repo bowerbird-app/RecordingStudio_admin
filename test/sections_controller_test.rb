@@ -272,8 +272,11 @@ class SectionsControllerTest < Minitest::Test
                          RecordingStudioAdmin::SectionsController
                        end
 
+    widget_controller = controller_class != RecordingStudioAdmin::SectionsController
+    request_env = widget_controller ? { "HTTP_TURBO_FRAME" => "widget-frame" } : {}
+
     controller_class.new.tap do |controller|
-      controller.set_request! ActionDispatch::TestRequest.create
+      controller.set_request! ActionDispatch::TestRequest.create(request_env)
       controller.set_response! ActionDispatch::TestResponse.new
       controller.define_singleton_method(:params) { params }
     end

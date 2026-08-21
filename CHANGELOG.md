@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.0.1
+
+### Fixed
+
+- Landing on a screen chart, table, table count, or widget endpoint as a page (direct visit, bookmark, refresh, or a link followed without Turbo) no longer renders a bare unstyled fragment. Those visits now redirect to the screen or section page that owns the frame, keeping the current query (sort, filters, page, columns).
+
 ## 2.0.0
 
 ### ⚠ BREAKING CHANGES
