@@ -43,8 +43,8 @@ module RecordingStudioAdmin
     end
 
     def search_result_groups(items)
-      section_lookup = @admin_items.select { |item| item.type == :section }.each_with_object({}) do |item, lookup|
-        lookup[item.key.to_s] = item.title.to_s
+      section_lookup = @admin_items.select { |item| item.type == :section }.to_h do |item|
+        [item.key.to_s, item.title.to_s]
       end
 
       groups = []

@@ -2,6 +2,42 @@
 
 ## Unreleased
 
+## 2.0.0
+
+### ⚠ BREAKING CHANGES
+
+- Requires `recording_studio_accessible ~> 0.6` (and RecordingStudio `~> 4.1` via that stack). Hosts still on Accessible `0.3` must upgrade Accessible and RecordingStudio before installing Admin `2.0.0`.
+- Removed the `AllowsAccessibleChildren` / `recording_studio_accessible_children` compatibility bridge. Enable Accessible with `RecordingStudio.enable_capability(:accessible, on: …)` on each recordable that should hold grants.
+- Generated `AdminRoot` is an owned root (`shared: false`) and enables `:accessible` via the capability API.
+
+### Added
+
+- Dummy and docs guidance for first-staff seeding with `RecordingStudioAccessible.bootstrap_owner_access!` on an empty owned admin root (no ENV bootstrap authorizer).
+- RecordingStudio `4.1` harden indexes migration in the dummy app.
+
+### Changed
+
+- Bumped FlatPack to `~> 0.1.129`.
+- Dummy pins: RecordingStudio `v4.1.0`, Accessible `v0.6.1`, Root Switchable `v0.5.0`, FlatPack `v0.1.129`.
+- Dummy Tailwind sources aligned with sibling dummies so FlatPack / engine classes are included in the build.
+- Dummy Accessible initializer sets `access_actor_types = ["User"]`.
+
+### Removed
+
+- Dummy no longer ships `recording_studio_exportable`. Exportable `0.2.0` requires RecordingStudio `~> 4.2`; Admin still gates export UI behind `defined?(RecordingStudioExportable)`.
+
+### Upgrade Notes
+
+See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
+
+1. Upgrade RecordingStudio to `~> 4.1` and Accessible to `~> 0.6` (tested with Accessible `v0.6.1`) and FlatPack to `~> 0.1.129` before installing Admin `2.0.0`.
+2. Replace `AllowsAccessibleChildren` / `recording_studio_accessible_children` with `RecordingStudio.enable_capability(:accessible, on: self)`.
+3. Keep AdminRoot owned (`shared: false`). Do not make the admin root a shared root.
+4. Configure `access_actor_types` (for example `["User"]`).
+5. First staff on an empty owned admin root: `RecordingStudioAccessible.bootstrap_owner_access!(recording:, actor:)`. Later invites: `grant_access`.
+6. From RecordingStudio 3.x, run `rails g recording_studio:migrations` and `db:migrate`.
+7. Billing (`~> 1.1.0`), API dummy (`1.1.0`), and Notifications dummy (`1.0.0`) stay on Admin 1.x until those gems bump. Webhooks tracks this repo untagged and must pin `1.2.0` or upgrade its RS/Accessible stack before `bundle update`. Users 0.1 does not need this release; Users Phase 6 does.
+
 ## 1.2.0
 
 ### Added

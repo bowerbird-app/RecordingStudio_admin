@@ -6,10 +6,9 @@ source "https://rubygems.org"
 gemspec
 
 # Private RecordingStudio ecosystem dependencies used by the engine during development/test.
-gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.124"
-gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v3.0.2"
-gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "0.3.2"
-gem "recording_studio_exportable", github: "bowerbird-app/RecordingStudio_exportable"
+gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.129"
+gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.1.0"
+gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.6.1"
 
 gem "devise"
 gem "puma"
@@ -17,6 +16,7 @@ gem "sprockets-rails"
 
 group :development, :test do
   gem "debug"
+  gem "minitest-mock"
   gem "simplecov", require: false
 end
 

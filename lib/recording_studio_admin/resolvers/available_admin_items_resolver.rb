@@ -174,8 +174,8 @@ module RecordingStudioAdmin
       def filter_by_parent(items)
         return items if @parent.blank?
 
-        parent_lookup = items.each_with_object({}) do |item, lookup|
-          lookup[item.key.to_s] = item.parent_key&.to_s
+        parent_lookup = items.to_h do |item|
+          [item.key.to_s, item.parent_key&.to_s]
         end
 
         items.select { |item| descendant_of_parent?(item.parent_key, parent_lookup) }

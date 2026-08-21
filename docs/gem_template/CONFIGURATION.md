@@ -266,11 +266,10 @@ Registering a section makes the definition available to the engine. It does not 
 ```ruby
 class AdminRoot < ApplicationRecord
   include RecordingStudio::Recordable
-  include RecordingStudioAccessible::AllowsAccessibleChildren
   include RecordingStudioAdmin::AllowsAdminSections
 
-  recording_studio_recordable label: "Admin", root: true
-  recording_studio_accessible_children :access
+  recording_studio_recordable label: "Admin", root: true, shared: false
+  RecordingStudio.enable_capability(:accessible, on: self)
 
   recording_studio_admin_sections do
     section :root

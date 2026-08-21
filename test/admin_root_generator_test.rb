@@ -33,16 +33,18 @@ class AdminRootGeneratorTest < Minitest::Test
     assert_includes template, "head :forbidden"
   end
 
-  def test_generated_admin_root_includes_accessible_children
+  def test_generated_admin_root_enables_accessible_capability
     template = File.read(generator_template_path("app/models/admin_root.rb"))
     admin_audit_log_template = File.read(generator_template_path("app/models/admin_audit_log.rb"))
     audit_migration_template = File.read(generator_template_path("db/migrate/create_admin_audit_logs.rb"))
     generator_source = File.read(File.join(ROOT,
                                            "lib/generators/recording_studio_admin/admin_root/admin_root_generator.rb"))
 
-    assert_includes template, "include RecordingStudioAccessible::AllowsAccessibleChildren"
     assert_includes template, "include RecordingStudioAdmin::AllowsAdminSections"
-    assert_includes template, "recording_studio_accessible_children :access"
+    assert_includes template, "recording_studio_recordable label: \"Admin\", root: true, shared: false"
+    assert_includes template, "RecordingStudio.enable_capability(:accessible, on: self)"
+    refute_includes template, "AllowsAccessibleChildren"
+    refute_includes template, "recording_studio_accessible_children"
     assert_includes template, "recording_studio_admin_sections do"
     assert_includes template, "section :root"
     assert_includes template, "section :admin_activity_logs"
