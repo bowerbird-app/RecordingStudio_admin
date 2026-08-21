@@ -5,11 +5,13 @@ This guide covers the host-app steps required to mount `RecordingStudioAdmin`, w
 ## Prerequisites
 
 - Rails 8.1+
-- `RecordingStudio`
-- `RecordingStudioAccessible`
-- `FlatPack`
+- RecordingStudio `~> 4.1`
+- RecordingStudioAccessible `~> 0.6`
+- FlatPack `~> 0.1.129`
 - A host-app authentication method such as `authenticate_user!`
 - A way to resolve the current `RecordingStudio::Recording` that owns the admin context
+
+From Admin `1.x`, see [docs/UPGRADING.md](../UPGRADING.md).
 
 ## Install the gem
 

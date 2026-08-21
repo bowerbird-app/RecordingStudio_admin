@@ -9,6 +9,10 @@ It provides two separate capabilities:
 
 The old admin gem is not an implementation guide for this replacement.
 
+## Upgrading
+
+Hosts moving from Admin `1.x` (Accessible `~> 0.3`, RecordingStudio 3.x) to `2.0.0` should follow [docs/UPGRADING.md](docs/UPGRADING.md). That release requires Accessible `~> 0.6` and RecordingStudio `~> 4.1`.
+
 ## Quick start
 
 1. Add the gem to the host app and run the install generator:
