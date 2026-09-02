@@ -3,8 +3,18 @@
 require "test_helper"
 
 class RecordingStudioAdminTest < Minitest::Test
-  def test_version_exists
-    refute_nil ::RecordingStudioAdmin::VERSION
+  def test_version_matches_the_current_release
+    assert_equal "2.0.2", ::RecordingStudioAdmin::VERSION
+  end
+
+  def test_lockfiles_match_the_current_release
+    root = File.expand_path("..", __dir__)
+    version = ::RecordingStudioAdmin::VERSION
+
+    %w[Gemfile.lock test/dummy/Gemfile.lock].each do |relative|
+      lockfile = File.read(File.join(root, relative))
+      assert_includes lockfile, "recording_studio_admin (#{version})", relative
+    end
   end
 
   def test_engine_exists

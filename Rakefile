@@ -10,6 +10,7 @@ DUMMY_TEST_FILES = [
 DUMMY_GEMFILE = File.expand_path("test/dummy/Gemfile", __dir__)
 DUMMY_APP_ROOT = File.expand_path("test/dummy", __dir__)
 DUMMY_APP_TEST_FILES = %w[
+  test/cursor_boot_files_test.rb
   test/integration/admin_layout_width_consistency_test.rb
   test/integration/admin_resource_crud_test.rb
   test/integration/admin_section_rendering_test.rb

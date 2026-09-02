@@ -32,6 +32,23 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "docs/UPGRADING.md"
   end
 
+  def test_docs_cover_cloud_agent_boot_and_the_2_0_2_rebuild
+    upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
+    changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
+    readme = File.read(File.join(ROOT, "README.md"))
+
+    assert_includes upgrading, "## Upgrading to 2.0.2"
+    assert_includes upgrading, "Rebuild the Cloud Agent environment with Draft off"
+    assert_includes upgrading, "cursor-skills.md"
+
+    assert_includes changelog, "## 2.0.2"
+    assert_includes changelog, "docs/UPGRADING.md#upgrading-to-202"
+    assert_includes changelog, "Draft off"
+
+    assert_includes readme, "## Cloud Agent boot"
+    assert_includes readme, "docs/cursor-skills.md"
+  end
+
   def test_docs_cover_frame_endpoints_and_the_2_0_1_page_load_redirect
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
