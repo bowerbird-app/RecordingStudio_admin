@@ -12,6 +12,7 @@ This directory still lives under `docs/gem_template/` because it originated from
 ## Reference guides in this folder
 
 - [CODESPACES.md](CODESPACES.md): devcontainer and Codespaces workflow
+- [../cursor-skills.md](../cursor-skills.md): Cloud Agent boot files and the fetched skill pack
 
 The older template-era docs that described generic gem-template hooks, services, migrations, renaming, and other non-RecordingStudioAdmin setup have been removed from this repository.
 

@@ -674,6 +674,7 @@ The admin root generator creates editable app-owned files including `Admin::Base
 - Admin screens guide: practical setup and DSL guide for screens, sections, widgets, and registration
 - Installation guide: host-app installation and generator behavior
 - Configuration guide: initializer options, access recording patterns, and runtime wiring
+- Cloud Agent boot: [Cursor skills in Cloud Agents](docs/cursor-skills.md)
 
 ## Dummy app
 
@@ -686,6 +687,15 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 - Background Jobs
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
+
+## Cloud Agent boot
+
+Cloud Agent Builds run `.cursor/install.sh`, then `.cursor/fetch-skills.sh`.
+The install hook provisions a cold image. On a warm snapshot it skips apt,
+ruby-build, db:prepare, and tailwind when Ruby, bundle, and Postgres are
+already usable. Fetch-skills always runs last. `.cursor/start.sh` starts
+PostgreSQL on each boot. Rebuild with Draft off to load a new pack. See
+[Cursor skills in Cloud Agents](docs/cursor-skills.md).
 
 ## Future API readiness
 

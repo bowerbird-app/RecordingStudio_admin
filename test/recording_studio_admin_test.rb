@@ -3,8 +3,8 @@
 require "test_helper"
 
 class RecordingStudioAdminTest < Minitest::Test
-  def test_version_exists
-    refute_nil ::RecordingStudioAdmin::VERSION
+  def test_version_matches_the_current_release
+    assert_equal "2.0.2", ::RecordingStudioAdmin::VERSION
   end
 
   def test_engine_exists

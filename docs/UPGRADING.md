@@ -1,5 +1,14 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.0.2
+
+No host, schema, or product changes. Admin screens and widgets are unchanged.
+
+This release adds Cloud Agent boot files so a Build can provision a cold
+image, skip that work on a warm snapshot, and always fetch the skill pack
+last. Rebuild the Cloud Agent environment with Draft off so Build loads the
+pack. See [Cursor skills in Cloud Agents](cursor-skills.md).
+
 ## Upgrading to 2.0.1
 
 Drop-in bug fix. No configuration, API, or dependency changes.
