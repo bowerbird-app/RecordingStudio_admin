@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Dummy and engine Gemfiles pin RecordingStudio to `v4.2.2`.
+
 ## 2.0.2
 
 Cloud Agent install no longer fails a warm environment rebuild. Skills still
