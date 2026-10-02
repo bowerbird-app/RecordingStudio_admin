@@ -192,7 +192,7 @@
               <% if widget_href.present? %>
                 <div class="shrink-0">
                   <%= render FlatPack::Tooltip::Component.new(text: "Open #{widget_link_label}") do %>
-                    <%= render FlatPack::Button::Component.new(text: "More", url: widget_href, style: :secondary, size: :sm) %>
+                    <%= render FlatPack::Button::Component.new(text: "More", href: widget_href, style: :secondary, size: :sm) %>
                   <% end %>
                 </div>
               <% end %>
