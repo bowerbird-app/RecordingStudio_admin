@@ -25,6 +25,8 @@ module RecordingStudioAdmin
 
     initializer "recording_studio_admin.built_in_admin_activity_logs" do |app|
       app.config.to_prepare do
+        RecordingStudioAdmin::FlatPackGeoChartSupport.install!
+        RecordingStudioAdmin::FlatPackApiCompat.install!
         RecordingStudioAdmin.register_screen(RecordingStudioAdmin::AdminActivityLogsScreen)
         RecordingStudioAdmin.register_section(RecordingStudioAdmin::AdminActivityLogsSection)
         RecordingStudioAdmin.register_widget(RecordingStudioAdmin::AdminActivityLogsActivityOverview)

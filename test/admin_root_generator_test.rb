@@ -97,7 +97,7 @@ class AdminRootGeneratorTest < Minitest::Test
     assert_includes search_results_template, "hidden: !item_matches_search"
     assert_includes search_results_template, "FlatPack::Badge::Component"
     assert_includes search_results_template, "No admin screens or sections match that search."
-    assert_includes template, "FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url"
+    assert_includes template, "FlatPack::PageNav::Component.new(anchor_href: page_nav_anchor_url"
     assert_includes template, "href: preserve_anchor_url(section.url)"
     assert_includes template, "FlatPack::List::Component"
     assert_includes template, "FlatPack::List::Item"

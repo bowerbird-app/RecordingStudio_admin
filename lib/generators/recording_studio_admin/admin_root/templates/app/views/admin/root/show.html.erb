@@ -1,4 +1,4 @@
-<%= render FlatPack::PageNav::Component.new(anchor_url: page_nav_anchor_url, class: "mb-4") do |page_nav| %>
+<%= render FlatPack::PageNav::Component.new(anchor_href: page_nav_anchor_url, class: "mb-4") do |page_nav| %>
   <% page_nav.right do %>
     <% if @admin_access_recording.present? %>
       <%= recording_studio_accessible_avatars(@admin_access_recording, button_style: :ghost, button_size: :md) %>

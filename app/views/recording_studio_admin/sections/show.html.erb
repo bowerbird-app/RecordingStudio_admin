@@ -22,7 +22,7 @@
       <% if action_links.any? %>
       <% page_title.slot do %>
         <% visible_links.each do |link| %>
-          <%= render FlatPack::Button::Component.new(text: link.text, url: preserve_anchor_url(link.url), style: link.style) %>
+          <%= render FlatPack::Button::Component.new(text: link.text, href: preserve_anchor_url(link.url), style: link.style) %>
         <% end %>
 
         <% if overflow_links.any? %>
