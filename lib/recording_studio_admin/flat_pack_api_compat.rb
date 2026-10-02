@@ -6,39 +6,38 @@ module RecordingStudioAdmin
   module FlatPackApiCompat
     module PageNavInitialize
       def initialize(**kwargs)
-        if kwargs.key?(:anchor_url) && !kwargs.key?(:anchor_href)
-          kwargs[:anchor_href] = kwargs.delete(:anchor_url)
-        end
-        if kwargs.key?(:secondary_anchor_url) && !kwargs.key?(:secondary_anchor_href)
-          kwargs[:secondary_anchor_href] = kwargs.delete(:secondary_anchor_url)
-        end
+        remap_alias!(kwargs, :anchor_url, :anchor_href)
+        remap_alias!(kwargs, :secondary_anchor_url, :secondary_anchor_href)
+        remap_back_url!(kwargs)
+        super
+      end
+
+      private
+
+      def remap_alias!(kwargs, from, to)
+        kwargs[to] = kwargs.delete(from) if kwargs.key?(from) && !kwargs.key?(to)
+      end
+
+      def remap_back_url!(kwargs)
         if kwargs.key?(:back_url) && !kwargs.key?(:secondary_anchor_href)
           kwargs[:secondary_anchor_href] = kwargs.delete(:back_url)
         else
           kwargs.delete(:back_url)
         end
-
-        super(**kwargs)
       end
     end
 
     module SidebarItemInitialize
       def initialize(**kwargs)
-        if kwargs.key?(:label) && !kwargs.key?(:text)
-          kwargs[:text] = kwargs.delete(:label)
-        end
-
-        super(**kwargs)
+        kwargs[:text] = kwargs.delete(:label) if kwargs.key?(:label) && !kwargs.key?(:text)
+        super
       end
     end
 
     module ButtonInitialize
       def initialize(**kwargs)
-        if kwargs.key?(:url) && !kwargs.key?(:href)
-          kwargs[:href] = kwargs.delete(:url)
-        end
-
-        super(**kwargs)
+        kwargs[:href] = kwargs.delete(:url) if kwargs.key?(:url) && !kwargs.key?(:href)
+        super
       end
     end
 
