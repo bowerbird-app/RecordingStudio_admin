@@ -5,6 +5,9 @@
 ### Changed
 
 - Dummy and engine Gemfiles pin RecordingStudio to `v4.2.2`.
+- Dummy admin root PageNav assertion matches RecordingStudio `4.2.2` layout
+  (`anchor_href`). Close still needs FlatPack `>= 0.1.197`; this pin keeps
+  FlatPack at `v0.1.129`.
 
 ## 2.0.2
 
