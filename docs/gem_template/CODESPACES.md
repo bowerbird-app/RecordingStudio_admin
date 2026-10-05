@@ -1,6 +1,6 @@
 > **Repository Documentation**
 > *   **Applies To:** RecordingStudioAdmin devcontainer and dummy app workflow
-> *   **Last Updated:** June 17, 2026
+> *   **Last Updated:** October 5, 2026
 >
 > *Maintainers: Please update the date above when modifying this file.*
 
@@ -78,6 +78,8 @@ Set automatically inside the container:
 | `REDIS_URL` | `redis://redis:6379/0` |
 | `CODESPACES` | `true` |
 
+Dummy credentials are not set automatically. Put the shared RecordingStudio_* dummy master key in a Codespaces secret named `RAILS_MASTER_KEY`, or write it to `test/dummy/config/master.key`. Keep `test/dummy/config/credentials.yml.enc`; do not generate a new key.
+
 ---
 
 ## CSRF Protection
@@ -148,6 +150,7 @@ If you change `.devcontainer/` files:
 | Tailwind not rebuilding | Restart `bin/dev` or run `bin/rails tailwindcss:build`. |
 | `bin/dev` exits immediately | Remove a stale `test/dummy/tmp/pids/server.pid`; the dummy `bin/dev` script already cleans up dead PID files on startup. |
 | Port already in use | Use a different port: `PORT=3001 bin/dev`. |
+| Couldn't decrypt credentials | Set `RAILS_MASTER_KEY` to the shared Recording Studio dummy key, or write it to `test/dummy/config/master.key`. Do not generate a new key. |
 
 ---
 
