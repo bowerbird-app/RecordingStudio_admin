@@ -688,6 +688,8 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
+The dummy pins Accessible `v0.11.1`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+
 ## Cloud Agent boot
 
 Cloud Agent Builds run `.cursor/install.sh`, then `.cursor/fetch-skills.sh`.
