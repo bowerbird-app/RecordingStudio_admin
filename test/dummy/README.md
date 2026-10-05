@@ -13,6 +13,8 @@ This Rails app exists to validate the Recording Studio addon template in a real 
 
 ## Quick Start
 
+Dummy credentials (`config/credentials.yml.enc`) use the shared RecordingStudio_* development master key. Set `RAILS_MASTER_KEY` or write that key to `config/master.key` (gitignored). Do not generate a per-repo dummy key.
+
 ```bash
 cd test/dummy
 bundle install
