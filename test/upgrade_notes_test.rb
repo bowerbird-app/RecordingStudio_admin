@@ -11,7 +11,7 @@ class UpgradeNotesTest < Minitest::Test
 
     assert_includes upgrading, "## Upgrading to 2.0.0"
     assert_includes upgrading, "recording_studio_accessible ~> 0.6"
-    assert_includes upgrading, 'tag: "v0.6.1"'
+    assert_includes upgrading, 'tag: "v0.11.1"'
     assert_includes upgrading, "RecordingStudio.enable_capability(:accessible, on: self)"
     assert_includes upgrading, "bootstrap_owner_access!"
     assert_includes upgrading, "Keep **AdminRoot owned**"
@@ -23,6 +23,7 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes changelog, "### Upgrade Notes"
     assert_includes changelog, "docs/UPGRADING.md"
     assert_includes changelog, "Webhooks tracks this repo untagged"
+    assert_includes changelog, "Accessible `0.8`–`0.11` migrations"
   end
 
   def test_readme_points_hosts_at_upgrade_notes
@@ -30,6 +31,8 @@ class UpgradeNotesTest < Minitest::Test
 
     assert_includes readme, "## Upgrading"
     assert_includes readme, "docs/UPGRADING.md"
+    assert_includes readme, "Accessible `v0.11.1`"
+    assert_includes readme, "bootstrap_owner_access!"
   end
 
   def test_docs_cover_cloud_agent_boot_and_the_2_0_2_rebuild

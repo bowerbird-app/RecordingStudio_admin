@@ -5,6 +5,10 @@
 ### Changed
 
 - Dummy and engine Gemfiles pin RecordingStudio to `v4.2.2`.
+- Dummy and engine Gemfiles pin RecordingStudio Accessible to `v0.11.1`.
+- Dummy installs Accessible `0.8`–`0.11` migrations (dependent grants,
+  invitations, string roles). Seeds and tests grant access through
+  `bootstrap_owner_access!` and `grant_access` only.
 - Dummy admin root PageNav assertion matches RecordingStudio `4.2.2` layout
   (`anchor_href`). Close still needs FlatPack `>= 0.1.197`; this pin keeps
   FlatPack at `v0.1.129`.
