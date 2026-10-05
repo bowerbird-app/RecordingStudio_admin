@@ -8,12 +8,12 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_accessible.git
-  revision: eb898857241bc2211803e39086a11fab63ce2f76
-  tag: v0.6.1
+  revision: fe2d86aa2d96b843bc05651dc25023fd4546ab37
+  tag: v0.11.1
   specs:
-    recording_studio_accessible (0.6.1)
+    recording_studio_accessible (0.11.0)
       rails (~> 8.1.0)
-      recording_studio (~> 4.1)
+      recording_studio (~> 4.2)
 
 GIT
   remote: https://github.com/bowerbird-app/flatpack.git

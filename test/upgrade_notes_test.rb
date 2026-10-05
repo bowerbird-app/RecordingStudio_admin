@@ -11,7 +11,7 @@ class UpgradeNotesTest < Minitest::Test
 
     assert_includes upgrading, "## Upgrading to 2.0.0"
     assert_includes upgrading, "recording_studio_accessible ~> 0.6"
-    assert_includes upgrading, 'tag: "v0.6.1"'
+    assert_includes upgrading, 'tag: "v0.11.1"'
     assert_includes upgrading, "RecordingStudio.enable_capability(:accessible, on: self)"
     assert_includes upgrading, "bootstrap_owner_access!"
     assert_includes upgrading, "Keep **AdminRoot owned**"
