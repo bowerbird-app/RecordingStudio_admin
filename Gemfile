@@ -6,7 +6,7 @@ source "https://rubygems.org"
 gemspec
 
 # Private RecordingStudio ecosystem dependencies used by the engine during development/test.
-gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.129"
+gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.198"
 gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.2.2"
 gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.11.1"
 
