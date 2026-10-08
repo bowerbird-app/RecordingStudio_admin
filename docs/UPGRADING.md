@@ -54,11 +54,11 @@ Section, screen, widget, and resource definition APIs are unchanged. The breakin
 # Gemfile
 gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.2.2"
 gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.11.1"
-gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.129"
+gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.207"
 gem "recording_studio_admin", github: "bowerbird-app/RecordingStudio_admin" # 2.0.0
 ```
 
-This gem depends on `recording_studio_accessible ~> 0.6` (which requires RecordingStudio `~> 4.1`) and `flat_pack ~> 0.1.129`. Bundler will reject Admin `2.0.0` next to Accessible `~> 0.3`.
+This gem depends on `recording_studio_accessible ~> 0.6` (which requires RecordingStudio `~> 4.1`) and `flat_pack ~> 0.1.207`. Bundler will reject Admin `2.0.0` next to Accessible `~> 0.3`.
 
 If you are coming from RecordingStudio 3.x, run `bin/rails generate recording_studio:migrations` (or install the harden-indexes migration) and `db:migrate` before mounting admin.
 
