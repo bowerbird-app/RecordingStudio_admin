@@ -363,7 +363,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "avatar-group"
     assert_includes response.body, "Admin Section Rendering"
     assert_includes response.body, 'aria-label="Go back"'
-    # RecordingStudio 4.2.2 default layout passes FlatPack PageNav `anchor_href:`.
+    # RecordingStudio 4.3.0 default layout passes FlatPack PageNav `anchor_href:`.
     # FlatPack >= 0.1.197 accepts that kwarg, so Close renders as a real link.
     assert_includes response.body, 'aria-label="Close"'
     assert_includes response.body, 'href="http://www.example.com/"'
