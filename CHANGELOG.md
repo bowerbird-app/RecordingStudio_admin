@@ -13,6 +13,17 @@
   (`anchor_href`). Close still needs FlatPack `>= 0.1.197`; this pin keeps
   FlatPack at `v0.1.129`.
 
+## 2.0.7 - 2026-10-08
+
+### Fixed
+
+- Version constant now matches the git tag. It was stuck at `2.0.2` across
+  tags `v2.0.2` through `v2.0.6`.
+
+### Changed
+
+- Includes the RecordingStudio `v4.3.0` pin bump already on main (#13).
+
 ## 2.0.2
 
 Cloud Agent install no longer fails a warm environment rebuild. Skills still
