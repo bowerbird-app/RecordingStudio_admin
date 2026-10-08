@@ -40,9 +40,9 @@
     </form>
 
     <%= render FlatPack::ButtonGroup::Component.new do |group| %>
-      <% group.button(render(FlatPack::Button::Component.new(text: "All", url: search_type_url.call("all"), style: (@search_type == "all" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
-      <% group.button(render(FlatPack::Button::Component.new(text: "Sections", url: search_type_url.call("sections"), style: (@search_type == "sections" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
-      <% group.button(render(FlatPack::Button::Component.new(text: "Screens", url: search_type_url.call("screens"), style: (@search_type == "screens" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
+      <% group.button(render(FlatPack::Button::Component.new(text: "All", href: search_type_url.call("all"), style: (@search_type == "all" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
+      <% group.button(render(FlatPack::Button::Component.new(text: "Sections", href: search_type_url.call("sections"), style: (@search_type == "sections" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
+      <% group.button(render(FlatPack::Button::Component.new(text: "Screens", href: search_type_url.call("screens"), style: (@search_type == "screens" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
     <% end %>
 
     <% if @search_query.present? %>
