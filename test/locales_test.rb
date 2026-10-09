@@ -3,6 +3,7 @@
 require "test_helper"
 require "yaml"
 require "tmpdir"
+require "fileutils"
 
 class LocalesTest < Minitest::Test
   # I18n template tokens use %{name}; RuboCop prefers %<name>s for Kernel#sprintf.
@@ -127,11 +128,11 @@ class LocalesTest < Minitest::Test
         assert_equal "Host admin sections", I18n.t("recording_studio.admin.sections.index.title")
       end
     ensure
-      File.delete(host_locale) if File.exist?(host_locale)
+      FileUtils.rm_f(host_locale)
       I18n.load_path = @original_load_path.dup
       I18n.reload!
-      assert_equal @original_load_path.map { |path| File.expand_path(path) },
-                   I18n.load_path.map { |path| File.expand_path(path) }
+      assert_equal(@original_load_path.map { |path| File.expand_path(path) },
+                   I18n.load_path.map { |path| File.expand_path(path) })
     end
   end
 
