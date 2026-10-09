@@ -7,6 +7,11 @@ class AdminI18nHostOverrideTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include DummyAccessTestHelpers
 
+  HOST_OVERRIDE_LOCALE = File.expand_path(
+    "../locales/recording_studio_admin.host_override.en.yml",
+    __dir__
+  ).freeze
+
   def setup
     @original_load_path = I18n.load_path.dup
   end
@@ -34,26 +39,30 @@ class AdminI18nHostOverrideTest < ActionDispatch::IntegrationTest
   test "host locale file overrides gem english on a real admin page" do
     sign_in_admin_user
 
-    get "/admin/sections", params: { anchor_url: root_url }
+    begin
+      I18n.load_path << HOST_OVERRIDE_LOCALE
+      I18n.reload!
 
-    assert_response :success
-    assert_includes response.body, "HOST Browse the sections available in this admin context"
-    refute_match(
-      /(?<!HOST )Browse the sections available in this admin context/,
-      response.body
-    )
-    assert_equal @original_load_path, I18n.load_path
+      get "/admin/sections", params: { anchor_url: root_url, q: "zzzz-no-match-host-override" }
+
+      assert_response :success
+      assert_includes response.body, "HOST No admin screens or sections match that search."
+      refute_match(/(?<!HOST )No admin screens or sections match that search\./, response.body)
+    ensure
+      I18n.load_path = @original_load_path.dup
+      I18n.reload!
+      assert_equal @original_load_path, I18n.load_path
+    end
   end
 
-  test "dummy host override file is on the rails load path after the gem locale" do
-    gem_locale = File.expand_path("../../../../config/locales/en.yml", __dir__)
-    host_locale = File.expand_path("../../config/locales/recording_studio_admin.host_override.en.yml", __dir__)
-    expanded = I18n.load_path.map { |path| File.expand_path(path) }
+  test "without the test-only override the gem english empty search still renders" do
+    sign_in_admin_user
 
-    assert_includes expanded, File.expand_path(gem_locale)
-    assert_includes expanded, File.expand_path(host_locale)
-    assert_operator expanded.index(File.expand_path(host_locale)), :>,
-                    expanded.index(File.expand_path(gem_locale))
+    get "/admin/sections", params: { anchor_url: root_url, q: "zzzz-no-match-default-english" }
+
+    assert_response :success
+    assert_includes response.body, "No admin screens or sections match that search."
+    refute_includes response.body, "HOST No admin screens or sections match that search."
     assert_equal @original_load_path, I18n.load_path
   end
 end

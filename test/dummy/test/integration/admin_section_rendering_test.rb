@@ -199,7 +199,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Admin sections"
-    assert_includes response.body, "HOST Browse the sections available in this admin context"
+    assert_includes response.body, "Browse the sections available in this admin context"
     assert_includes response.body, "Search screens and sections"
     assert_includes response.body, "Admin section"
     assert_includes response.body, "Monitor API traffic, users, jobs, and failures"
