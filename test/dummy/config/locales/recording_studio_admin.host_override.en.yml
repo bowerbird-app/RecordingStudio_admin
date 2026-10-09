@@ -1,0 +1,8 @@
+# Host override for admin gem interface copy. Loaded after engine locales so
+# these English strings win over the gem defaults in the dummy app.
+en:
+  recording_studio:
+    admin:
+      sections:
+        index:
+          subtitle: "HOST Browse the sections available in this admin context"

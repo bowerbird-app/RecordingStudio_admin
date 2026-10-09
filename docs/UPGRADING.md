@@ -11,9 +11,10 @@ were renamed or removed.
 
 - Static interface copy in the gem's own views uses Rails I18n keys under
   `recording_studio.admin`.
-- The gem ships English only in `config/locales/en.yml` (Rails engines load
-  that path by default). There is no dependency on
-  `recording_studio_internationalization`.
+- The gem ships English only in `config/locales/en.yml`. Rails engines load
+  that path by default (no extra initializer), so host `config/locales`
+  files load after the gem and can override English. There is no dependency
+  on `recording_studio_internationalization`.
 - This gem had no prior top-level `recording_studio_admin.*` locale namespace.
   New strings use the nested `recording_studio.admin` keys only.
 

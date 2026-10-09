@@ -108,6 +108,8 @@ class LocalesTest < Minitest::Test
   end
 
   def test_host_override_of_nested_keys_wins
+    # Unit-suite simulation only. Real Rails load order (host after gem) is
+    # covered by test/dummy/test/integration/admin_i18n_host_override_test.rb.
     host_locale = File.join(Dir.tmpdir, "recording_studio_admin_host_override_#{Process.pid}.yml")
     File.write(host_locale, <<~YAML)
       en:
@@ -117,16 +119,20 @@ class LocalesTest < Minitest::Test
               index:
                 title: "Host admin sections"
     YAML
-    I18n.load_path << host_locale
-    I18n.reload!
+    begin
+      I18n.load_path << host_locale
+      I18n.reload!
 
-    I18n.with_locale(:en) do
-      assert_equal "Host admin sections", I18n.t("recording_studio.admin.sections.index.title")
+      I18n.with_locale(:en) do
+        assert_equal "Host admin sections", I18n.t("recording_studio.admin.sections.index.title")
+      end
+    ensure
+      File.delete(host_locale) if File.exist?(host_locale)
+      I18n.load_path = @original_load_path.dup
+      I18n.reload!
+      assert_equal @original_load_path.map { |path| File.expand_path(path) },
+                   I18n.load_path.map { |path| File.expand_path(path) }
     end
-  ensure
-    File.delete(host_locale) if host_locale && File.exist?(host_locale)
-    I18n.load_path = @original_load_path.dup
-    ensure_gem_locale_loaded!
   end
 
   def test_no_override_keeps_english_defaults
