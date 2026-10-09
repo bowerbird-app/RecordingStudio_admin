@@ -1,11 +1,14 @@
 <%= render layout: "recording_studio_admin/shared/page_shell" do %>
   <% recording_studio_page_nav(
-       title: "Admin sections",
+       title: t("recording_studio.admin.sections.index.title"),
        page_nav_anchor_url: page_nav_anchor_url(default: RecordingStudioAdmin.configuration.default_mount_path)
      ) %>
   <%= render "recording_studio_admin/shared/page_nav" unless recording_studio_admin_default_layout? %>
 
-  <%= render FlatPack::PageTitle::Component.new(title: "Admin sections", subtitle: "Browse the sections available in this admin context") %>
+  <%= render FlatPack::PageTitle::Component.new(
+        title: t("recording_studio.admin.sections.index.title"),
+        subtitle: t("recording_studio.admin.sections.index.subtitle")
+      ) %>
 
   <%= turbo_frame_tag "admin-sections-discovery" do %>
   <div class="space-y-4">
@@ -35,14 +38,14 @@
       <%= render FlatPack::SearchInput::Component.new(
         name: :q,
         value: @search_query,
-        placeholder: "Search screens and sections"
+        placeholder: t("recording_studio.admin.sections.index.search_placeholder")
       ) %>
     </form>
 
     <%= render FlatPack::ButtonGroup::Component.new do |group| %>
-      <% group.button(render(FlatPack::Button::Component.new(text: "All", href: search_type_url.call("all"), style: (@search_type == "all" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
-      <% group.button(render(FlatPack::Button::Component.new(text: "Sections", href: search_type_url.call("sections"), style: (@search_type == "sections" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
-      <% group.button(render(FlatPack::Button::Component.new(text: "Screens", href: search_type_url.call("screens"), style: (@search_type == "screens" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
+      <% group.button(render(FlatPack::Button::Component.new(text: t("recording_studio.admin.sections.index.filter_all"), href: search_type_url.call("all"), style: (@search_type == "all" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
+      <% group.button(render(FlatPack::Button::Component.new(text: t("recording_studio.admin.sections.index.filter_sections"), href: search_type_url.call("sections"), style: (@search_type == "sections" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
+      <% group.button(render(FlatPack::Button::Component.new(text: t("recording_studio.admin.sections.index.filter_screens"), href: search_type_url.call("screens"), style: (@search_type == "screens" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
     <% end %>
 
     <% if @search_query.present? %>
@@ -67,7 +70,7 @@
                         <% end %>
                       </div>
                       <%= render FlatPack::Badge::Component.new(
-                        text: item.type == :screen ? "Screen" : "Section",
+                        text: item.type == :screen ? t("recording_studio.admin.sections.index.badge_screen") : t("recording_studio.admin.sections.index.badge_section"),
                         style: item.type == :screen ? :info : :default,
                         size: :sm
                       ) %>
@@ -79,7 +82,7 @@
           <% end %>
         </div>
       <% else %>
-        <p class="text-sm text-(--surface-muted-content-color)">No admin screens or sections match that search.</p>
+        <p class="text-sm text-(--surface-muted-content-color)"><%= t("recording_studio.admin.sections.index.empty_search") %></p>
       <% end %>
     <% end %>
   </div>
@@ -103,6 +106,6 @@
       <% end %>
     <% end %>
   <% else %>
-    <p class="text-sm text-(--surface-muted-content-color)">No admin sections are available.</p>
+    <p class="text-sm text-(--surface-muted-content-color)"><%= t("recording_studio.admin.sections.index.empty") %></p>
   <% end %>
 <% end %>

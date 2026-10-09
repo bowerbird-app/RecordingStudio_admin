@@ -2,6 +2,6 @@
 
 <%= turbo_frame_tag "screen-table-count" do %>
   <p class="mt-1 text-sm text-(--surface-muted-content-color)">
-    <%= table_result ? pluralize(table_result.total_count, "row") : "0 rows" %>
+    <%= t("recording_studio.admin.screens.table.row_count", count: table_result ? table_result.total_count : 0) %>
   </p>
 <% end %>

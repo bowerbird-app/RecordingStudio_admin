@@ -86,7 +86,7 @@
       <% if screen.table.show_count && table_result %>
         <%= turbo_frame_tag "screen-table-count", src: (recording_studio_admin_screen_region_path(screen.key, :table_count, query: base_query) if table_result.count_pending) do %>
           <p class="mt-1 text-sm text-(--surface-muted-content-color)">
-            <%= table_result.count_pending ? "Counting rows..." : pluralize(table_result.total_count, "row") %>
+            <%= table_result.count_pending ? t("recording_studio.admin.screens.table.counting_rows") : t("recording_studio.admin.screens.table.row_count", count: table_result.total_count) %>
           </p>
         <% end %>
       <% end %>
@@ -111,7 +111,7 @@
                   <% end %>
                 <% end %>
                 <%= render FlatPack::Button::Component.new(
-                  text: export_options.fetch(:text, "Export"),
+                  text: export_options.fetch(:text, t("recording_studio.admin.screens.table.export")),
                   icon: export_options.fetch(:icon, "arrow-down-tray"),
                   type: "submit",
                   style: export_options.fetch(:style, :secondary),
@@ -125,7 +125,7 @@
                 columns: selected_column_keys,
                 filters: export_filter_query,
                 attributes: { screen_key: screen.key },
-                text: export_options.fetch(:text, "Export"),
+                text: export_options.fetch(:text, t("recording_studio.admin.screens.table.export")),
                 icon: export_options.fetch(:icon, "arrow-down-tray"),
                 style: export_options.fetch(:style, :secondary),
                 size: export_options.fetch(:size, :md),
@@ -134,7 +134,7 @@
             <% end %>
           <% else %>
             <%= render FlatPack::Button::Component.new(
-              text: export_options.fetch(:unauthorized_text, "Export restricted"),
+              text: export_options.fetch(:unauthorized_text, t("recording_studio.admin.screens.table.export_restricted")),
               icon: export_options.fetch(:icon, "arrow-down-tray"),
               style: export_options.fetch(:style, :secondary),
               size: export_options.fetch(:size, :md),
@@ -146,7 +146,7 @@
 
         <% if columns_button_visible %>
           <%= render FlatPack::Button::Component.new(
-            text: "Columns",
+            text: t("recording_studio.admin.screens.table.columns"),
             icon: "table-cells",
             style: :secondary,
             size: :md,
@@ -154,7 +154,7 @@
               modal_id: columns_modal_id
             },
             aria: {
-              label: "Choose table columns"
+              label: t("recording_studio.admin.screens.table.choose_columns")
             }
           ) %>
         <% end %>
@@ -163,7 +163,7 @@
   </div>
 
   <% if columns_button_visible %>
-    <%= render FlatPack::Modal::Component.new(id: columns_modal_id, title: "Table columns", size: :sm) do |modal| %>
+    <%= render FlatPack::Modal::Component.new(id: columns_modal_id, title: t("recording_studio.admin.screens.table.columns_modal_title"), size: :sm) do |modal| %>
       <% modal.body do %>
         <%= form_with url: recording_studio_admin_screen_region_path(screen.key, :table, query: {}), method: :get, id: columns_form_id, data: { turbo_frame: "screen-table" } do %>
           <% column_picker_query.each do |key, value| %>
@@ -193,7 +193,7 @@
 
       <% modal.footer do %>
         <%= render FlatPack::Button::Component.new(
-          text: "Reset",
+          text: t("recording_studio.admin.screens.table.reset"),
           style: :default,
           size: :md,
           href: reset_columns_url,
@@ -204,7 +204,7 @@
         ) %>
 
         <%= render FlatPack::Button::Component.new(
-          text: "Apply",
+          text: t("recording_studio.admin.screens.table.apply"),
           style: :primary,
           size: :md,
           type: "submit",
@@ -263,16 +263,16 @@
     <% end %>
 
     <% if screen.table.actions.any? %>
-      <% table.column(title: "Actions", html: ->(row) do
+      <% table.column(title: t("recording_studio.admin.screens.table.actions"), html: ->(row) do
            actions = screen.table.actions.filter_map { |action| action.resolve(row, recording_studio_admin_context) }
            next if actions.empty?
 
            action_label = if row.respond_to?(:email) && row.email.present?
-                            "Actions for #{row.email}"
+                            t("recording_studio.admin.screens.table.actions_for_email", email: row.email)
                           elsif row.respond_to?(:id) && row.id.present?
-                            "Actions for row #{row.id}"
+                            t("recording_studio.admin.screens.table.actions_for_row", id: row.id)
                           else
-                            "Row actions"
+                            t("recording_studio.admin.screens.table.row_actions")
                           end
 
            dropdown = FlatPack::Button::Dropdown::Component.new(
@@ -315,7 +315,7 @@
       ) %>
     <% else %>
       <div class="mt-4 flex justify-center">
-        <%= render FlatPack::Badge::Component.new(text: "End") %>
+        <%= render FlatPack::Badge::Component.new(text: t("recording_studio.admin.screens.table.end")) %>
       </div>
     <% end %>
   <% end %>

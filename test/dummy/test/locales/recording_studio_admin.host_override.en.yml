@@ -1,0 +1,8 @@
+# Test-only host override. Not under config/locales, so the dummy app's
+# normal UI keeps gem English unless a test loads this file.
+en:
+  recording_studio:
+    admin:
+      sections:
+        index:
+          empty_search: "HOST No admin screens or sections match that search."

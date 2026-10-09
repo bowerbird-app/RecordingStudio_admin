@@ -1,0 +1,46 @@
+en:
+  recording_studio:
+    admin:
+      navigation:
+        go_back: "Go back"
+        close: "Close"
+      sections:
+        index:
+          title: "Admin sections"
+          subtitle: "Browse the sections available in this admin context"
+          search_placeholder: "Search screens and sections"
+          filter_all: "All"
+          filter_sections: "Sections"
+          filter_screens: "Screens"
+          badge_screen: "Screen"
+          badge_section: "Section"
+          empty_search: "No admin screens or sections match that search."
+          empty: "No admin sections are available."
+        show:
+          more: "More"
+      screens:
+        filters:
+          trigger_label: "Filters"
+          all_placeholder: "All"
+        table:
+          counting_rows: "Counting rows..."
+          row_count:
+            one: "%{count} row"
+            other: "%{count} rows"
+          export: "Export"
+          export_restricted: "Export restricted"
+          columns: "Columns"
+          choose_columns: "Choose table columns"
+          columns_modal_title: "Table columns"
+          reset: "Reset"
+          apply: "Apply"
+          actions: "Actions"
+          actions_for_email: "Actions for %{email}"
+          actions_for_row: "Actions for row %{id}"
+          row_actions: "Row actions"
+          end: "End"
+      widgets:
+        more: "More"
+        more_info_about: "More information about %{title}"
+        more_info_about_widget: "More information about this widget"
+        open: "Open %{label}"
