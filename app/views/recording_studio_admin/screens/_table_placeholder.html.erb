@@ -43,7 +43,7 @@
     <% end %>
 
     <% if screen.table.actions.any? %>
-      <% table.column(title: "Actions", html: ->(_row) do
+      <% table.column(title: t("recording_studio.admin.screens.table.actions"), html: ->(_row) do
            tag.span(
              render(FlatPack::Skeleton::Component.new(variant: :text, width: "2.5rem", shimmer: true)),
              class: "block min-h-4",

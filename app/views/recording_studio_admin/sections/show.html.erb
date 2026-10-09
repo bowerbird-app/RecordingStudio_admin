@@ -26,7 +26,7 @@
         <% end %>
 
         <% if overflow_links.any? %>
-          <% dropdown = FlatPack::Button::Dropdown::Component.new(text: "More", style: :secondary) %>
+          <% dropdown = FlatPack::Button::Dropdown::Component.new(text: t("recording_studio.admin.sections.show.more"), style: :secondary) %>
 
           <% overflow_links.each do |link| %>
             <% dropdown.menu_item(text: link.text, href: preserve_anchor_url(link.url)) %>

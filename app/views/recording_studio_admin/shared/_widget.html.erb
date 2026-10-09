@@ -3,7 +3,7 @@
 <% widget_href = presenter.href %>
 <% compact_card_href = presenter.compact_href %>
 <% widget_link_label = presenter.link_label %>
-<% info_label = widget.title.present? ? "More information about #{widget.title}" : "More information about this widget" %>
+<% info_label = widget.title.present? ? t("recording_studio.admin.widgets.more_info_about", title: widget.title) : t("recording_studio.admin.widgets.more_info_about_widget") %>
 <% info_trigger = capture do %>
   <%= render FlatPack::Tooltip::Component.new(text: widget.info, placement: :bottom, class: "relative z-10 shrink-0 pointer-events-auto") do %>
     <%= button_tag type: "button",
@@ -24,7 +24,7 @@
   ) do |card| %>
     <% card.body do %>
       <% if compact_card && compact_card_href.present? && widget.info.present? %>
-        <%= link_to "", compact_card_href, class: "absolute inset-0 z-0 rounded-lg", aria: { label: "Open #{widget_link_label}" } %>
+        <%= link_to "", compact_card_href, class: "absolute inset-0 z-0 rounded-lg", aria: { label: t("recording_studio.admin.widgets.open", label: widget_link_label) } %>
       <% end %>
       <% change_text_class = presenter.change_text_class %>
       <% period_label = presenter.period_label %>
@@ -191,8 +191,8 @@
 
               <% if widget_href.present? %>
                 <div class="shrink-0">
-                  <%= render FlatPack::Tooltip::Component.new(text: "Open #{widget_link_label}") do %>
-                    <%= render FlatPack::Button::Component.new(text: "More", href: widget_href, style: :secondary, size: :sm) %>
+                  <%= render FlatPack::Tooltip::Component.new(text: t("recording_studio.admin.widgets.open", label: widget_link_label)) do %>
+                    <%= render FlatPack::Button::Component.new(text: t("recording_studio.admin.widgets.more"), href: widget_href, style: :secondary, size: :sm) %>
                   <% end %>
                 </div>
               <% end %>

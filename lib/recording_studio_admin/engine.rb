@@ -11,6 +11,14 @@ module RecordingStudioAdmin
       app.config.assets.paths << root.join("app/javascript") if app.config.respond_to?(:assets)
     end
 
+    # Rails engines already add config/locales to the I18n load path. Keep this
+    # explicit so hosts and tests can rely on English keys under
+    # recording_studio.admin without a separate internationalization gem.
+    initializer "recording_studio_admin.locales", before: :load_config_initializers do |app|
+      locale_files = Dir[root.join("config", "locales", "*.{rb,yml}")]
+      app.config.i18n.load_path |= locale_files
+    end
+
     initializer "recording_studio_admin.load_config" do |app|
       next unless app.respond_to?(:config_for)
       next unless app.root.join("config/recording_studio_admin.yml").exist?

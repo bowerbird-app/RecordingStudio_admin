@@ -1,5 +1,42 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.1.0
+
+This is a non-breaking upgrade. Rendered English interface text is unchanged.
+Callers that pass their own labels via `content_for`, the admin DSL, or
+export/button options keep working. No public constants, methods, or helpers
+were renamed or removed.
+
+### What Changed
+
+- Static interface copy in the gem's own views uses Rails I18n keys under
+  `recording_studio.admin`.
+- The gem ships English only in `config/locales/en.yml` (Rails engines load
+  that path by default). There is no dependency on
+  `recording_studio_internationalization`.
+- This gem had no prior top-level `recording_studio_admin.*` locale namespace.
+  New strings use the nested `recording_studio.admin` keys only.
+
+Keys added (high level):
+
+| Section | Examples |
+| --- | --- |
+| `recording_studio.admin.navigation` | Go back, Close |
+| `recording_studio.admin.sections.index` | Admin sections, search placeholder, empty states, badges |
+| `recording_studio.admin.sections.show` | More |
+| `recording_studio.admin.screens.filters` | Filters, All |
+| `recording_studio.admin.screens.table` | Columns, Export, Apply, Reset, row counts, Actions |
+| `recording_studio.admin.widgets` | More, Open %{label}, info aria-labels |
+
+Left untranslated on purpose: DSL-registered section/screen/widget titles and
+link labels, caller-provided export button text, filter labels derived from
+keys (`humanize`), icon/style tokens, chart series names, and dummy/host views.
+
+### Upgrade Steps
+
+No migration is required. English hosts need no change. To override or add
+another language, set the keys above in the host's `config/locales`.
+
 ## Upgrading to 2.0.2
 
 No host, schema, or product changes. Admin screens and widgets are unchanged.

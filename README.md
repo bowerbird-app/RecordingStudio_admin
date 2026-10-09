@@ -653,6 +653,15 @@ Formatting belongs in FlatPack views/components, not in definition objects.
 
 All shipped rendering uses FlatPack components. Wrapper views may compose FlatPack, but this gem does not provide a separate UI system.
 
+### Interface text
+
+Static chrome in the gem's own views (PageNav defaults, sections index copy,
+filter/table controls, widget More/info labels) ships as English Rails I18n
+keys under `recording_studio.admin` in `config/locales/en.yml`. Hosts can
+override those keys. Titles, subtitles, link labels, and export button text
+passed through the admin DSL or `content_for` stay caller-owned. There is no
+dependency on `recording_studio_internationalization`.
+
 ## Generators
 
 Install the engine:

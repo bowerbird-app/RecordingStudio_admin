@@ -13,6 +13,25 @@
   (`anchor_href`). Close still needs FlatPack `>= 0.1.197`; this pin keeps
   FlatPack at `v0.1.129`.
 
+## 2.1.0 - 2026-10-09
+
+### Added
+
+- English Rails I18n keys for static interface copy in the gem's own views
+  and partials (`config/locales/en.yml` under `recording_studio.admin`)
+
+### Changed
+
+- Static chrome in sections, screens (filters/table), widgets, and page_nav
+  resolves through `t(...)` (English output unchanged)
+
+### Upgrade notes
+
+- No migration or host code change is required for English.
+- To translate or override the defaults, add keys under
+  `recording_studio.admin` in the host's locale files.
+- See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-210).
+
 ## 2.0.7 - 2026-10-08
 
 ### Fixed

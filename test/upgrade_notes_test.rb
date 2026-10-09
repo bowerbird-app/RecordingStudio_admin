@@ -5,6 +5,25 @@ require "test_helper"
 class UpgradeNotesTest < Minitest::Test
   ROOT = File.expand_path("..", __dir__)
 
+  def test_upgrading_doc_covers_the_2_1_0_i18n_release
+    upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
+    changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
+    readme = File.read(File.join(ROOT, "README.md"))
+
+    assert_includes upgrading, "## Upgrading to 2.1.0"
+    assert_includes upgrading, "recording_studio.admin"
+    assert_includes upgrading, "config/locales/en.yml"
+    assert_includes upgrading, "no prior top-level `recording_studio_admin.*` locale namespace"
+    assert_includes upgrading, "No public constants, methods, or helpers"
+
+    assert_includes changelog, "## 2.1.0"
+    assert_includes changelog, "docs/UPGRADING.md#upgrading-to-210"
+    assert_includes changelog, "recording_studio.admin"
+
+    assert_includes readme, "### Interface text"
+    assert_includes readme, "recording_studio.admin"
+  end
+
   def test_upgrading_doc_covers_the_2_0_floor_and_mixin_migration
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
