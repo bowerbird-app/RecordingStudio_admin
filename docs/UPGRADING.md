@@ -162,7 +162,7 @@ Admin `2.0.0` does not rewrite other addons. Bundler resolution is what bites:
 | `recording_studio_webhooks` | Engine and dummy Gemfiles track `RecordingStudio_admin` **without a tag**. After Admin 2.0 lands on `main`, an unpinned `bundle update` will pull 2.0 against Webhooks' RS 3 / Accessible 0.3 stack and fail. Pin Admin `1.2.0` or finish the Webhooks RS 4 upgrade first. |
 | `recording_studio_users` | **0.1** (identity / invites / onboarding) does **not** need Admin 2.0. **Phase 6** staff people-admin screens do. |
 | `recording_studio_exportable` | Not a runtime dependency of Admin. `0.2.0` needs RS `~> 4.2`. |
-| `recording_studio_root_switchable` | `0.5.0` already requires RS `~> 4.1` and Accessible `~> 0.6`. Compatible. |
+| `recording_studio_root_switchable` | Dummy pins `0.8.0` (RS `~> 4.1`, Accessible `~> 0.13`, Metrics `~> 0.2`). Compatible. |
 | Cursor plugin `recording-studio-admin` skill | Default-branch copy still shows `AllowsAccessibleChildren`. Follow this gem's README / this file. |
 
 Tagged 1.x consumers are not broken by publishing 2.0. Anything that floats this GitHub repo without a version or tag will be.
