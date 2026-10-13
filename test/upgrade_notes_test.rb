@@ -54,32 +54,36 @@ class UpgradeNotesTest < Minitest::Test
     resolver = File.read(File.join(ROOT, "lib/recording_studio_admin/section_recording_resolver.rb"))
 
     assert_includes version, 'VERSION = "2.3.0"'
-    assert_includes gemspec, 'recording_studio_trashable", "~> 0.9"'
-    assert_includes gemfile, 'tag: "v0.9.0"'
+    assert_includes gemspec, 'recording_studio_trashable", "~> 0.10"'
+    assert_includes gemfile, 'tag: "v0.10.0"'
+    assert_includes gemfile, "require: false"
     assert_includes gemfile, "recording_studio_trashable"
-    assert_includes resolver, "recording_studio_trashable_active"
-    assert_includes resolver, "recording_studio_trashable_active_available?"
+    assert_includes resolver, "recording_studio_trashable_kept_sql"
+    assert_includes resolver, "kept_sql_available?"
+    refute_includes resolver, "recording_studio_trashable_active.find_by"
 
     assert_includes upgrading, "## Upgrading to 2.3.0"
-    assert_includes upgrading, "recording_studio_trashable_active"
-    assert_includes upgrading, 'tag: "v0.9.0"'
-    assert_includes upgrading, "recording_studio_metrics"
-    assert_includes upgrading, "no `unscoped`"
-    assert_includes upgrading, "same `unscoped` base matches main"
+    assert_includes upgrading, "recording_studio_trashable_kept_sql"
+    assert_includes upgrading, 'tag: "v0.10.0"'
+    assert_includes upgrading, "require: false"
+    assert_includes upgrading, "query-only"
+    assert_includes upgrading, "same"
+    assert_includes upgrading, "`unscoped` base matches main"
 
     assert_includes changelog, "## 2.3.0"
     assert_includes changelog, "docs/UPGRADING.md#upgrading-to-230"
     assert_includes changelog, "recording_studio_trashable"
-    assert_includes changelog, "no added `unscoped`"
+    assert_includes changelog, "~> 0.10"
+    assert_includes changelog, "recording_studio_trashable/query"
 
     assert_includes readme, "2.3.0"
-    assert_includes readme, "recording_studio_trashable_active"
-    assert_includes readme,
-                    "RecordingStudio::Recording.recording_studio_trashable_active.find_by(recordable: admin_root)"
-    refute_includes readme, "unscoped.recording_studio_trashable_active.find_by(recordable: admin_root)"
+    assert_includes readme, "recording_studio_trashable_kept_sql"
+    refute_includes readme, "recording_studio_trashable_active.find_by(recordable: admin_root)"
 
-    assert_includes resolver, "unscoped.recording_studio_trashable_active.find_by"
-    assert_includes resolver, "unscoped.find_by(attributes.merge(trashed_at: nil))"
+    assert_includes resolver, "unscoped.find_by(find_attrs.merge(trashed_at: nil))"
+    assert_includes resolver, "kept_recordings"
+    engine = File.read(File.join(ROOT, "lib/recording_studio_admin/engine.rb"))
+    assert_includes engine, 'require "recording_studio_trashable/query"'
   end
 
   def test_upgrading_doc_covers_the_2_0_floor_and_mixin_migration

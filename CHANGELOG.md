@@ -17,28 +17,30 @@
 
 ### Added
 
-- Dependency on RecordingStudioTrashable `~> 0.9` (dev/test pin `v0.9.0`)
-- Parity tests for section recording lookup through
-  `recording_studio_trashable_active`
+- Dependency on RecordingStudioTrashable `~> 0.10` (dev/test pin `v0.10.0`,
+  `require: false`) loaded only via `recording_studio_trashable/query`
+- Parity tests for kept-SQL lookups under a host
+  `default_scope { where.not(trashed_at: nil) }`, plus a surface test that
+  Trashable's engine/importmap/capability/metrics do not load
 
 ### Changed
 
 - `SectionRecordingResolver` finds kept section recordings with
-  `RecordingStudio::Recording.unscoped.recording_studio_trashable_active`
-  when Trashable is loaded and `trashed_at` exists (same `unscoped` base as
-  main); otherwise keeps the previous `unscoped.find_by(..., trashed_at: nil)`
-- Admin root / site-admin resolver examples and the dummy initializer use
-  `RecordingStudio::Recording.recording_studio_trashable_active.find_by(...)`
-  on the same default-scoped relation main used (no added `unscoped`)
-- Dummy workspace stats and seeds use the Trashable kept/active helpers
+  `unscoped.where(recording_studio_trashable_kept_sql)` when Trashable query
+  helpers and `trashed_at` exist (same `unscoped` base as main; no `_active`
+  unscope); otherwise keeps `unscoped.find_by(..., trashed_at: nil)`
+- Admin-root examples, dummy initializer, workspace stats, and seeds use
+  `where(recording_studio_trashable_kept_sql)` on the same relation base main
+  used (no added `unscoped`, no `_active`)
 
 ### Upgrade notes
 
-- Add `recording_studio_trashable` (`~> 0.9`, git tag `v0.9.0`) alongside Admin.
-  Trashable pulls `recording_studio_metrics ~> 0.2`.
-- Host resolvers that still pass `trashed_at: nil` keep working; prefer the
-  Trashable active scope on the same relation base (do not wrap admin-root
-  lookups in `unscoped` unless main already did).
+- Add `recording_studio_trashable` (`~> 0.10`, git tag `v0.10.0`,
+  `require: false`). Admin requires `recording_studio_trashable/query` only —
+  not the full Trashable engine.
+- Prefer `where(...kept_sql)` over `recording_studio_trashable_active` for
+  former `trashed_at: nil` filters so host `trashed_at` default scopes stay
+  intact.
 - See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-230).
 
 ## 2.2.0 - 2026-10-13

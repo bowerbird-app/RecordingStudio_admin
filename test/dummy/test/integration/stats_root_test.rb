@@ -32,7 +32,9 @@ class StatsRootTest < ActionDispatch::IntegrationTest
     previous_actor = Current.actor
     Current.actor = actor
 
-    recording = RecordingStudio::Recording.recording_studio_trashable_active.find_by(
+    recording = RecordingStudio::Recording.where(
+      RecordingStudio::Recording.recording_studio_trashable_kept_sql
+    ).find_by(
       root_recording: root_recording,
       parent_recording: parent_recording,
       recordable: recordable

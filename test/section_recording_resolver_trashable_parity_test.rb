@@ -16,12 +16,13 @@ class SectionRecordingResolverTrashableParityTest < Minitest::Test
   end
 
   class FakeRelation
-    attr_reader :filters, :unscoped_called, :active_called
+    attr_reader :filters, :unscoped_called, :kept_sql_called, :active_called
 
     def initialize(rows)
       @rows = rows
       @filters = {}
       @unscoped_called = false
+      @kept_sql_called = false
       @active_called = false
     end
 
@@ -33,6 +34,16 @@ class SectionRecordingResolverTrashableParityTest < Minitest::Test
     def recording_studio_trashable_active
       @active_called = true
       @filters[:trashed_at] = nil
+      self
+    end
+
+    def where(condition = nil, *)
+      if condition.is_a?(String) && condition.include?("trashed_at")
+        @kept_sql_called = true
+        @filters[:trashed_at] = nil
+      elsif condition.is_a?(Hash)
+        @filters.merge!(condition)
+      end
       self
     end
 
@@ -49,15 +60,22 @@ class SectionRecordingResolverTrashableParityTest < Minitest::Test
 
   class FakeRecordingModel
     class << self
-      attr_accessor :relation, :column_names, :respond_to_active
+      attr_accessor :relation, :column_names, :respond_to_kept_sql
 
       def unscoped
         relation.unscoped
       end
 
-      # Match Object#respond_to? arity for constant stubbing in parity tests.
+      def where(...)
+        relation.where(...)
+      end
+
+      def recording_studio_trashable_kept_sql(table = "recording_studio_recordings")
+        %("#{table}"."trashed_at" IS NULL)
+      end
+
       def respond_to?(method_name, include_all = false) # rubocop:disable Style/OptionalBooleanParameter
-        return respond_to_active if method_name == :recording_studio_trashable_active
+        return respond_to_kept_sql if method_name == :recording_studio_trashable_kept_sql
 
         super
       end
@@ -85,21 +103,19 @@ class SectionRecordingResolverTrashableParityTest < Minitest::Test
     @relation = FakeRelation.new([@kept, @trashed])
     FakeRecordingModel.relation = @relation
     FakeRecordingModel.column_names = %w[id trashed_at]
-    FakeRecordingModel.respond_to_active = true
+    FakeRecordingModel.respond_to_kept_sql = true
   end
 
-  def test_find_recording_uses_trashable_active_on_main_unscoped_base
+  def test_find_recording_uses_kept_sql_on_main_unscoped_base
     found = with_fake_recording_model do
       resolver.send(:find_recording, @recordable, @root, @parent)
     end
 
     assert_equal @kept, found
     assert @relation.unscoped_called, "SectionRecordingResolver must keep main's unscoped base"
-    assert @relation.active_called
+    assert @relation.kept_sql_called
+    refute @relation.active_called, "must not use recording_studio_trashable_active"
     assert_nil @relation.filters[:trashed_at]
-    assert_equal @recordable, @relation.filters[:recordable]
-    assert_equal @root, @relation.filters[:root_recording]
-    assert_equal @parent, @relation.filters[:parent_recording]
   end
 
   def test_find_recording_skips_trashed_rows_like_main
@@ -111,8 +127,8 @@ class SectionRecordingResolverTrashableParityTest < Minitest::Test
     refute_equal @trashed.id, found.id
   end
 
-  def test_find_recording_falls_back_to_trashed_at_nil_without_trashable_scope
-    FakeRecordingModel.respond_to_active = false
+  def test_find_recording_falls_back_without_kept_sql_helper
+    FakeRecordingModel.respond_to_kept_sql = false
 
     found = with_fake_recording_model do
       resolver.send(:find_recording, @recordable, @root, @parent)
@@ -120,61 +136,41 @@ class SectionRecordingResolverTrashableParityTest < Minitest::Test
 
     assert_equal @kept, found
     assert @relation.unscoped_called
-    refute @relation.active_called
+    refute @relation.kept_sql_called
     assert_nil @relation.filters[:trashed_at]
   end
 
-  def test_find_recording_falls_back_when_trashed_at_column_is_missing
-    FakeRecordingModel.column_names = %w[id]
-
-    found = with_fake_recording_model do
-      resolver.send(:find_recording, @recordable, @root, @parent)
-    end
-
-    assert_equal @kept, found
-    refute @relation.active_called
-    assert_nil @relation.filters[:trashed_at]
-  end
-
-  def test_active_availability_requires_column_and_scope
-    resolver_instance = resolver
-
-    FakeRecordingModel.column_names = %w[id trashed_at]
-    FakeRecordingModel.respond_to_active = true
+  def test_kept_sql_available_requires_helper_and_column
     with_fake_recording_model do
-      assert resolver_instance.send(:recording_studio_trashable_active_available?)
-    end
+      assert resolver.send(:kept_sql_available?)
 
-    FakeRecordingModel.respond_to_active = false
-    with_fake_recording_model do
-      refute resolver_instance.send(:recording_studio_trashable_active_available?)
-    end
+      FakeRecordingModel.respond_to_kept_sql = false
+      refute resolver.send(:kept_sql_available?)
 
-    FakeRecordingModel.respond_to_active = true
-    FakeRecordingModel.column_names = %w[id]
-    with_fake_recording_model do
-      refute resolver_instance.send(:recording_studio_trashable_active_available?)
+      FakeRecordingModel.respond_to_kept_sql = true
+      FakeRecordingModel.column_names = %w[id]
+      refute resolver.send(:kept_sql_available?)
     end
   end
 
-  def test_engine_requires_trashable_like_accessible
+  def test_engine_requires_query_only_not_full_trashable
     engine = File.read(File.expand_path("../lib/recording_studio_admin/engine.rb", __dir__))
 
-    assert_includes engine, 'require "recording_studio_trashable" if defined?(Bundler)'
-    assert_includes engine, 'require "recording_studio_accessible" if defined?(Bundler)'
+    assert_includes engine, 'require "recording_studio_trashable/query"'
+    refute_includes engine, 'require "recording_studio_trashable" if defined?(Bundler)'
   end
 
-  def test_dependencies_pin_trashable_v0_9_0
+  def test_dependencies_pin_trashable_v0_10_0_require_false
     root = File.expand_path("..", __dir__)
     gemspec = File.read(File.join(root, "recording_studio_admin.gemspec"))
     gemfile = File.read(File.join(root, "Gemfile"))
     dummy_gemfile = File.read(File.join(root, "test/dummy/Gemfile"))
 
-    assert_includes gemspec, 'recording_studio_trashable", "~> 0.9"'
-    assert_includes gemfile, "recording_studio_trashable"
-    assert_includes gemfile, 'tag: "v0.9.0"'
-    assert_includes dummy_gemfile, "recording_studio_trashable"
-    assert_includes dummy_gemfile, 'tag: "v0.9.0"'
+    assert_includes gemspec, 'recording_studio_trashable", "~> 0.10"'
+    assert_includes gemfile, 'tag: "v0.10.0"'
+    assert_includes gemfile, "require: false"
+    assert_includes dummy_gemfile, 'tag: "v0.10.0"'
+    assert_includes dummy_gemfile, "require: false"
   end
 
   private
