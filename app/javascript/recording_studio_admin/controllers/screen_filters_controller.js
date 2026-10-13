@@ -2,8 +2,20 @@ import { Controller } from "@hotwired/stimulus"
 
 const SCREEN_FRAME_IDS = new Set(["screen-chart", "screen-table"])
 
+const DEFAULT_DATE_PRESET_LABELS = {
+  today: "Today",
+  yesterday: "Yesterday",
+  last_3_days: "Last 3 days",
+  this_week: "This week",
+  last_week: "Last week",
+  this_month: "This month",
+  last_month: "Last month",
+  this_year: "This year",
+  last_year: "Last year"
+}
+
 export default class extends Controller {
-  static values = { modalFilters: Boolean, inlineFilterNames: Array }
+  static values = { modalFilters: Boolean, inlineFilterNames: Array, datePresetLabels: Object }
 
   connect() {
     this.boundDocumentClick = this.queueDateRangeSubmit.bind(this)
@@ -199,15 +211,8 @@ export default class extends Controller {
 
   syncPresetLabelsFromHiddenFields() {
     const presetLabels = {
-      today: "Today",
-      yesterday: "Yesterday",
-      last_3_days: "Last 3 days",
-      this_week: "This week",
-      last_week: "Last week",
-      this_month: "This month",
-      last_month: "Last month",
-      this_year: "This year",
-      last_year: "Last year"
+      ...DEFAULT_DATE_PRESET_LABELS,
+      ...(this.hasDatePresetLabelsValue ? this.datePresetLabelsValue : {})
     }
 
     const presetInputs = this.element.querySelectorAll("input[type='hidden'][name$='date_range_preset']")

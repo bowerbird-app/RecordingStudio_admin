@@ -13,6 +13,31 @@
   (`anchor_href`). Close still needs FlatPack `>= 0.1.197`; this pin keeps
   FlatPack at `v0.1.129`.
 
+## 2.2.0 - 2026-10-13
+
+### Added
+
+- English Rails I18n keys for sections search group headings
+  (`Sections` / `Screens` / `In %{title}`) and screen filter date-preset
+  labels under `recording_studio.admin`
+- Dummy host override for `screens.filters.date_presets.last_year` as a
+  real boot-order guard (`test/dummy/config/locales`)
+
+### Changed
+
+- Sections search group titles and screen-filter date-preset labels resolve
+  through `t(...)` / Stimulus JSON (English output unchanged)
+- Existing view `t(...)` calls pass English `default:` values
+
+### Upgrade notes
+
+- No migration or host code change is required for English.
+- To translate or override the new strings, add keys under
+  `recording_studio.admin.sections.index.search_groups` and
+  `recording_studio.admin.screens.filters.date_presets` in the host's
+  locale files.
+- See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-220).
+
 ## 2.1.0 - 2026-10-09
 
 ### Added
@@ -194,3 +219,6 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 ### Removed
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
+
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.1.0...v2.2.0

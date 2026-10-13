@@ -334,6 +334,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-turbo-frame="admin-sections-discovery"'
     assert_includes response.body, "Sections"
     assert_includes response.body, "In Users"
+    assert_match(%r{<h3[^>]*>Sections</h3>}, response.body)
+    assert_match(%r{<h3[^>]*>In Users</h3>}, response.body)
   end
 
   test "admin sections index can filter search results to sections or screens only" do

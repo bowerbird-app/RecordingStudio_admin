@@ -656,11 +656,14 @@ All shipped rendering uses FlatPack components. Wrapper views may compose FlatPa
 ### Interface text
 
 Static chrome in the gem's own views (PageNav defaults, sections index copy,
-filter/table controls, widget More/info labels) ships as English Rails I18n
-keys under `recording_studio.admin` in `config/locales/en.yml`. Hosts can
-override those keys. Titles, subtitles, link labels, and export button text
-passed through the admin DSL or `content_for` stay caller-owned. There is no
-dependency on `recording_studio_internationalization`.
+filter/table controls, widget More/info labels), sections search group
+headings, and screen date-preset labels passed to Stimulus ship as English
+Rails I18n keys under `recording_studio.admin` in `config/locales/en.yml`.
+Hosts can override those keys. Titles, subtitles, link labels, and export
+button text passed through the admin DSL or `content_for` stay caller-owned.
+`Period::QUICK_PRESET_LABELS` and other public return values stay English;
+translation happens at the render site. There is no dependency on
+`recording_studio_internationalization`.
 
 ## Generators
 
