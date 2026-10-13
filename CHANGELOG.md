@@ -13,6 +13,36 @@
   (`anchor_href`). Close still needs FlatPack `>= 0.1.197`; this pin keeps
   FlatPack at `v0.1.129`.
 
+## 2.3.0 - 2026-10-13
+
+### Added
+
+- Dependency on RecordingStudioTrashable `~> 0.10` (dev/test pin `v0.10.0`,
+  `require: false`) loaded only via `recording_studio_trashable/query`
+- Parity tests for kept-SQL lookups under a host
+  `default_scope { where.not(trashed_at: nil) }`, plus a surface test that
+  Trashable's engine/importmap/capability/metrics do not load
+
+### Changed
+
+- `SectionRecordingResolver` finds kept section recordings with
+  `unscoped.where(recording_studio_trashable_kept_sql)` when Trashable query
+  helpers and `trashed_at` exist (same `unscoped` base as main; no `_active`
+  unscope); otherwise keeps `unscoped.find_by(..., trashed_at: nil)`
+- Admin-root examples, dummy initializer, workspace stats, and seeds use
+  `where(recording_studio_trashable_kept_sql)` on the same relation base main
+  used (no added `unscoped`, no `_active`)
+
+### Upgrade notes
+
+- Add `recording_studio_trashable` (`~> 0.10`, git tag `v0.10.0`,
+  `require: false`). Admin requires `recording_studio_trashable/query` only —
+  not the full Trashable engine.
+- Prefer `where(...kept_sql)` over `recording_studio_trashable_active` for
+  former `trashed_at: nil` filters so host `trashed_at` default scopes stay
+  intact.
+- See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-230).
+
 ## 2.2.0 - 2026-10-13
 
 ### Added
@@ -220,5 +250,6 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.1.0...v2.2.0

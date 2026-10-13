@@ -28,8 +28,9 @@ module AdminScreens
         return RecordingStudio::Recording.none unless root_recording
 
         RecordingStudio::Recording.where(
+          RecordingStudio::Recording.recording_studio_trashable_kept_sql
+        ).where(
           root_recording_id: root_recording.id,
-          trashed_at: nil,
           recordable_type: %w[Folder Page]
         ).where.not(id: root_recording.id)
       end

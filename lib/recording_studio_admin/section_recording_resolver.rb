@@ -47,12 +47,29 @@ module RecordingStudioAdmin
     end
 
     def find_recording(recordable, root_recording, parent_recording)
-      RecordingStudio::Recording.unscoped.find_by(
+      # Same base as main: `Recording.unscoped.find_by(..., trashed_at: nil)`.
+      # Prefer kept_sql (not `_active`) so host trashed_at default scopes stay.
+      find_attrs = {
         root_recording: root_recording,
         parent_recording: parent_recording,
-        recordable: recordable,
-        trashed_at: nil
+        recordable: recordable
+      }
+      return kept_recordings.find_by(find_attrs) if kept_sql_available?
+
+      RecordingStudio::Recording.unscoped.find_by(find_attrs.merge(trashed_at: nil))
+    end
+
+    def kept_recordings
+      RecordingStudio::Recording.unscoped.where(
+        RecordingStudio::Recording.recording_studio_trashable_kept_sql
       )
+    end
+
+    def kept_sql_available?
+      return false unless RecordingStudio::Recording.respond_to?(:recording_studio_trashable_kept_sql)
+      return false unless RecordingStudio::Recording.respond_to?(:column_names)
+
+      RecordingStudio::Recording.column_names.include?("trashed_at")
     end
 
     def record_child(recordable, root_recording, parent_recording)

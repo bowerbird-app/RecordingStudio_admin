@@ -1,5 +1,73 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.3.0
+
+Admin `2.3.0` depends on RecordingStudioTrashable `~> 0.10` and loads only the
+query-only helpers (`require "recording_studio_trashable/query"`). Product
+behavior is unchanged: section recordings and admin-root resolvers still
+resolve only non-trashed rows, and host `default_scope`s on `trashed_at` are
+preserved (no `_active` unscope).
+
+### What Changed
+
+- `SectionRecordingResolver` uses
+  `RecordingStudio::Recording.unscoped.where(...recording_studio_trashable_kept_sql)`
+  when Trashable query helpers and the `trashed_at` column exist. The same
+  `unscoped` base matches main; the trash filter is a SQL `IS NULL` fragment
+  (not `recording_studio_trashable_active`).
+- Documented `site_admin_recording_resolver` / access-recording examples use
+  `RecordingStudio::Recording.where(...kept_sql).find_by(...)` on the same
+  default-scoped relation main used (no added `unscoped`, no `_active`).
+- Engine Gemfile pins Trashable at git tag `v0.10.0` with `require: false`.
+  Admin does not load the Trashable engine, importmap, `:trashable`
+  capability, CopyHelper, or trash metrics.
+
+### Upgrade Steps
+
+1. Add Trashable next to Admin (query helpers only). Trashable's gemspec still
+   lists Metrics, so pin that git source for Bundler resolution even though
+   Admin does not boot Metrics or Trashable's engine:
+
+```ruby
+# Gemfile
+gem "recording_studio_metrics", github: "bowerbird-app/RecordingStudio_metrics",
+                                tag: "v0.2.0", require: false
+gem "recording_studio_trashable", github: "bowerbird-app/RecordingStudio_trashable",
+                                  tag: "v0.10.0", require: false
+```
+
+2. Bundle and ensure Trashable's `trashed_at` schema is present (Recording
+   Studio / Trashable migrations). Admin keeps a column-existence guard and
+   falls back to `trashed_at: nil` only when the kept_sql helper is missing.
+
+3. Update host admin-root resolvers that still use
+   `find_by(..., trashed_at: nil)` to:
+
+```ruby
+RecordingStudio::Recording.where(
+  RecordingStudio::Recording.recording_studio_trashable_kept_sql
+).find_by(recordable: admin_root)
+```
+
+Do not wrap those lookups in `unscoped` or chain `recording_studio_trashable_active`
+unless you intentionally want to drop a host `trashed_at` default scope.
+
+### Verify the upgrade
+
+```ruby
+assert RecordingStudio::Recording.respond_to?(:recording_studio_trashable_kept_sql)
+refute defined?(RecordingStudioTrashable::Engine) # Admin query-only path
+
+admin_root = AdminRoot.find_by!(name: "Admin")
+kept = RecordingStudio::Recording.where(
+  RecordingStudio::Recording.recording_studio_trashable_kept_sql
+).find_by(recordable: admin_root)
+assert_equal kept, RecordingStudio::Recording.find_by(
+  recordable: admin_root,
+  trashed_at: nil
+)
+```
+
 ## Upgrading to 2.2.0
 
 This is a non-breaking upgrade. Rendered English interface text is unchanged.

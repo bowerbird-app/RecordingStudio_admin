@@ -16,6 +16,26 @@ GIT
       recording_studio (~> 4.2)
 
 GIT
+  remote: https://github.com/bowerbird-app/RecordingStudio_metrics.git
+  revision: 6e02b6b75a8a9dad2bd80c6ba2d30f7444e67b9e
+  tag: v0.2.0
+  specs:
+    recording_studio_metrics (0.2.0)
+      rails (~> 8.1.0)
+      recording_studio (~> 4.2)
+
+GIT
+  remote: https://github.com/bowerbird-app/RecordingStudio_trashable.git
+  revision: 6f590d0b1ed6cd64515ae5ffec280b28bbbca20d
+  tag: v0.10.0
+  specs:
+    recording_studio_trashable (0.10.0)
+      flat_pack (>= 0.1.74)
+      rails (~> 8.1.0)
+      recording_studio (~> 4.2)
+      recording_studio_metrics (~> 0.2)
+
+GIT
   remote: https://github.com/bowerbird-app/flatpack.git
   revision: 7490c10b4ec59c7df81aa4f6a46d8f9ef83de8bc
   tag: v0.1.207
@@ -29,10 +49,11 @@ GIT
 PATH
   remote: .
   specs:
-    recording_studio_admin (2.2.0)
+    recording_studio_admin (2.3.0)
       flat_pack (~> 0.1.207)
       rails (~> 8.1.0)
       recording_studio_accessible (~> 0.6)
+      recording_studio_trashable (~> 0.10)
 
 GEM
   remote: https://rubygems.org/
@@ -330,6 +351,8 @@ DEPENDENCIES
   recording_studio!
   recording_studio_accessible!
   recording_studio_admin!
+  recording_studio_metrics!
+  recording_studio_trashable!
   rubocop
   rubocop-rails
   simplecov
