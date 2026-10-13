@@ -1,5 +1,64 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.3.0
+
+Admin `2.3.0` depends on RecordingStudioTrashable `~> 0.9` and routes
+active-recording lookups through Trashable's kept/active API. Product
+behavior is unchanged: section recordings and admin-root resolvers still
+resolve only non-trashed rows.
+
+### What Changed
+
+- `SectionRecordingResolver` uses
+  `RecordingStudio::Recording.unscoped.recording_studio_trashable_active`
+  when Trashable is loaded and the `trashed_at` column exists.
+- Documented `site_admin_recording_resolver` / access-recording examples use
+  the same active scope (with `unscoped` so a host `default_scope` cannot
+  hide the admin root).
+- Engine Gemfile pins Trashable at git tag `v0.9.0`. Trashable also needs
+  Metrics `~> 0.2` (already common via Root Switchable).
+
+### Upgrade Steps
+
+1. Add Trashable next to Admin (and Metrics if the host does not already
+   have it):
+
+```ruby
+# Gemfile
+gem "recording_studio_trashable", github: "bowerbird-app/RecordingStudio_trashable",
+                                  tag: "v0.9.0"
+gem "recording_studio_metrics", github: "bowerbird-app/RecordingStudio_metrics",
+                                tag: "v0.2.0"
+```
+
+2. Bundle and ensure Trashable's `trashed_at` schema is present (Recording
+   Studio / Trashable migrations). Admin keeps a column-existence guard and
+   falls back to `trashed_at: nil` only when the Trashable scope is missing.
+
+3. Update host admin-root resolvers that still use
+   `find_by(..., trashed_at: nil)` to:
+
+```ruby
+RecordingStudio::Recording.unscoped.recording_studio_trashable_active.find_by(
+  recordable: admin_root
+)
+```
+
+### Verify the upgrade
+
+```ruby
+assert RecordingStudio::Recording.respond_to?(:recording_studio_trashable_active)
+
+admin_root = AdminRoot.find_by!(name: "Admin")
+kept = RecordingStudio::Recording.unscoped.recording_studio_trashable_active.find_by(
+  recordable: admin_root
+)
+assert_equal kept, RecordingStudio::Recording.unscoped.find_by(
+  recordable: admin_root,
+  trashed_at: nil
+)
+```
+
 ## Upgrading to 2.2.0
 
 This is a non-breaking upgrade. Rendered English interface text is unchanged.

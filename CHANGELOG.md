@@ -13,6 +13,32 @@
   (`anchor_href`). Close still needs FlatPack `>= 0.1.197`; this pin keeps
   FlatPack at `v0.1.129`.
 
+## 2.3.0 - 2026-10-13
+
+### Added
+
+- Dependency on RecordingStudioTrashable `~> 0.9` (dev/test pin `v0.9.0`)
+- Parity tests for section recording lookup through
+  `recording_studio_trashable_active`
+
+### Changed
+
+- `SectionRecordingResolver` finds kept section recordings with
+  `RecordingStudio::Recording.unscoped.recording_studio_trashable_active`
+  when Trashable is loaded and `trashed_at` exists; otherwise keeps the
+  previous `trashed_at: nil` filter
+- Admin root / site-admin resolver examples and the dummy initializer use
+  `unscoped.recording_studio_trashable_active.find_by(...)`
+- Dummy workspace stats and seeds use the Trashable kept/active helpers
+
+### Upgrade notes
+
+- Add `recording_studio_trashable` (`~> 0.9`, git tag `v0.9.0`) alongside Admin.
+  Trashable pulls `recording_studio_metrics ~> 0.2`.
+- Host resolvers that still pass `trashed_at: nil` keep working; prefer the
+  Trashable active scope so Admin and Trashable stay aligned.
+- See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-230).
+
 ## 2.2.0 - 2026-10-13
 
 ### Added
@@ -220,5 +246,6 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.1.0...v2.2.0

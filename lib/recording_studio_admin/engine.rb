@@ -2,6 +2,7 @@
 
 require "rails/engine"
 require "recording_studio_accessible" if defined?(Bundler)
+require "recording_studio_trashable" if defined?(Bundler)
 
 module RecordingStudioAdmin
   class Engine < ::Rails::Engine

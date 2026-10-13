@@ -13,6 +13,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 Hosts moving from Admin `1.x` (Accessible `~> 0.3`, RecordingStudio 3.x) to `2.0.0` should follow [docs/UPGRADING.md](docs/UPGRADING.md). That release requires Accessible `~> 0.6` and RecordingStudio `~> 4.1`.
 
+Admin `2.3.0` adds RecordingStudioTrashable `~> 0.9` and routes active-recording lookups through its kept/active API. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-230).
+
 ## Quick start
 
 1. Add the gem to the host app and run the install generator:
@@ -360,7 +362,7 @@ RecordingStudioAdmin.configure do |config|
     admin_root = AdminRoot.find_by(name: "Admin")
     next unless admin_root
 
-    RecordingStudio::Recording.find_by(recordable: admin_root, trashed_at: nil)
+    RecordingStudio::Recording.unscoped.recording_studio_trashable_active.find_by(recordable: admin_root)
   end
 end
 ```

@@ -47,12 +47,26 @@ module RecordingStudioAdmin
     end
 
     def find_recording(recordable, root_recording, parent_recording)
-      RecordingStudio::Recording.unscoped.find_by(
+      attributes = {
         root_recording: root_recording,
         parent_recording: parent_recording,
-        recordable: recordable,
-        trashed_at: nil
-      )
+        recordable: recordable
+      }
+
+      if recording_studio_trashable_active_available?
+        RecordingStudio::Recording.unscoped.recording_studio_trashable_active.find_by(attributes)
+      else
+        RecordingStudio::Recording.unscoped.find_by(attributes.merge(trashed_at: nil))
+      end
+    end
+
+    # Trashable owns `trashed_at` filters. Keep the column check so hosts without
+    # the Trashable schema still boot; call the shared scope only when present.
+    def recording_studio_trashable_active_available?
+      return false unless RecordingStudio::Recording.respond_to?(:recording_studio_trashable_active)
+      return false unless RecordingStudio::Recording.respond_to?(:column_names)
+
+      RecordingStudio::Recording.column_names.include?("trashed_at")
     end
 
     def record_child(recordable, root_recording, parent_recording)
