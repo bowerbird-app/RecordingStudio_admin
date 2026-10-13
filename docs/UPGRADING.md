@@ -24,11 +24,14 @@ preserved (no `_active` unscope).
 
 ### Upgrade Steps
 
-1. Add Trashable next to Admin (query helpers only; no Metrics requirement for
-   Admin itself):
+1. Add Trashable next to Admin (query helpers only). Trashable's gemspec still
+   lists Metrics, so pin that git source for Bundler resolution even though
+   Admin does not boot Metrics or Trashable's engine:
 
 ```ruby
 # Gemfile
+gem "recording_studio_metrics", github: "bowerbird-app/RecordingStudio_metrics",
+                                tag: "v0.2.0", require: false
 gem "recording_studio_trashable", github: "bowerbird-app/RecordingStudio_trashable",
                                   tag: "v0.10.0", require: false
 ```

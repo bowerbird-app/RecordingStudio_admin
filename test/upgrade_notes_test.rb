@@ -69,6 +69,8 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes upgrading, "query-only"
     assert_includes upgrading, "same"
     assert_includes upgrading, "`unscoped` base matches main"
+    assert_includes upgrading, "recording_studio_metrics"
+    assert_includes upgrading, 'tag: "v0.2.0"'
 
     assert_includes changelog, "## 2.3.0"
     assert_includes changelog, "docs/UPGRADING.md#upgrading-to-230"
