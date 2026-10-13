@@ -76,8 +76,7 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "recording_studio_trashable_active"
     assert_includes readme,
                     "RecordingStudio::Recording.recording_studio_trashable_active.find_by(recordable: admin_root)"
-    refute_includes readme,
-                    "RecordingStudio::Recording.unscoped.recording_studio_trashable_active.find_by(recordable: admin_root)"
+    refute_includes readme, "unscoped.recording_studio_trashable_active.find_by(recordable: admin_root)"
 
     assert_includes resolver, "unscoped.recording_studio_trashable_active.find_by"
     assert_includes resolver, "unscoped.find_by(attributes.merge(trashed_at: nil))"
