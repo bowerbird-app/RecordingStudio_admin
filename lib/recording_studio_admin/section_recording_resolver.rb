@@ -53,6 +53,7 @@ module RecordingStudioAdmin
         recordable: recordable
       }
 
+      # Same base as main: `Recording.unscoped.find_by(..., trashed_at: nil)`.
       if recording_studio_trashable_active_available?
         RecordingStudio::Recording.unscoped.recording_studio_trashable_active.find_by(attributes)
       else

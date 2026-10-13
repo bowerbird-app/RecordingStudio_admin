@@ -88,13 +88,13 @@ class SectionRecordingResolverTrashableParityTest < Minitest::Test
     FakeRecordingModel.respond_to_active = true
   end
 
-  def test_find_recording_uses_trashable_active_when_available
+  def test_find_recording_uses_trashable_active_on_main_unscoped_base
     found = with_fake_recording_model do
       resolver.send(:find_recording, @recordable, @root, @parent)
     end
 
     assert_equal @kept, found
-    assert @relation.unscoped_called
+    assert @relation.unscoped_called, "SectionRecordingResolver must keep main's unscoped base"
     assert @relation.active_called
     assert_nil @relation.filters[:trashed_at]
     assert_equal @recordable, @relation.filters[:recordable]
