@@ -25,10 +25,11 @@
 
 - `SectionRecordingResolver` finds kept section recordings with
   `RecordingStudio::Recording.unscoped.recording_studio_trashable_active`
-  when Trashable is loaded and `trashed_at` exists; otherwise keeps the
-  previous `trashed_at: nil` filter
+  when Trashable is loaded and `trashed_at` exists (same `unscoped` base as
+  main); otherwise keeps the previous `unscoped.find_by(..., trashed_at: nil)`
 - Admin root / site-admin resolver examples and the dummy initializer use
-  `unscoped.recording_studio_trashable_active.find_by(...)`
+  `RecordingStudio::Recording.recording_studio_trashable_active.find_by(...)`
+  on the same default-scoped relation main used (no added `unscoped`)
 - Dummy workspace stats and seeds use the Trashable kept/active helpers
 
 ### Upgrade notes
@@ -36,7 +37,8 @@
 - Add `recording_studio_trashable` (`~> 0.9`, git tag `v0.9.0`) alongside Admin.
   Trashable pulls `recording_studio_metrics ~> 0.2`.
 - Host resolvers that still pass `trashed_at: nil` keep working; prefer the
-  Trashable active scope so Admin and Trashable stay aligned.
+  Trashable active scope on the same relation base (do not wrap admin-root
+  lookups in `unscoped` unless main already did).
 - See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-230).
 
 ## 2.2.0 - 2026-10-13

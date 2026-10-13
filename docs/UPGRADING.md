@@ -11,10 +11,11 @@ resolve only non-trashed rows.
 
 - `SectionRecordingResolver` uses
   `RecordingStudio::Recording.unscoped.recording_studio_trashable_active`
-  when Trashable is loaded and the `trashed_at` column exists.
+  when Trashable is loaded and the `trashed_at` column exists. The same `unscoped` base matches main; only the trash filter moves to Trashable.
 - Documented `site_admin_recording_resolver` / access-recording examples use
-  the same active scope (with `unscoped` so a host `default_scope` cannot
-  hide the admin root).
+  `RecordingStudio::Recording.recording_studio_trashable_active.find_by(...)`
+  on the default-scoped relation (no `unscoped`), matching main's
+  `find_by(..., trashed_at: nil)`.
 - Engine Gemfile pins Trashable at git tag `v0.9.0`. Trashable also needs
   Metrics `~> 0.2` (already common via Root Switchable).
 
@@ -36,10 +37,11 @@ gem "recording_studio_metrics", github: "bowerbird-app/RecordingStudio_metrics",
    falls back to `trashed_at: nil` only when the Trashable scope is missing.
 
 3. Update host admin-root resolvers that still use
-   `find_by(..., trashed_at: nil)` to:
+   `find_by(..., trashed_at: nil)` to the same relation base (no new
+   `unscoped`):
 
 ```ruby
-RecordingStudio::Recording.unscoped.recording_studio_trashable_active.find_by(
+RecordingStudio::Recording.recording_studio_trashable_active.find_by(
   recordable: admin_root
 )
 ```
@@ -50,10 +52,10 @@ RecordingStudio::Recording.unscoped.recording_studio_trashable_active.find_by(
 assert RecordingStudio::Recording.respond_to?(:recording_studio_trashable_active)
 
 admin_root = AdminRoot.find_by!(name: "Admin")
-kept = RecordingStudio::Recording.unscoped.recording_studio_trashable_active.find_by(
+kept = RecordingStudio::Recording.recording_studio_trashable_active.find_by(
   recordable: admin_root
 )
-assert_equal kept, RecordingStudio::Recording.unscoped.find_by(
+assert_equal kept, RecordingStudio::Recording.find_by(
   recordable: admin_root,
   trashed_at: nil
 )
