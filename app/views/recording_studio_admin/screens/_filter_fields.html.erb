@@ -18,7 +18,7 @@
           options: select_options,
           value: filter.value,
           label: filter.key.to_s.humanize,
-          placeholder: t("recording_studio.admin.screens.filters.all_placeholder"),
+          placeholder: t("recording_studio.admin.screens.filters.all_placeholder", default: "All"),
           **select_search_options
         ) %>
       <% else %>

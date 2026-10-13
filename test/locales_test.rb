@@ -21,9 +21,21 @@ class LocalesTest < Minitest::Test
     "sections.index.badge_section" => "Section",
     "sections.index.empty_search" => "No admin screens or sections match that search.",
     "sections.index.empty" => "No admin sections are available.",
+    "sections.index.search_groups.sections" => "Sections",
+    "sections.index.search_groups.screens" => "Screens",
+    "sections.index.search_groups.in_section" => "In %{title}",
     "sections.show.more" => "More",
     "screens.filters.trigger_label" => "Filters",
     "screens.filters.all_placeholder" => "All",
+    "screens.filters.date_presets.today" => "Today",
+    "screens.filters.date_presets.yesterday" => "Yesterday",
+    "screens.filters.date_presets.last_3_days" => "Last 3 days",
+    "screens.filters.date_presets.this_week" => "This week",
+    "screens.filters.date_presets.last_week" => "Last week",
+    "screens.filters.date_presets.this_month" => "This month",
+    "screens.filters.date_presets.last_month" => "Last month",
+    "screens.filters.date_presets.this_year" => "This year",
+    "screens.filters.date_presets.last_year" => "Last year",
     "screens.table.counting_rows" => "Counting rows...",
     "screens.table.export" => "Export",
     "screens.table.export_restricted" => "Export restricted",
@@ -88,7 +100,58 @@ class LocalesTest < Minitest::Test
                    I18n.t("recording_studio.admin.screens.table.actions_for_email", email: "admin@example.com")
       assert_equal "Open API activity",
                    I18n.t("recording_studio.admin.widgets.open", label: "API activity")
+      assert_equal "In Users",
+                   I18n.t("recording_studio.admin.sections.index.search_groups.in_section", title: "Users")
     end
+  end
+
+  def test_lib_sources_do_not_append_i18n_load_path
+    lib_root = File.expand_path("../lib", __dir__)
+    Dir[File.join(lib_root, "**", "*.rb")].each do |path|
+      source = File.read(path)
+
+      refute_includes source, "i18n.load_path", "#{path} must not touch i18n.load_path"
+      refute_includes source, "I18n.load_path", "#{path} must not touch I18n.load_path"
+    end
+  end
+
+  def test_date_preset_keys_match_period_quick_preset_labels_constant
+    RecordingStudioAdmin::Period::QUICK_PRESET_LABELS.each do |key, english|
+      assert_equal english,
+                   I18n.t("recording_studio.admin.screens.filters.date_presets.#{key}", raise: true)
+    end
+  end
+
+  def test_non_english_locale_falls_back_to_english_defaults_for_search_group_headings
+    previous_locales = I18n.available_locales
+    I18n.available_locales = previous_locales | [:fr]
+    I18n.with_locale(:fr) do
+      assert_equal "Sections",
+                   I18n.t(
+                     "recording_studio.admin.sections.index.search_groups.sections",
+                     default: "Sections"
+                   )
+      assert_equal "Screens",
+                   I18n.t(
+                     "recording_studio.admin.sections.index.search_groups.screens",
+                     default: "Screens"
+                   )
+      # rubocop:disable Style/FormatStringToken -- I18n interpolation token
+      assert_equal "In Utilisateurs",
+                   I18n.t(
+                     "recording_studio.admin.sections.index.search_groups.in_section",
+                     title: "Utilisateurs",
+                     default: "In %{title}"
+                   )
+      # rubocop:enable Style/FormatStringToken
+      assert_equal "Today",
+                   I18n.t(
+                     "recording_studio.admin.screens.filters.date_presets.today",
+                     default: RecordingStudioAdmin::Period::QUICK_PRESET_LABELS.fetch(:today)
+                   )
+    end
+  ensure
+    I18n.available_locales = previous_locales if previous_locales
   end
 
   def test_en_yml_nests_keys_under_recording_studio_admin

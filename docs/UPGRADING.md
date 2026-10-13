@@ -1,5 +1,39 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.2.0
+
+This is a non-breaking upgrade. Rendered English interface text is unchanged.
+No public constants, methods, or helpers were renamed or removed.
+`Period::QUICK_PRESET_LABELS` stays the public English constant; labels are
+translated only when the filter partial passes them to Stimulus.
+
+### What Changed
+
+- Sections search group headings (`Sections`, `Screens`, `In %{title}`) use
+  Rails I18n under `recording_studio.admin.sections.index.search_groups`.
+- Screen date-preset labels used by the filters Stimulus controller are
+  passed as a JSON data attribute built from
+  `recording_studio.admin.screens.filters.date_presets`, with English
+  fallbacks in the JavaScript if the attribute is absent.
+- Existing view `t(...)` calls now include English `default:` values.
+
+Keys added (high level):
+
+| Section | Examples |
+| --- | --- |
+| `recording_studio.admin.sections.index.search_groups` | Sections, Screens, In %{title} |
+| `recording_studio.admin.screens.filters.date_presets` | Today, Yesterday, Last 3 days, … |
+
+Left untranslated on purpose: DSL-registered section/screen/widget titles,
+subtitles, and links (including built-in Admin activity logs); Admin column
+headers; caller `export_options` text; Devise messages; generator CLI text;
+developer-facing errors; `Period` labels returned from public methods.
+
+### Upgrade Steps
+
+No migration is required. English hosts need no change. To override or add
+another language, set the keys above in the host's `config/locales`.
+
 ## Upgrading to 2.1.0
 
 This is a non-breaking upgrade. Rendered English interface text is unchanged.

@@ -1,0 +1,10 @@
+# Host nested override for a rarely shown date-preset label (last_year).
+# Loaded by Rails from config/locales — do not append this path in tests.
+# Common visible chrome (titles, empty states, Filters, Columns) stays on gem English.
+en:
+  recording_studio:
+    admin:
+      screens:
+        filters:
+          date_presets:
+            last_year: "HOST Last year"

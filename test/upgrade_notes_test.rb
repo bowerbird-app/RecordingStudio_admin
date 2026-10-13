@@ -24,6 +24,28 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "recording_studio.admin"
   end
 
+  def test_upgrading_doc_covers_the_2_2_0_i18n_wave_2_release
+    upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
+    changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
+    readme = File.read(File.join(ROOT, "README.md"))
+    version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
+
+    assert_includes version, 'VERSION = "2.2.0"'
+    assert_includes upgrading, "## Upgrading to 2.2.0"
+    assert_includes upgrading, "search_groups"
+    assert_includes upgrading, "date_presets"
+    assert_includes upgrading, "QUICK_PRESET_LABELS"
+    assert_includes upgrading, "default:"
+
+    assert_includes changelog, "## 2.2.0"
+    assert_includes changelog, "docs/UPGRADING.md#upgrading-to-220"
+    assert_includes changelog, "search group headings"
+    assert_includes changelog, "date-preset"
+
+    assert_includes readme, "date-preset labels"
+    assert_includes readme, "QUICK_PRESET_LABELS"
+  end
+
   def test_upgrading_doc_covers_the_2_0_floor_and_mixin_migration
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))

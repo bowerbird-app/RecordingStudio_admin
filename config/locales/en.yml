@@ -16,12 +16,26 @@ en:
           badge_section: "Section"
           empty_search: "No admin screens or sections match that search."
           empty: "No admin sections are available."
+          search_groups:
+            sections: "Sections"
+            screens: "Screens"
+            in_section: "In %{title}"
         show:
           more: "More"
       screens:
         filters:
           trigger_label: "Filters"
           all_placeholder: "All"
+          date_presets:
+            today: "Today"
+            yesterday: "Yesterday"
+            last_3_days: "Last 3 days"
+            this_week: "This week"
+            last_week: "Last week"
+            this_month: "This month"
+            last_month: "Last month"
+            this_year: "This year"
+            last_year: "Last year"
         table:
           counting_rows: "Counting rows..."
           row_count:

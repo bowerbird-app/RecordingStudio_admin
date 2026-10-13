@@ -49,7 +49,12 @@ module RecordingStudioAdmin
 
       groups = []
       section_items = items.select { |item| item.type == :section }
-      groups << { title: "Sections", items: section_items } if section_items.any?
+      if section_items.any?
+        groups << {
+          title: I18n.t("recording_studio.admin.sections.index.search_groups.sections", default: "Sections"),
+          items: section_items
+        }
+      end
 
       grouped_screen_items = items.select { |item| item.type == :screen && item.parent_key.present? }
                                   .group_by { |item| item.parent_key.to_s }
@@ -60,11 +65,23 @@ module RecordingStudioAdmin
 
       sorted_grouped_screen_items.each do |parent_key, grouped_items|
         parent_title = section_lookup[parent_key] || parent_key.humanize
-        groups << { title: "In #{parent_title}", items: grouped_items }
+        groups << {
+          title: I18n.t(
+            "recording_studio.admin.sections.index.search_groups.in_section",
+            title: parent_title,
+            default: "In #{parent_title}"
+          ),
+          items: grouped_items
+        }
       end
 
       ungrouped_screens = items.select { |item| item.type == :screen && item.parent_key.blank? }
-      groups << { title: "Screens", items: ungrouped_screens } if ungrouped_screens.any?
+      if ungrouped_screens.any?
+        groups << {
+          title: I18n.t("recording_studio.admin.sections.index.search_groups.screens", default: "Screens"),
+          items: ungrouped_screens
+        }
+      end
       groups
     end
 

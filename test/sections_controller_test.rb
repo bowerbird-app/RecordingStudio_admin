@@ -59,6 +59,44 @@ class SectionsControllerTest < Minitest::Test
                  controller.instance_variable_get(:@search_result_groups).first.fetch(:items).map(&:key)
   end
 
+  def test_index_search_result_groups_use_literal_english_sections_and_screens_headings
+    controller = build_controller(params: ActionController::Parameters.new(q: "api"))
+    sections = [ResolvedSection.new(key: "api", title: "API", subtitle: nil, icon: nil,
+                                    url: "/admin/sections/api")]
+    items = [
+      ResolvedItem.new(type: :section, key: "api", title: "API", subtitle: "Traffic", icon: nil,
+                       url: "/admin/sections/api", search_text: "section api traffic"),
+      ResolvedItem.new(type: :screen, key: "api_requests", title: "API requests", subtitle: "Traffic", icon: nil,
+                       url: "/admin/screens/api_requests", search_text: "screen api requests traffic"),
+      ResolvedItem.new(type: :screen, key: "user_sign_ins", title: "User sign-ins", subtitle: "Access", icon: nil,
+                       url: "/admin/screens/user_sign_ins",
+                       search_text: "screen user sign-ins access",
+                       parent_key: "users")
+    ]
+    expected_context = Object.new
+    expected_context.define_singleton_method(:available_admin_items) do |include:|
+      raise "unexpected include" unless include == %i[sections screens]
+
+      items
+    end
+    controller.define_singleton_method(:recording_studio_admin_context) { expected_context }
+
+    with_singleton_stub(RecordingStudioAdmin, :resolve_sections, lambda { |context:|
+      assert_same expected_context, context
+      sections
+    }) do
+      controller.index
+    end
+
+    titles = controller.instance_variable_get(:@search_result_groups).map { |group| group.fetch(:title) }
+
+    assert_equal %w[Sections Screens], titles
+    assert_equal "Sections",
+                 I18n.t("recording_studio.admin.sections.index.search_groups.sections", default: "Sections")
+    assert_equal "Screens",
+                 I18n.t("recording_studio.admin.sections.index.search_groups.screens", default: "Screens")
+  end
+
   def test_show_uses_surface_root_section_when_key_is_absent
     controller = build_controller(params: ActionController::Parameters.new)
     expected_context = Struct.new(:root_admin_section_key).new("page_views")
