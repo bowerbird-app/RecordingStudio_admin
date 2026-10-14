@@ -17,6 +17,10 @@ and allows `group_by` `action_key`, `resource_key` or `outcome`. Action keys
 such as `update` repeat across resources, so read them with `resource_key`.
 Actors, records, IPs, user agents and error text are never grouped or returned.
 
+Select filters now accept repeated params (`status[]=a&status[]=b`). Custom
+`apply:` lambdas then receive an Array, so wrap the value with `Array(value)`
+if the filter can be multi-valued. Single values still arrive as a String.
+
 ## Upgrading to 2.3.0
 
 Admin `2.3.0` depends on RecordingStudioTrashable `~> 0.10` and loads only the

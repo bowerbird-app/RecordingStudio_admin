@@ -23,6 +23,9 @@
   bundle `recording_studio_metrics ~> 0.3`; Admin itself does not depend on it.
   See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
 - Dev and dummy Gemfiles pin Metrics `v0.3.1`.
+- Select filters accept repeated params (`status[]=pending&status[]=running`).
+  Each allowed, non-blank value is kept and the default apply becomes
+  `WHERE field IN (...)`. A single kept value is still passed as a string.
 
 ## 2.3.0 - 2026-10-13
 

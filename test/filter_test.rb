@@ -77,6 +77,19 @@ class FilterTest < Minitest::Test
     assert_equal({ occurred_at: ..value.end_date.end_of_day }, relation.clauses.last)
   end
 
+  def test_select_filter_keeps_every_allowed_value_from_repeated_params
+    definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(:status, :select,
+                                                                         options: %w[pending running failed])
+
+    assert_equal %w[pending running], definition.normalize(status: %w[pending running nope pending ""])
+    assert_equal "failed", definition.normalize(status: %w[failed])
+    assert_nil definition.normalize(status: %w[nope])
+
+    relation = RelationDouble.new
+    definition.apply(relation, %w[pending running], nil)
+    assert_equal [{ status: %w[pending running] }], relation.clauses
+  end
+
   def test_select_filter_rejects_undeclared_options
     definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(:status, :select, options: %w[open closed])
 
