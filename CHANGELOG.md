@@ -13,6 +13,35 @@
   (`anchor_href`). Close still needs FlatPack `>= 0.1.197`; this pin keeps
   FlatPack at `v0.1.129`.
 
+## 2.4.0 - 2026-10-14
+
+### Added
+
+- `RecordingStudioAdmin::ControllerAuth` concern shared by the engine
+  `ApplicationController` and the generated host `Admin::BaseController`
+- Per-area (surface) `authentication_method` / `current_actor_method` lookup
+  with global configuration fallback for generated host admin controllers
+- Host-template-only `Current.actor` nil fallback: when `Current.actor` is
+  nil, the generated base controller calls the configured/surface actor
+  method; it does not overwrite a host-set actor
+
+### Changed
+
+- Engine auth/actor helpers move into `ControllerAuth`; engine
+  `current_actor` / `Current.actor=` semantics match main (401 when the auth
+  method is missing, 403/404 paths, CSRF order unchanged)
+- Generated `Admin::BaseController` includes `ControllerAuth`, applies the
+  host-only nil actor handling above, and builds context with the request
+  surface
+
+### Upgrade notes
+
+- Prefer adding `include RecordingStudioAdmin::ControllerAuth` (and the
+  host-only `current_actor` / `set_recording_studio_admin_current_actor`
+  overrides) by hand — regenerating `admin_root` overwrites a customized
+  base controller. Untouched hosts keep global-only auth until they update.
+- See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
+
 ## 2.3.0 - 2026-10-13
 
 ### Added
@@ -250,6 +279,7 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.2...v2.4.0
 [2.3.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.1.0...v2.2.0

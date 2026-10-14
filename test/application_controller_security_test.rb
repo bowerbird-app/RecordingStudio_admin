@@ -33,12 +33,16 @@ class ApplicationControllerSecurityTest < Minitest::Test
 
   def test_engine_controller_has_fail_closed_authentication_hook
     source = File.read(File.join(ROOT, "app/controllers/recording_studio_admin/application_controller.rb"))
+    concern = File.read(File.join(ROOT, "lib/recording_studio_admin/controller_auth.rb"))
 
+    assert_includes source, "include RecordingStudioAdmin::ControllerAuth"
     assert_includes source, "layout :recording_studio_admin_layout"
     assert_includes source, "before_action :authenticate_recording_studio_admin!"
-    assert_includes source, "head :unauthorized"
-    assert_includes source, "head :forbidden"
     assert_includes source, "set_recording_studio_admin_current_actor"
+    assert_includes source, "head :forbidden"
+    assert_includes concern, "head :unauthorized"
+    assert_includes concern, "return Current.actor if defined?(Current) && Current.respond_to?(:actor)"
+    refute_includes concern, "!Current.actor.nil?"
   end
 
   def test_engine_layout_uses_configuration
@@ -131,6 +135,22 @@ class ApplicationControllerSecurityTest < Minitest::Test
     end
   end
 
+  def test_engine_current_actor_does_not_overwrite_pre_set_actor
+    calls = 0
+    controller = build_controller do
+      define_method(:signed_in_actor) do
+        calls += 1
+        :configured
+      end
+    end
+    RecordingStudioAdmin.configuration.current_actor_method = :signed_in_actor
+
+    with_current_stub(actor: :host_set) do
+      assert_equal :host_set, controller.send(:current_actor)
+      assert_equal 0, calls
+    end
+  end
+
   def test_recording_studio_admin_context_uses_controller_inputs_and_memoizes
     controller = build_controller do
       def signed_in_actor
@@ -217,6 +237,19 @@ class ApplicationControllerSecurityTest < Minitest::Test
 
     with_current_stub(actor: :from_current) do
       assert_equal :from_current, controller.send(:current_actor)
+    end
+  end
+
+  def test_current_actor_returns_nil_when_current_actor_is_cleared
+    controller = build_controller do
+      def signed_in_actor
+        :configured
+      end
+    end
+    RecordingStudioAdmin.configuration.current_actor_method = :signed_in_actor
+
+    with_current_stub(actor: nil) do
+      assert_nil controller.send(:current_actor)
     end
   end
 
