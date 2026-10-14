@@ -13,6 +13,17 @@
   (`anchor_href`). Close still needs FlatPack `>= 0.1.197`; this pin keeps
   FlatPack at `v0.1.129`.
 
+## 2.4.0 - 2026-10-14
+
+### Added
+
+- `RecordingStudioAdmin::Metrics.register!(model: AdminAuditLog)`: opt-in
+  `admin_events.over_time` timeseries over the host audit log (`occurred_at`),
+  `group_by` `action_key`, `resource_key` or `outcome`. Requires the host to
+  bundle `recording_studio_metrics ~> 0.3`; Admin itself does not depend on it.
+  See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
+- Dev and dummy Gemfiles pin Metrics `v0.3.1`.
+
 ## 2.3.0 - 2026-10-13
 
 ### Added

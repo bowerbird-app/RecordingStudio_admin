@@ -1,5 +1,22 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.4.0
+
+No migration and no behavior change. Hosts that run RecordingStudioMetrics
+`~> 0.3` (and the API operations endpoint) can expose admin audit counts:
+
+```ruby
+Rails.application.config.to_prepare do
+  RecordingStudioAdmin::Metrics.register!(model: AdminAuditLog)
+end
+```
+
+This registers `admin_events.over_time` (site blast radius, `:operations`
+exposure, AdminRoot `:view`). It counts `AdminAuditLog` rows by `occurred_at`
+and allows `group_by` `action_key`, `resource_key` or `outcome`. Action keys
+such as `update` repeat across resources, so read them with `resource_key`.
+Actors, records, IPs, user agents and error text are never grouped or returned.
+
 ## Upgrading to 2.3.0
 
 Admin `2.3.0` depends on RecordingStudioTrashable `~> 0.10` and loads only the
