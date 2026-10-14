@@ -1,19 +1,20 @@
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio.git
-  revision: b34e59cbd4f56fbc76cf16965d4acda5aea60310
-  tag: v4.5.0
+  revision: a6e42617e16647d91ddb70748e41774577f17b6c
+  tag: v4.6.0
   specs:
-    recording_studio (4.5.0)
+    recording_studio (4.6.0)
       rails (>= 8.1.0)
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_accessible.git
-  revision: db1d692fdecccdf251c7c8b5dc19074a0e4da97c
-  tag: v0.15.0
+  revision: 226c6a92472f6ddf1fabcb27ea52ef6a23e53f87
+  tag: v0.17.0
   specs:
-    recording_studio_accessible (0.15.0)
+    recording_studio_accessible (0.17.0)
       rails (~> 8.1.0)
       recording_studio (~> 4.2)
+      recording_studio_trashable (~> 0.10)
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_metrics.git
