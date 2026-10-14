@@ -1,5 +1,57 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.4.0
+
+Admin `2.4.0` adds a shared ILIKE search helper for admin screens. Prefer it over
+hand-rolled `sanitize_sql_like` / `ILIKE` filters so `%` and `_` stay escaped and
+blank search input leaves the relation unchanged.
+
+### What Changed
+
+- New public API: `RecordingStudioAdmin::Filters::Ilike`
+  - `on(*columns, strip: false)` — callable for `filter :search, apply:`
+  - `apply(relation, value, columns:, strip: false)` — filter a relation in place
+  - `pattern(value, strip: false)` — escaped `%…%` bind for custom SQL
+- Built-in admin activity logs search uses the helper; `AdminActivityLogsSupport.safe_like`
+  is removed.
+
+### Upgrade Steps
+
+1. Bundle Admin `2.4.0`.
+2. Replace hand-rolled table search filters with the helper:
+
+```ruby
+# Before
+filter :search, apply: lambda { |relation, value, _context|
+  next relation unless value.present?
+
+  q = "%#{ActiveRecord::Base.sanitize_sql_like(value)}%"
+  relation.where("path ILIKE :q OR status ILIKE :q", q: q)
+}
+
+# After
+filter :search, apply: RecordingStudioAdmin::Filters::Ilike.on(:path, :status)
+```
+
+3. If a screen previously called `.strip` on the search text before matching, pass
+   `strip: true`.
+4. If you called `AdminActivityLogsSupport.safe_like`, use
+   `RecordingStudioAdmin::Filters::Ilike.pattern` instead.
+
+### Verify the upgrade
+
+```ruby
+relation = ApiRequest.all
+filtered = RecordingStudioAdmin::Filters::Ilike.apply(
+  relation,
+  "a%b_c",
+  columns: [:path]
+)
+assert_includes filtered.to_sql, "ILIKE"
+assert_equal "%a\\%b\\_c%", RecordingStudioAdmin::Filters::Ilike.pattern("a%b_c")
+assert_equal relation, RecordingStudioAdmin::Filters::Ilike.apply(relation, "", columns: [:path])
+```
+
 ## Upgrading to 2.3.0
 
 Admin `2.3.0` depends on RecordingStudioTrashable `~> 0.10` and loads only the

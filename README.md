@@ -17,6 +17,10 @@ Admin `2.3.0` adds RecordingStudioTrashable `~> 0.10` (query-only) and replaces
 `trashed_at: nil` filters with `recording_studio_trashable_kept_sql`. See
 [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-230).
 
+Admin `2.4.0` adds `RecordingStudioAdmin::Filters::Ilike` for shared,
+`sanitize_sql_like`-escaped table search. See
+[docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
+
 ## Quick start
 
 1. Add the gem to the host app and run the install generator:
@@ -573,6 +577,24 @@ Built-in filters include:
 
 - date range
 - group by (`hour`, `day`, `week`, `month`, `year`)
+- ILIKE search helper for table text search (`RecordingStudioAdmin::Filters::Ilike`)
+
+For case-insensitive partial match across declared columns, escape user input with
+`sanitize_sql_like` and skip blank values:
+
+```ruby
+table do
+  filter :search, apply: RecordingStudioAdmin::Filters::Ilike.on(
+    :resource_key,
+    :action_key,
+    :outcome
+  )
+end
+```
+
+Use `apply` when you already have a relation (for example after a join), and
+`pattern` when you need only the escaped `%…%` bind value. Pass `strip: true`
+when the screen should ignore leading and trailing spaces in the search text.
 
 Screen filters display inline when there are fewer than three filters. Screens with three or more main and table
 filters use a FlatPack modal by default. Override that behavior in the screen definition when needed:

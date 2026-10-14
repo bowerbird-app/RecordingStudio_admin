@@ -4,7 +4,7 @@ module AdminScreens
   class ApiRequests
     table do
       export "admin.api_requests", text: "Export"
-      filter :search, apply: ->(relation, value, _context) { value.present? ? relation.where("path ILIKE ?", AdminScreens::Base.safe_like(value)) : relation }
+      filter :search, apply: RecordingStudioAdmin::Filters::Ilike.on(:path)
       column :created_at
       column :method
       column :status, display: :badge, display_options: ->(_row, _context, value) do

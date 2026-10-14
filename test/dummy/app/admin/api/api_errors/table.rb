@@ -3,12 +3,11 @@
 module AdminScreens
   class ApiErrors
     table do
-      filter :search, apply: lambda { |relation, value, _context|
-        next relation unless value.present?
-
-        q = AdminScreens::Base.safe_like(value)
-        relation.where("message ILIKE :q OR path ILIKE :q OR error_class ILIKE :q", q: q)
-      }
+      filter :search, apply: RecordingStudioAdmin::Filters::Ilike.on(
+        :message,
+        :path,
+        :error_class
+      )
       column :created_at
       column :error_class
       column :status

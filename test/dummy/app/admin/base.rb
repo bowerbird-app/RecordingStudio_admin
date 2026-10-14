@@ -30,10 +30,6 @@ module AdminScreens
         end
       end
 
-      def safe_like(value)
-        "%#{ActiveRecord::Base.sanitize_sql_like(value.to_s)}%"
-      end
-
       def period_change_label(relation, distinct_field: nil, current_period: 7.days.ago.., previous_period: 14.days.ago...7.days.ago)
         current_count = period_count(relation, period: current_period, distinct_field: distinct_field)
         previous_count = period_count(relation, period: previous_period, distinct_field: distinct_field)

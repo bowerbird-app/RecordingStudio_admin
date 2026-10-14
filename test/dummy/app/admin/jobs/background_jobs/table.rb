@@ -3,7 +3,7 @@
 module AdminScreens
   class BackgroundJobs
     table do
-      filter :search, apply: ->(relation, value, _context) { value.present? ? relation.where("job_class ILIKE ?", AdminScreens::Base.safe_like(value)) : relation }
+      filter :search, apply: RecordingStudioAdmin::Filters::Ilike.on(:job_class)
       column :created_at
       column :job_class
       column :queue
