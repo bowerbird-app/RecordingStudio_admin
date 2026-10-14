@@ -33,7 +33,7 @@ class ApplicationControllerSecurityTest < Minitest::Test
 
   def test_engine_controller_has_fail_closed_authentication_hook
     source = File.read(File.join(ROOT, "app/controllers/recording_studio_admin/application_controller.rb"))
-    concern = File.read(File.join(ROOT, "app/controllers/concerns/recording_studio_admin/controller_auth.rb"))
+    concern = File.read(File.join(ROOT, "lib/recording_studio_admin/controller_auth.rb"))
 
     assert_includes source, "include RecordingStudioAdmin::ControllerAuth"
     assert_includes source, "layout :recording_studio_admin_layout"
@@ -41,6 +41,8 @@ class ApplicationControllerSecurityTest < Minitest::Test
     assert_includes source, "set_recording_studio_admin_current_actor"
     assert_includes source, "head :forbidden"
     assert_includes concern, "head :unauthorized"
+    assert_includes concern, "return Current.actor if defined?(Current) && Current.respond_to?(:actor)"
+    refute_includes concern, "!Current.actor.nil?"
   end
 
   def test_engine_layout_uses_configuration
@@ -222,7 +224,7 @@ class ApplicationControllerSecurityTest < Minitest::Test
     end
   end
 
-  def test_current_actor_falls_back_to_configured_method_when_current_actor_is_nil
+  def test_current_actor_returns_nil_when_current_actor_is_cleared
     controller = build_controller do
       def signed_in_actor
         :configured
@@ -231,7 +233,7 @@ class ApplicationControllerSecurityTest < Minitest::Test
     RecordingStudioAdmin.configuration.current_actor_method = :signed_in_actor
 
     with_current_stub(actor: nil) do
-      assert_equal :configured, controller.send(:current_actor)
+      assert_nil controller.send(:current_actor)
     end
   end
 

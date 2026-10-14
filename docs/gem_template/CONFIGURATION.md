@@ -120,13 +120,15 @@ Request flow:
 1. resolve the current surface from the request path
 2. call that surface's `authentication_method`, or the global default when unset
 3. set `Current.actor` from the surface/`current_actor_method` (when `Current` supports it)
-4. resolve the current actor with `Current.actor` when present, otherwise the
-   surface/`current_actor_method`
+4. resolve the current actor (`Current.actor` when that API exists, otherwise the
+   surface/`current_actor_method`)
 5. build a `RecordingStudioAdmin::Context`
 6. resolve the access recording
 7. authorize the actor against that recording
 
-If the configured authentication method does not exist on the controller stack, the engine returns `401 Unauthorized`. A surface can override `authentication_method`, `current_actor_method`, and `engine_layout`; otherwise it inherits the global configuration. When `Current.actor` is nil, actor resolution calls the configured method instead of trusting nil.
+If the configured authentication method does not exist on the controller stack, the engine returns `401 Unauthorized`. A surface can override `authentication_method`, `current_actor_method`, and `engine_layout`; otherwise it inherits the global configuration.
+
+On the engine, `current_actor` returns `Current.actor` whenever `Current` responds to `actor`, including when that value is `nil`. The generated host template overrides that path: when `Current.actor` is nil it calls the configured method, and it only assigns `Current.actor` when the value is already nil so a host-set actor is not overwritten.
 
 ## Access recording resolution
 

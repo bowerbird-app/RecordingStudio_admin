@@ -21,6 +21,8 @@ class AdminRootGeneratorTest < Minitest::Test
     assert_includes template, expected_helper_method
     assert_includes template, ":preserve_anchor_url"
     assert_includes template, "authenticate_recording_studio_admin!"
+    assert_includes template, "return if Current.respond_to?(:actor) && !Current.actor.nil?"
+    assert_includes template, "!Current.actor.nil?"
     assert_includes template, "RecordingStudioAdmin::Authorization.authorize!("
     assert_includes template, "recording_studio_admin_context,"
     assert_includes template, "recording: recording_studio_admin_access_recording"

@@ -21,23 +21,29 @@
   `ApplicationController` and the generated host `Admin::BaseController`
 - Per-area (surface) `authentication_method` / `current_actor_method` lookup
   with global configuration fallback for generated host admin controllers
-- `Current.actor` nil fallback: when `Current.actor` is nil, actor resolution
-  calls the configured/surface actor method instead of trusting nil
+- Host-template-only `Current.actor` nil fallback: when `Current.actor` is
+  nil, the generated base controller calls the configured/surface actor
+  method; it does not overwrite a host-set actor
+- Security workflow (Brakeman, bundler-audit, importmap audit) and a
+  separate lint job so PRs report the full check suite
+- Dummy Brakeman pin bumped to `8.1.0`; `distinct_date_series` quotes the
+  distinct column name so Security CI is clean
 
 ### Changed
 
-- Engine auth/actor helpers move into `ControllerAuth`; behavior otherwise
-  unchanged (401 when the auth method is missing, 403/404 paths, CSRF order)
-- Generated `Admin::BaseController` includes `ControllerAuth`, sets
-  `Current.actor` after auth, and builds context with the request surface
+- Engine auth/actor helpers move into `ControllerAuth`; engine
+  `current_actor` / `Current.actor=` semantics match main (401 when the auth
+  method is missing, 403/404 paths, CSRF order unchanged)
+- Generated `Admin::BaseController` includes `ControllerAuth`, applies the
+  host-only nil actor handling above, and builds context with the request
+  surface
 
 ### Upgrade notes
 
-- Regenerate the admin base controller (`bin/rails generate
-  recording_studio_admin:admin_root`) or add
-  `include RecordingStudioAdmin::ControllerAuth` and call
-  `authenticate_recording_studio_admin!` /
-  `set_recording_studio_admin_current_actor` from your host base controller
+- Prefer adding `include RecordingStudioAdmin::ControllerAuth` (and the
+  host-only `current_actor` / `set_recording_studio_admin_current_actor`
+  overrides) by hand — regenerating `admin_root` overwrites a customized
+  base controller. Untouched hosts keep global-only auth until they update.
 - See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
 
 ## 2.3.0 - 2026-10-13

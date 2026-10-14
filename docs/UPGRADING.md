@@ -5,29 +5,37 @@
 Admin `2.4.0` extracts area-aware authentication and actor lookup into
 `RecordingStudioAdmin::ControllerAuth`. The engine controller and the
 generated host `Admin::BaseController` both include that concern so per-surface
-`authentication_method` / `current_actor_method` settings apply the same way
-on host admin screens as on engine screens. When `Current.actor` is nil, actor
-resolution falls back to the configured (or surface) actor method.
+`authentication_method` / `current_actor_method` settings can apply the same way
+on host admin screens as on engine screens.
+
+Engine `current_actor` behavior is unchanged from main: if `Current` responds to
+`actor`, that value is returned (including `nil`). The generated host template
+adds host-only overrides: when `Current.actor` is nil it calls the configured
+actor method, and `set_recording_studio_admin_current_actor` only assigns when
+`Current.actor` is nil so a host-set actor is not overwritten.
+
+Hosts that leave an older generated `Admin::BaseController` untouched keep
+global-only auth until they update that file.
 
 ### What Changed
 
-- New public concern: `RecordingStudioAdmin::ControllerAuth`
+- New public concern: `RecordingStudioAdmin::ControllerAuth` (under
+  `lib/recording_studio_admin/controller_auth.rb`)
 - Engine `ApplicationController` includes the concern (same before_actions and
-  fail-closed 401 / 403 / 404 behavior)
+  fail-closed 401 / 403 / 404 behavior; same `current_actor` / `Current.actor=`
+  semantics as before)
 - Generated `Admin::BaseController` includes the concern, sets `Current.actor`
-  after auth, and passes the request surface into `Context`
+  only when it is nil, falls back to the actor method when `Current.actor` is
+  nil, and passes the request surface into `Context`
 
 ### Upgrade Steps
 
 1. Bump to Admin `2.4.0` and bundle.
 
-2. Update the host admin base controller. Prefer regenerating:
-
-```bash
-bin/rails generate recording_studio_admin:admin_root
-```
-
-Or add the include and callbacks by hand:
+2. Update the host admin base controller. Prefer adding the include and
+   host-only overrides by hand if you already customized the file —
+   regenerating `admin_root` overwrites a customized `Admin::BaseController`
+   (and other generated files).
 
 ```ruby
 class Admin::BaseController < ApplicationController
@@ -44,6 +52,19 @@ class Admin::BaseController < ApplicationController
     authenticate_recording_studio_admin!
   end
 
+  def set_recording_studio_admin_current_actor
+    return unless defined?(Current) && Current.respond_to?(:actor=)
+    return if Current.respond_to?(:actor) && !Current.actor.nil?
+
+    Current.actor = configured_current_actor
+  end
+
+  def current_actor
+    return Current.actor if defined?(Current) && Current.respond_to?(:actor) && !Current.actor.nil?
+
+    configured_current_actor
+  end
+
   def recording_studio_admin_context
     @recording_studio_admin_context ||= RecordingStudioAdmin::Context.new(
       params: params.to_unsafe_h,
@@ -55,6 +76,12 @@ class Admin::BaseController < ApplicationController
     )
   end
 end
+```
+
+Only regenerate when you intend to replace the generated files:
+
+```bash
+bin/rails generate recording_studio_admin:admin_root
 ```
 
 Remove any host copies of global-only `configuration.authentication_method` /
@@ -80,15 +107,18 @@ end
 assert defined?(RecordingStudioAdmin::ControllerAuth)
 assert_includes Admin::BaseController.ancestors, RecordingStudioAdmin::ControllerAuth
 
-# Per-area override (surface wins)
+# Per-area override (surface wins) on an updated host base controller
 RecordingStudioAdmin.configuration.surface(:stats, path: "/stats",
                                            authentication_method: :authenticate_stats_user!)
 # Hit a /stats host admin action and confirm authenticate_stats_user! runs.
 
-# Current.actor nil fallback
+# Host template: Current.actor nil falls back to the configured method
 Current.actor = nil
-# current_actor on an Admin::BaseController subclass should call the configured
-# current_actor_method instead of returning nil.
+# current_actor on Admin::BaseController should call current_actor_method.
+
+# Host template: do not overwrite a host-set actor
+Current.actor = already_signed_in_user
+# set_recording_studio_admin_current_actor must leave Current.actor unchanged.
 ```
 
 ## Upgrading to 2.3.0

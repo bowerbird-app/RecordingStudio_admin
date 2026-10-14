@@ -91,7 +91,8 @@ class UpgradeNotesTest < Minitest::Test
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
     readme = File.read(File.join(ROOT, "README.md"))
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
-    concern = File.read(File.join(ROOT, "app/controllers/concerns/recording_studio_admin/controller_auth.rb"))
+    concern = File.read(File.join(ROOT, "lib/recording_studio_admin/controller_auth.rb"))
+    gem_entry = File.read(File.join(ROOT, "lib/recording_studio_admin.rb"))
     engine_controller = File.read(File.join(ROOT, "app/controllers/recording_studio_admin/application_controller.rb"))
     generated = File.read(File.join(
                             ROOT,
@@ -99,30 +100,45 @@ class UpgradeNotesTest < Minitest::Test
                             "app/controllers/admin/base_controller.rb"
                           ))
     configuration_doc = File.read(File.join(ROOT, "docs/gem_template/CONFIGURATION.md"))
+    security_workflow = File.read(File.join(ROOT, ".github/workflows/security.yml"))
+    ci_workflow = File.read(File.join(ROOT, ".github/workflows/ci.yml"))
 
     assert_includes version, 'VERSION = "2.4.0"'
     assert_includes concern, "module ControllerAuth"
     assert_includes concern, "recording_studio_admin_surface.authentication_method"
     assert_includes concern, "recording_studio_admin_surface.current_actor_method"
-    assert_includes concern, "!Current.actor.nil?"
+    assert_includes concern, "return Current.actor if defined?(Current) && Current.respond_to?(:actor)"
+    refute_includes concern, "!Current.actor.nil?"
+    assert_includes gem_entry, 'require "recording_studio_admin/controller_auth"'
+    refute_includes gem_entry, "app/controllers/concerns"
     assert_includes engine_controller, "include RecordingStudioAdmin::ControllerAuth"
     assert_includes generated, "include RecordingStudioAdmin::ControllerAuth"
     assert_includes generated, "set_recording_studio_admin_current_actor"
+    assert_includes generated, "!Current.actor.nil?"
+    assert_includes generated, "return if Current.respond_to?(:actor) && !Current.actor.nil?"
 
     assert_includes upgrading, "## Upgrading to 2.4.0"
     assert_includes upgrading, "RecordingStudioAdmin::ControllerAuth"
     assert_includes upgrading, "authenticate_recording_studio_admin!"
     assert_includes upgrading, "set_recording_studio_admin_current_actor"
     assert_includes upgrading, "Current.actor"
+    assert_includes upgrading, "overwrites a customized"
+    assert_includes upgrading, "global-only auth"
 
     assert_includes changelog, "## 2.4.0"
     assert_includes changelog, "docs/UPGRADING.md#upgrading-to-240"
     assert_includes changelog, "compare/v2.3.2...v2.4.0"
     assert_includes changelog, "ControllerAuth"
+    assert_includes changelog, "overwrites a customized"
 
     assert_includes readme, "2.4.0"
     assert_includes readme, "ControllerAuth"
     assert_includes configuration_doc, "RecordingStudioAdmin::ControllerAuth"
+    assert_includes security_workflow, "bin/brakeman"
+    assert_includes security_workflow, "bin/bundler-audit"
+    assert_includes security_workflow, "importmap audit"
+    assert_includes ci_workflow, "lint:"
+    assert_includes ci_workflow, "bundle exec rubocop"
   end
 
   def test_upgrading_doc_covers_the_2_0_floor_and_mixin_migration

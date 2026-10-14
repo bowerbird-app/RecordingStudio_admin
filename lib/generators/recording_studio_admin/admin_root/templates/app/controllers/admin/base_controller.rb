@@ -19,6 +19,21 @@ class Admin::BaseController < ApplicationController
     authenticate_recording_studio_admin!
   end
 
+  # Host-only: do not overwrite a Current.actor the host ApplicationController already set.
+  def set_recording_studio_admin_current_actor
+    return unless defined?(Current) && Current.respond_to?(:actor=)
+    return if Current.respond_to?(:actor) && !Current.actor.nil?
+
+    Current.actor = configured_current_actor
+  end
+
+  # Host-only: when Current.actor is nil, call the surface/global actor method.
+  def current_actor
+    return Current.actor if defined?(Current) && Current.respond_to?(:actor) && !Current.actor.nil?
+
+    configured_current_actor
+  end
+
   def authorize_admin_user!
     return if performed?
 

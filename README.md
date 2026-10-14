@@ -18,9 +18,11 @@ Admin `2.3.0` adds RecordingStudioTrashable `~> 0.10` (query-only) and replaces
 [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-230).
 
 Admin `2.4.0` shares area-aware sign-in lookup via
-`RecordingStudioAdmin::ControllerAuth` so generated host `Admin::BaseController`
-honors per-surface `authentication_method` / `current_actor_method` like the
-engine. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
+`RecordingStudioAdmin::ControllerAuth` so an updated generated host
+`Admin::BaseController` honors per-surface `authentication_method` /
+`current_actor_method` like the engine. Untouched hosts keep global-only auth
+until they add the include (regenerating overwrites a customized base
+controller). See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
 
 ## Quick start
 

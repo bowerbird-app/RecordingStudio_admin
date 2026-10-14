@@ -9,6 +9,10 @@ module RecordingStudioAdmin
   # Resolves the current admin surface from the request, then reads that
   # surface's +authentication_method+ and +current_actor_method+, falling back
   # to global configuration when the surface leaves them unset.
+  #
+  # Engine +current_actor+ / +set_recording_studio_admin_current_actor+ match
+  # the previous ApplicationController behavior. The generated host template
+  # overrides those two methods for host-only nil handling.
   module ControllerAuth
     extend ActiveSupport::Concern
 
@@ -33,7 +37,7 @@ module RecordingStudioAdmin
     end
 
     def current_actor
-      return Current.actor if defined?(Current) && Current.respond_to?(:actor) && !Current.actor.nil?
+      return Current.actor if defined?(Current) && Current.respond_to?(:actor)
 
       configured_current_actor
     end

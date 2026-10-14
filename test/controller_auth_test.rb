@@ -47,6 +47,8 @@ class ControllerAuthTest < Minitest::Test
     assert_includes template, "authenticate_recording_studio_admin!"
     assert_includes template, "current_actor: current_actor"
     assert_includes template, "surface: recording_studio_admin_surface"
+    assert_includes template, "!Current.actor.nil?"
+    assert_includes template, "return if Current.respond_to?(:actor) && !Current.actor.nil?"
     refute_includes template, "RecordingStudioAdmin.configuration.authentication_method"
     refute_includes template, "RecordingStudioAdmin.configuration.current_actor_method"
   end
@@ -116,7 +118,7 @@ class ControllerAuthTest < Minitest::Test
     assert_equal :global, controller.send(:current_actor)
   end
 
-  def test_current_actor_falls_back_to_configured_method_when_current_actor_is_nil
+  def test_generated_current_actor_falls_back_to_configured_method_when_nil
     controller = build_generated_controller do
       def signed_in_actor
         :from_method
@@ -129,7 +131,7 @@ class ControllerAuthTest < Minitest::Test
     end
   end
 
-  def test_set_current_actor_uses_area_actor_method
+  def test_generated_set_current_actor_assigns_when_nil
     RecordingStudioAdmin.configuration.current_actor_method = :global_actor
     RecordingStudioAdmin.configuration.surface(:stats, path: "/stats", current_actor_method: :stats_actor)
     controller = build_generated_controller(path: "/stats", script_name: "/stats") do
@@ -142,10 +144,25 @@ class ControllerAuthTest < Minitest::Test
       end
     end
 
-    with_current_stub do
+    with_current_stub(actor: nil) do
       controller.send(:set_recording_studio_admin_current_actor)
 
       assert_equal :stats, Current.actor
+    end
+  end
+
+  def test_generated_set_current_actor_does_not_overwrite_host_set_actor
+    RecordingStudioAdmin.configuration.current_actor_method = :signed_in_actor
+    controller = build_generated_controller do
+      def signed_in_actor
+        :from_method
+      end
+    end
+
+    with_current_stub(actor: :host_set) do
+      controller.send(:set_recording_studio_admin_current_actor)
+
+      assert_equal :host_set, Current.actor
     end
   end
 
@@ -169,6 +186,19 @@ class ControllerAuthTest < Minitest::Test
 
       def authenticate_admin_user!
         authenticate_recording_studio_admin!
+      end
+
+      def set_recording_studio_admin_current_actor
+        return unless defined?(Current) && Current.respond_to?(:actor=)
+        return if Current.respond_to?(:actor) && !Current.actor.nil?
+
+        Current.actor = configured_current_actor
+      end
+
+      def current_actor
+        return Current.actor if defined?(Current) && Current.respond_to?(:actor) && !Current.actor.nil?
+
+        configured_current_actor
       end
     end
     klass.class_eval(&) if block_given?
