@@ -33,12 +33,14 @@ class ApplicationControllerSecurityTest < Minitest::Test
 
   def test_engine_controller_has_fail_closed_authentication_hook
     source = File.read(File.join(ROOT, "app/controllers/recording_studio_admin/application_controller.rb"))
+    concern = File.read(File.join(ROOT, "app/controllers/concerns/recording_studio_admin/controller_auth.rb"))
 
+    assert_includes source, "include RecordingStudioAdmin::ControllerAuth"
     assert_includes source, "layout :recording_studio_admin_layout"
     assert_includes source, "before_action :authenticate_recording_studio_admin!"
-    assert_includes source, "head :unauthorized"
-    assert_includes source, "head :forbidden"
     assert_includes source, "set_recording_studio_admin_current_actor"
+    assert_includes source, "head :forbidden"
+    assert_includes concern, "head :unauthorized"
   end
 
   def test_engine_layout_uses_configuration
@@ -217,6 +219,19 @@ class ApplicationControllerSecurityTest < Minitest::Test
 
     with_current_stub(actor: :from_current) do
       assert_equal :from_current, controller.send(:current_actor)
+    end
+  end
+
+  def test_current_actor_falls_back_to_configured_method_when_current_actor_is_nil
+    controller = build_controller do
+      def signed_in_actor
+        :configured
+      end
+    end
+    RecordingStudioAdmin.configuration.current_actor_method = :signed_in_actor
+
+    with_current_stub(actor: nil) do
+      assert_equal :configured, controller.send(:current_actor)
     end
   end
 

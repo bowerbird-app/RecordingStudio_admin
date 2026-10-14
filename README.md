@@ -17,6 +17,11 @@ Admin `2.3.0` adds RecordingStudioTrashable `~> 0.10` (query-only) and replaces
 `trashed_at: nil` filters with `recording_studio_trashable_kept_sql`. See
 [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-230).
 
+Admin `2.4.0` shares area-aware sign-in lookup via
+`RecordingStudioAdmin::ControllerAuth` so generated host `Admin::BaseController`
+honors per-surface `authentication_method` / `current_actor_method` like the
+engine. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
+
 ## Quick start
 
 1. Add the gem to the host app and run the install generator:

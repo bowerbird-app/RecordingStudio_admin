@@ -48,12 +48,10 @@ class UpgradeNotesTest < Minitest::Test
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
     readme = File.read(File.join(ROOT, "README.md"))
-    version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     gemspec = File.read(File.join(ROOT, "recording_studio_admin.gemspec"))
     gemfile = File.read(File.join(ROOT, "Gemfile"))
     resolver = File.read(File.join(ROOT, "lib/recording_studio_admin/section_recording_resolver.rb"))
 
-    assert_includes version, 'VERSION = "2.3.0"'
     assert_includes gemspec, 'recording_studio_trashable", "~> 0.10"'
     assert_includes gemfile, 'tag: "v0.10.0"'
     assert_includes gemfile, "require: false"
@@ -86,6 +84,45 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes resolver, "kept_recordings"
     engine = File.read(File.join(ROOT, "lib/recording_studio_admin/engine.rb"))
     assert_includes engine, 'require "recording_studio_trashable/query"'
+  end
+
+  def test_upgrading_doc_covers_the_2_4_0_controller_auth_release
+    upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
+    changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
+    readme = File.read(File.join(ROOT, "README.md"))
+    version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
+    concern = File.read(File.join(ROOT, "app/controllers/concerns/recording_studio_admin/controller_auth.rb"))
+    engine_controller = File.read(File.join(ROOT, "app/controllers/recording_studio_admin/application_controller.rb"))
+    generated = File.read(File.join(
+                            ROOT,
+                            "lib/generators/recording_studio_admin/admin_root/templates",
+                            "app/controllers/admin/base_controller.rb"
+                          ))
+    configuration_doc = File.read(File.join(ROOT, "docs/gem_template/CONFIGURATION.md"))
+
+    assert_includes version, 'VERSION = "2.4.0"'
+    assert_includes concern, "module ControllerAuth"
+    assert_includes concern, "recording_studio_admin_surface.authentication_method"
+    assert_includes concern, "recording_studio_admin_surface.current_actor_method"
+    assert_includes concern, "!Current.actor.nil?"
+    assert_includes engine_controller, "include RecordingStudioAdmin::ControllerAuth"
+    assert_includes generated, "include RecordingStudioAdmin::ControllerAuth"
+    assert_includes generated, "set_recording_studio_admin_current_actor"
+
+    assert_includes upgrading, "## Upgrading to 2.4.0"
+    assert_includes upgrading, "RecordingStudioAdmin::ControllerAuth"
+    assert_includes upgrading, "authenticate_recording_studio_admin!"
+    assert_includes upgrading, "set_recording_studio_admin_current_actor"
+    assert_includes upgrading, "Current.actor"
+
+    assert_includes changelog, "## 2.4.0"
+    assert_includes changelog, "docs/UPGRADING.md#upgrading-to-240"
+    assert_includes changelog, "compare/v2.3.2...v2.4.0"
+    assert_includes changelog, "ControllerAuth"
+
+    assert_includes readme, "2.4.0"
+    assert_includes readme, "ControllerAuth"
+    assert_includes configuration_doc, "RecordingStudioAdmin::ControllerAuth"
   end
 
   def test_upgrading_doc_covers_the_2_0_floor_and_mixin_migration

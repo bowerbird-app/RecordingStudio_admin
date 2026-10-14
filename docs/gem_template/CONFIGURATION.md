@@ -110,17 +110,23 @@ The route helper establishes the surface path and root section. The configuratio
 
 ## Authentication and actor lookup
 
-Every request to the engine runs through `RecordingStudioAdmin::ApplicationController`.
+Every request to the engine runs through `RecordingStudioAdmin::ApplicationController`,
+which includes `RecordingStudioAdmin::ControllerAuth`. The generated host
+`Admin::BaseController` includes the same concern so per-surface sign-in settings
+apply on host admin screens as well.
 
 Request flow:
 
-1. call `authentication_method`
-2. resolve the current actor with `current_actor_method`
-3. build a `RecordingStudioAdmin::Context`
-4. resolve the access recording
-5. authorize the actor against that recording
+1. resolve the current surface from the request path
+2. call that surface's `authentication_method`, or the global default when unset
+3. set `Current.actor` from the surface/`current_actor_method` (when `Current` supports it)
+4. resolve the current actor with `Current.actor` when present, otherwise the
+   surface/`current_actor_method`
+5. build a `RecordingStudioAdmin::Context`
+6. resolve the access recording
+7. authorize the actor against that recording
 
-If the configured authentication method does not exist on the controller stack, the engine returns `401 Unauthorized`. A surface can override `authentication_method`, `current_actor_method`, and `engine_layout`; otherwise it inherits the global configuration.
+If the configured authentication method does not exist on the controller stack, the engine returns `401 Unauthorized`. A surface can override `authentication_method`, `current_actor_method`, and `engine_layout`; otherwise it inherits the global configuration. When `Current.actor` is nil, actor resolution calls the configured method instead of trusting nil.
 
 ## Access recording resolution
 

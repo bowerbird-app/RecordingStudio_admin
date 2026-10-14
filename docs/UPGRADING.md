@@ -1,5 +1,96 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.4.0
+
+Admin `2.4.0` extracts area-aware authentication and actor lookup into
+`RecordingStudioAdmin::ControllerAuth`. The engine controller and the
+generated host `Admin::BaseController` both include that concern so per-surface
+`authentication_method` / `current_actor_method` settings apply the same way
+on host admin screens as on engine screens. When `Current.actor` is nil, actor
+resolution falls back to the configured (or surface) actor method.
+
+### What Changed
+
+- New public concern: `RecordingStudioAdmin::ControllerAuth`
+- Engine `ApplicationController` includes the concern (same before_actions and
+  fail-closed 401 / 403 / 404 behavior)
+- Generated `Admin::BaseController` includes the concern, sets `Current.actor`
+  after auth, and passes the request surface into `Context`
+
+### Upgrade Steps
+
+1. Bump to Admin `2.4.0` and bundle.
+
+2. Update the host admin base controller. Prefer regenerating:
+
+```bash
+bin/rails generate recording_studio_admin:admin_root
+```
+
+Or add the include and callbacks by hand:
+
+```ruby
+class Admin::BaseController < ApplicationController
+  include RecordingStudioAdmin::AdminActionAuditing
+  include RecordingStudioAdmin::ControllerAuth
+
+  before_action :authenticate_admin_user!
+  before_action :set_recording_studio_admin_current_actor
+  before_action :authorize_admin_user!
+
+  private
+
+  def authenticate_admin_user!
+    authenticate_recording_studio_admin!
+  end
+
+  def recording_studio_admin_context
+    @recording_studio_admin_context ||= RecordingStudioAdmin::Context.new(
+      params: params.to_unsafe_h,
+      current_actor: current_actor,
+      controller: self,
+      routes: self,
+      view_context: view_context,
+      surface: recording_studio_admin_surface
+    )
+  end
+end
+```
+
+Remove any host copies of global-only `configuration.authentication_method` /
+`configuration.current_actor_method` lookup so the concern owns that path.
+
+3. If you configure per-surface auth, confirm each surface still resolves:
+
+```ruby
+RecordingStudioAdmin.configure do |config|
+  config.authentication_method = :authenticate_user!
+  config.current_actor_method = :current_user
+
+  config.surface :stats do |surface|
+    surface.authentication_method = :authenticate_stats_user!
+    surface.current_actor_method = :current_stats_user
+  end
+end
+```
+
+### Verify the upgrade
+
+```ruby
+assert defined?(RecordingStudioAdmin::ControllerAuth)
+assert_includes Admin::BaseController.ancestors, RecordingStudioAdmin::ControllerAuth
+
+# Per-area override (surface wins)
+RecordingStudioAdmin.configuration.surface(:stats, path: "/stats",
+                                           authentication_method: :authenticate_stats_user!)
+# Hit a /stats host admin action and confirm authenticate_stats_user! runs.
+
+# Current.actor nil fallback
+Current.actor = nil
+# current_actor on an Admin::BaseController subclass should call the configured
+# current_actor_method instead of returning nil.
+```
+
 ## Upgrading to 2.3.0
 
 Admin `2.3.0` depends on RecordingStudioTrashable `~> 0.10` and loads only the

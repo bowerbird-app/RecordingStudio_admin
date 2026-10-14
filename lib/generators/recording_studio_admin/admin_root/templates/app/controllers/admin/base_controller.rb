@@ -2,10 +2,12 @@
 
 class Admin::BaseController < ApplicationController
   include RecordingStudioAdmin::AdminActionAuditing
+  include RecordingStudioAdmin::ControllerAuth
 
   layout "admin"
 
   before_action :authenticate_admin_user!
+  before_action :set_recording_studio_admin_current_actor
   before_action :authorize_admin_user!
 
   helper_method :recording_studio_admin_context, :recording_studio_admin_access_recording, :page_nav_anchor_url,
@@ -14,10 +16,7 @@ class Admin::BaseController < ApplicationController
   private
 
   def authenticate_admin_user!
-    method_name = RecordingStudioAdmin.configuration.authentication_method
-    return send(method_name) if method_name && respond_to?(method_name, true)
-
-    head :unauthorized
+    authenticate_recording_studio_admin!
   end
 
   def authorize_admin_user!
@@ -34,16 +33,12 @@ class Admin::BaseController < ApplicationController
   def recording_studio_admin_context
     @recording_studio_admin_context ||= RecordingStudioAdmin::Context.new(
       params: params.to_unsafe_h,
-      current_actor: recording_studio_admin_current_actor,
+      current_actor: current_actor,
       controller: self,
       routes: self,
-      view_context: view_context
+      view_context: view_context,
+      surface: recording_studio_admin_surface
     )
-  end
-
-  def recording_studio_admin_current_actor
-    method_name = RecordingStudioAdmin.configuration.current_actor_method
-    send(method_name) if method_name && respond_to?(method_name, true)
   end
 
   def recording_studio_admin_access_recording
