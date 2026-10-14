@@ -3,6 +3,7 @@
 require "test_helper"
 require "action_controller"
 require "action_dispatch/testing/test_response"
+require "securerandom"
 
 class ControllerAuthTest < Minitest::Test
   CurrentStub = Struct.new(:actor) do
@@ -22,6 +23,7 @@ class ControllerAuthTest < Minitest::Test
     @original_authentication_method = RecordingStudioAdmin.configuration.authentication_method
     @original_current_actor_method = RecordingStudioAdmin.configuration.current_actor_method
     @original_surfaces = RecordingStudioAdmin.configuration.surfaces.dup
+    @generated_constants = []
   end
 
   def teardown
@@ -30,6 +32,9 @@ class ControllerAuthTest < Minitest::Test
     RecordingStudioAdmin.configuration.surfaces.clear
     @original_surfaces.each do |key, surface|
       RecordingStudioAdmin.configuration.surfaces[key] = surface
+    end
+    Array(@generated_constants).reverse_each do |name|
+      Object.send(:remove_const, name) if Object.const_defined?(name, false)
     end
   end
 
@@ -180,31 +185,31 @@ class ControllerAuthTest < Minitest::Test
   end
 
   def build_generated_controller(path: "/admin", script_name: "", &)
-    host_application_controller = Class.new(ActionController::Base)
-    klass = Class.new(host_application_controller) do
-      include RecordingStudioAdmin::ControllerAuth
-
-      def authenticate_admin_user!
-        authenticate_recording_studio_admin!
-      end
-
-      def set_recording_studio_admin_current_actor
-        return unless defined?(Current) && Current.respond_to?(:actor=)
-        return if Current.respond_to?(:actor) && !Current.actor.nil?
-
-        Current.actor = configured_current_actor
-      end
-
-      def current_actor
-        return Current.actor if defined?(Current) && Current.respond_to?(:actor) && !Current.actor.nil?
-
-        configured_current_actor
-      end
-    end
-    klass.class_eval(&) if block_given?
+    klass = load_generated_controller_class
+    klass = Class.new(klass, &) if block_given?
     klass.new.tap do |controller|
       controller.set_request! ActionDispatch::TestRequest.create("PATH_INFO" => path, "SCRIPT_NAME" => script_name)
       controller.set_response! ActionDispatch::TestResponse.new
     end
+  end
+
+  # Eval the real generator template so host-only nil-actor overrides stay covered.
+  def load_generated_controller_class
+    suffix = SecureRandom.hex(4)
+    host_name = "ControllerAuthHost#{suffix}"
+    generated_name = "ControllerAuthGenerated#{suffix}"
+
+    Object.const_set(host_name, Class.new(ActionController::Base))
+    @generated_constants << host_name
+
+    source = File.read(GENERATED_BASE_CONTROLLER)
+    source = source.sub(
+      "class Admin::BaseController < ApplicationController",
+      "class #{generated_name} < #{host_name}"
+    )
+    Object.class_eval(source)
+    @generated_constants << generated_name
+
+    Object.const_get(generated_name)
   end
 end

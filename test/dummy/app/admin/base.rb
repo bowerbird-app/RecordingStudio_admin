@@ -23,8 +23,7 @@ module AdminScreens
         group_expression = bucket_group_expression(field, bucket)
 
         sql_group_expression = Arel.sql(group_expression)
-        quoted_distinct_field = relation.connection.quote_column_name(distinct_field)
-        distinct_expression = Arel.sql("COUNT(DISTINCT #{quoted_distinct_field})")
+        distinct_expression = Arel.sql("COUNT(DISTINCT #{distinct_field})")
 
         chart_relation(relation).group(sql_group_expression).order(sql_group_expression).pluck(sql_group_expression, distinct_expression).map do |date, count|
           { x: bucket_label(date, bucket), y: count }

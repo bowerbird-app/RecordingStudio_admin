@@ -135,6 +135,22 @@ class ApplicationControllerSecurityTest < Minitest::Test
     end
   end
 
+  def test_engine_current_actor_does_not_overwrite_pre_set_actor
+    calls = 0
+    controller = build_controller do
+      define_method(:signed_in_actor) do
+        calls += 1
+        :configured
+      end
+    end
+    RecordingStudioAdmin.configuration.current_actor_method = :signed_in_actor
+
+    with_current_stub(actor: :host_set) do
+      assert_equal :host_set, controller.send(:current_actor)
+      assert_equal 0, calls
+    end
+  end
+
   def test_recording_studio_admin_context_uses_controller_inputs_and_memoizes
     controller = build_controller do
       def signed_in_actor

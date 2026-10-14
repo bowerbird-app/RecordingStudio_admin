@@ -100,8 +100,6 @@ class UpgradeNotesTest < Minitest::Test
                             "app/controllers/admin/base_controller.rb"
                           ))
     configuration_doc = File.read(File.join(ROOT, "docs/gem_template/CONFIGURATION.md"))
-    security_workflow = File.read(File.join(ROOT, ".github/workflows/security.yml"))
-    ci_workflow = File.read(File.join(ROOT, ".github/workflows/ci.yml"))
 
     assert_includes version, 'VERSION = "2.4.0"'
     assert_includes concern, "module ControllerAuth"
@@ -130,15 +128,12 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes changelog, "compare/v2.3.2...v2.4.0"
     assert_includes changelog, "ControllerAuth"
     assert_includes changelog, "overwrites a customized"
+    refute_includes changelog.split("## 2.3.0").first, "Security workflow"
+    refute_includes changelog.split("## 2.3.0").first, "Brakeman pin"
 
     assert_includes readme, "2.4.0"
     assert_includes readme, "ControllerAuth"
     assert_includes configuration_doc, "RecordingStudioAdmin::ControllerAuth"
-    assert_includes security_workflow, "bin/brakeman"
-    assert_includes security_workflow, "bin/bundler-audit"
-    assert_includes security_workflow, "importmap audit"
-    assert_includes ci_workflow, "lint:"
-    assert_includes ci_workflow, "bundle exec rubocop"
   end
 
   def test_upgrading_doc_covers_the_2_0_floor_and_mixin_migration

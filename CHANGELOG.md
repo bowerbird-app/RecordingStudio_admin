@@ -24,10 +24,6 @@
 - Host-template-only `Current.actor` nil fallback: when `Current.actor` is
   nil, the generated base controller calls the configured/surface actor
   method; it does not overwrite a host-set actor
-- Security workflow (Brakeman, bundler-audit, importmap audit) and a
-  separate lint job so PRs report the full check suite
-- Dummy Brakeman pin bumped to `8.1.0`; `distinct_date_series` quotes the
-  distinct column name so Security CI is clean
 
 ### Changed
 
