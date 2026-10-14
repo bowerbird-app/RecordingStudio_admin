@@ -53,7 +53,7 @@ class UpgradeNotesTest < Minitest::Test
     gemfile = File.read(File.join(ROOT, "Gemfile"))
     resolver = File.read(File.join(ROOT, "lib/recording_studio_admin/section_recording_resolver.rb"))
 
-    assert_includes version, 'VERSION = "2.3.0"'
+    assert_includes version, 'VERSION = "2.4.0"'
     assert_includes gemspec, 'recording_studio_trashable", "~> 0.10"'
     assert_includes gemfile, 'tag: "v0.10.0"'
     assert_includes gemfile, "require: false"

@@ -24,6 +24,8 @@ end
 Rails.application.config.to_prepare do
   load Rails.root.join("app/admin/manifest.rb")
 
+  RecordingStudioAdmin::Metrics.register!(model: AdminAuditLog)
+
   AdminScreens.load!
   AdminScreens::Root.register!
   AdminScreens::Api.register!
