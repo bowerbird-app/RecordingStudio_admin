@@ -6,11 +6,7 @@ module AdminScreens
       title "Error breakdown"
       hide_columns_button
       hide_count
-      filter :search, apply: lambda { |relation, value, _context|
-        next relation unless value.present?
-
-        relation.where("error_class ILIKE :q", q: AdminScreens::Base.safe_like(value))
-      }
+      filter :search, apply: RecordingStudioAdmin::Filters::Ilike.on(:error_class)
       default_sort :error_count, direction: :desc
       column :error_class, title: "Error class"
       column :error_count, title: "Count"

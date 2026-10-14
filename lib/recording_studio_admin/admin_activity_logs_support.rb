@@ -6,10 +6,6 @@ module RecordingStudioAdmin
 
     module_function
 
-    def safe_like(value)
-      "%#{ActiveRecord::Base.sanitize_sql_like(value.to_s)}%"
-    end
-
     def date_series(relation, field: :created_at, bucket: :day)
       bucket = bucket.to_sym
       group_expression = bucket_group_expression(field, bucket)

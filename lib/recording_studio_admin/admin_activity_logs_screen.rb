@@ -36,21 +36,14 @@ module RecordingStudioAdmin
     end
 
     table do
-      filter :search, apply: lambda { |relation, value, _context|
-        if value.present?
-          query = [
-            "resource_key ILIKE :q OR action_key ILIKE :q OR outcome ILIKE :q",
-            "actor_type ILIKE :q OR record_type ILIKE :q OR request_id ILIKE :q"
-          ].join(" OR ")
-
-          relation.where(
-            query,
-            q: RecordingStudioAdmin::AdminActivityLogsSupport.safe_like(value)
-          )
-        else
-          relation
-        end
-      }
+      filter :search, apply: RecordingStudioAdmin::Filters::Ilike.on(
+        :resource_key,
+        :action_key,
+        :outcome,
+        :actor_type,
+        :record_type,
+        :request_id
+      )
 
       column :occurred_at
       column :actor,

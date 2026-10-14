@@ -98,9 +98,7 @@ module AdminScreens
     end
 
     table do
-      filter :search, apply: ->(relation, value, _context) {
-        value.present? ? relation.where("path ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(value)}%") : relation
-      }
+      filter :search, apply: RecordingStudioAdmin::Filters::Ilike.on(:path)
 
       column :created_at
       column :method

@@ -3,7 +3,7 @@
 module AdminScreens
   class UserSignIns
     table do
-      filter :search, apply: ->(relation, value, _context) { value.present? ? relation.where("email ILIKE ?", AdminScreens::Base.safe_like(value)) : relation }
+      filter :search, apply: RecordingStudioAdmin::Filters::Ilike.on(:email)
       column :created_at
       column :email
       column :status
