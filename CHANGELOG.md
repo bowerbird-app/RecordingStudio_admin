@@ -4,6 +4,9 @@
 
 ### Changed
 
+- Dummy and engine Gemfiles pin RecordingStudioTrashable to `v0.11.0`
+  (`436cbb8`). Trashable 0.11 requires RecordingStudio `~> 4.7`, so those
+  Gemfiles also pin RecordingStudio to `v4.7.0`.
 - Dummy and engine Gemfiles pin RecordingStudio to `v4.2.2`.
 - Dummy and engine Gemfiles pin RecordingStudio Accessible to `v0.11.1`.
 - Dummy installs Accessible `0.8`–`0.11` migrations (dependent grants,
