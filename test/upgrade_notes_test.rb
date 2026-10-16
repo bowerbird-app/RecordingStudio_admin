@@ -55,7 +55,7 @@ class UpgradeNotesTest < Minitest::Test
 
     assert_includes version, 'VERSION = "2.3.0"'
     assert_includes gemspec, 'recording_studio_trashable", "~> 0.10"'
-    assert_includes gemfile, 'tag: "v0.10.0"'
+    assert_includes gemfile, 'tag: "v0.11.0"'
     assert_includes gemfile, "require: false"
     assert_includes gemfile, "recording_studio_trashable"
     assert_includes resolver, "recording_studio_trashable_kept_sql"
@@ -94,7 +94,7 @@ class UpgradeNotesTest < Minitest::Test
 
     assert_includes upgrading, "## Upgrading to 2.0.0"
     assert_includes upgrading, "recording_studio_accessible ~> 0.6"
-    assert_includes upgrading, 'tag: "v4.6.0"'
+    assert_includes upgrading, 'tag: "v4.7.0"'
     assert_includes upgrading, 'tag: "v0.18.0"'
     assert_includes upgrading, "RecordingStudio.enable_capability(:accessible, on: self)"
     assert_includes upgrading, "bootstrap_owner_access!"
@@ -115,7 +115,7 @@ class UpgradeNotesTest < Minitest::Test
 
     assert_includes readme, "## Upgrading"
     assert_includes readme, "docs/UPGRADING.md"
-    assert_includes readme, "RecordingStudio `v4.6.0`"
+    assert_includes readme, "RecordingStudio `v4.7.0`"
     assert_includes readme, "Accessible `v0.18.0`"
     assert_includes readme, "bootstrap_owner_access!"
   end
