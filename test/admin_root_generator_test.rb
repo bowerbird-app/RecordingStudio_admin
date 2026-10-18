@@ -10,18 +10,25 @@ class AdminRootGeneratorTest < Minitest::Test
     template = File.read(generator_template_path("app/controllers/admin/base_controller.rb"))
 
     assert_includes template, "class Admin::BaseController < ApplicationController"
+    assert_includes template, "include RecordingStudioAdmin::ControllerAuth"
     assert_includes template, 'layout "admin"'
     assert_includes template, "before_action :authenticate_admin_user!"
+    assert_includes template, "before_action :set_recording_studio_admin_current_actor"
     assert_includes template, "before_action :authorize_admin_user!"
     expected_helper_method =
       "helper_method :recording_studio_admin_context, :recording_studio_admin_access_recording, " \
       ":page_nav_anchor_url,"
     assert_includes template, expected_helper_method
     assert_includes template, ":preserve_anchor_url"
+    assert_includes template, "authenticate_recording_studio_admin!"
+    assert_includes template, "return if Current.respond_to?(:actor) && !Current.actor.nil?"
+    assert_includes template, "!Current.actor.nil?"
     assert_includes template, "RecordingStudioAdmin::Authorization.authorize!("
     assert_includes template, "recording_studio_admin_context,"
     assert_includes template, "recording: recording_studio_admin_access_recording"
     assert_includes template, "RecordingStudioAdmin::Context.new"
+    assert_includes template, "current_actor: current_actor"
+    assert_includes template, "surface: recording_studio_admin_surface"
     assert_includes template, "def recording_studio_admin_access_recording"
     assert_includes template, "AdminRoot.find_or_create_by!(name: \"Admin\")"
     assert_includes template, "RecordingStudio.root_recording_for(admin_root)"
@@ -29,8 +36,9 @@ class AdminRootGeneratorTest < Minitest::Test
     assert_includes template, "RecordingStudioAdmin::UrlSafety.safe_href(params[:anchor_url], allow_external: true)"
     assert_includes template, "def preserve_anchor_url(url)"
     assert_includes template, "reverse_merge(\"anchor_url\" => anchor_url)"
-    assert_includes template, "head :unauthorized"
     assert_includes template, "head :forbidden"
+    refute_includes template, "RecordingStudioAdmin.configuration.authentication_method"
+    refute_includes template, "RecordingStudioAdmin.configuration.current_actor_method"
   end
 
   def test_generated_admin_root_enables_accessible_capability

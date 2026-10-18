@@ -10,6 +10,7 @@ module RecordingStudioAdmin
       include RecordingStudio::RootSwitchable::ControllerSupport
     end
     include RecordingStudioAdmin::AdminActionAuditing
+    include RecordingStudioAdmin::ControllerAuth
 
     # Only meaningful to a widget frame request, so they are dropped when redirecting to a page.
     FRAME_ONLY_QUERY_PARAMS = %w[widget_view_variant widget_usage_index widget_render_variant].freeze
@@ -35,20 +36,6 @@ module RecordingStudioAdmin
 
     private
 
-    def authenticate_recording_studio_admin!
-      method_name = recording_studio_admin_surface.authentication_method ||
-                    RecordingStudioAdmin.configuration.authentication_method
-      return send(method_name) if method_name && respond_to?(method_name, true)
-
-      head :unauthorized
-    end
-
-    def set_recording_studio_admin_current_actor
-      return unless defined?(Current) && Current.respond_to?(:actor=)
-
-      Current.actor = configured_current_actor
-    end
-
     def recording_studio_admin_context
       @recording_studio_admin_context ||= RecordingStudioAdmin::Context.new(
         params: params.to_unsafe_h,
@@ -58,10 +45,6 @@ module RecordingStudioAdmin
         view_context: view_context,
         surface: recording_studio_admin_surface
       )
-    end
-
-    def recording_studio_admin_surface
-      @recording_studio_admin_surface ||= RecordingStudioAdmin.configuration.surface_for_request(request)
     end
 
     def page_nav_anchor_url(default: nil)
@@ -283,20 +266,6 @@ module RecordingStudioAdmin
 
     def normalized_query_hash(query_string)
       Rack::Utils.parse_nested_query(query_string).except("anchor_url")
-    end
-
-    def current_actor
-      return Current.actor if defined?(Current) && Current.respond_to?(:actor)
-
-      configured_current_actor
-    end
-
-    def configured_current_actor
-      method_name = recording_studio_admin_surface.current_actor_method ||
-                    RecordingStudioAdmin.configuration.current_actor_method
-      return send(method_name) if method_name && respond_to?(method_name, true)
-
-      nil
     end
 
     def recording_studio_admin_layout
