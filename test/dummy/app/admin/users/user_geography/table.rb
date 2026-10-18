@@ -3,11 +3,7 @@
 module AdminScreens
   class UserGeography
     table do
-      filter :search, apply: lambda { |relation, value, _context|
-        next relation unless value.present?
-
-        relation.where("email ILIKE ?", AdminScreens::Base.safe_like(value))
-      }
+      filter :search, apply: RecordingStudioAdmin::Filters::Ilike.on(:email)
 
       column :created_at
       column :email

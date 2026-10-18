@@ -44,16 +44,47 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "QUICK_PRESET_LABELS"
   end
 
-  def test_upgrading_doc_covers_the_2_3_0_trashable_api_release
+  def test_upgrading_doc_covers_the_2_4_0_ilike_filter_release
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
     readme = File.read(File.join(ROOT, "README.md"))
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
+    helper = File.read(File.join(ROOT, "lib/recording_studio_admin/filters/ilike.rb"))
+    screen = File.read(File.join(ROOT, "lib/recording_studio_admin/admin_activity_logs_screen.rb"))
+    support = File.read(File.join(ROOT, "lib/recording_studio_admin/admin_activity_logs_support.rb"))
+
+    assert_includes version, 'VERSION = "2.4.0"'
+    assert_includes helper, "module Ilike"
+    assert_includes helper, "sanitize_sql_like"
+    assert_includes helper, "def apply"
+    assert_includes helper, "def pattern"
+    assert_includes helper, "def on"
+    assert_includes screen, "RecordingStudioAdmin::Filters::Ilike.on"
+    refute_includes support, "def safe_like"
+
+    assert_includes upgrading, "## Upgrading to 2.4.0"
+    assert_includes upgrading, "RecordingStudioAdmin::Filters::Ilike"
+    assert_includes upgrading, "sanitize_sql_like"
+    assert_includes upgrading, "strip: true"
+    assert_includes upgrading, "AdminActivityLogsSupport.safe_like"
+
+    assert_includes changelog, "## 2.4.0"
+    assert_includes changelog, "docs/UPGRADING.md#upgrading-to-240"
+    assert_includes changelog, "Filters::Ilike"
+    assert_includes changelog, "AdminActivityLogsSupport.safe_like"
+
+    assert_includes readme, "2.4.0"
+    assert_includes readme, "RecordingStudioAdmin::Filters::Ilike"
+  end
+
+  def test_upgrading_doc_covers_the_2_3_0_trashable_api_release
+    upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
+    changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
+    readme = File.read(File.join(ROOT, "README.md"))
     gemspec = File.read(File.join(ROOT, "recording_studio_admin.gemspec"))
     gemfile = File.read(File.join(ROOT, "Gemfile"))
     resolver = File.read(File.join(ROOT, "lib/recording_studio_admin/section_recording_resolver.rb"))
 
-    assert_includes version, 'VERSION = "2.3.0"'
     assert_includes gemspec, 'recording_studio_trashable", "~> 0.10"'
     assert_includes gemfile, 'tag: "v0.11.0"'
     assert_includes gemfile, "require: false"

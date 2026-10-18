@@ -16,6 +16,32 @@
   (`anchor_href`). Close still needs FlatPack `>= 0.1.197`; this pin keeps
   FlatPack at `v0.1.129`.
 
+## 2.4.0 - 2026-10-14
+
+### Added
+
+- Public `RecordingStudioAdmin::Filters::Ilike` helper for admin table search:
+  declare columns, escape with `sanitize_sql_like`, and apply case-insensitive
+  partial (`ILIKE`) matching. Includes `on`, `apply`, and `pattern`.
+
+### Changed
+
+- Admin activity logs table search uses `Filters::Ilike` instead of a local
+  `safe_like` + hand-built `ILIKE` clause
+- Dummy admin screens use the shared helper for table search filters
+
+### Removed
+
+- `RecordingStudioAdmin::AdminActivityLogsSupport.safe_like`
+
+### Upgrade notes
+
+- Prefer `Filters::Ilike.on` / `apply` / `pattern` over hand-rolled
+  `sanitize_sql_like` + `ILIKE` in admin screens
+- Callers of `AdminActivityLogsSupport.safe_like` should switch to
+  `Filters::Ilike.pattern`
+- See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
+
 ## 2.3.0 - 2026-10-13
 
 ### Added
@@ -253,6 +279,7 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.1.0...v2.2.0
