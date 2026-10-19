@@ -44,6 +44,39 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "QUICK_PRESET_LABELS"
   end
 
+  def test_upgrading_doc_covers_the_2_4_0_flatpack_card_release
+    upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
+    changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
+    readme = File.read(File.join(ROOT, "README.md"))
+    version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
+    gemspec = File.read(File.join(ROOT, "recording_studio_admin.gemspec"))
+    gemfile = File.read(File.join(ROOT, "Gemfile"))
+    dummy_gemfile = File.read(File.join(ROOT, "test/dummy/Gemfile"))
+    views = Dir[File.join(ROOT, "app/views/**/*.erb")].map { |path| File.read(path) }.join
+
+    assert_includes version, 'VERSION = "2.4.0"'
+    assert_includes gemspec, 'flat_pack", "~> 0.1.254"'
+    assert_includes gemfile, 'tag: "v0.1.254"'
+    assert_includes dummy_gemfile, 'tag: "v0.1.254"'
+    refute_includes views, "style: :outlined"
+
+    assert_includes upgrading, "## Upgrading to 2.4.0"
+    assert_includes upgrading, "border: :strong"
+    assert_includes upgrading, 'tag: "v0.1.254"'
+    assert_includes upgrading, ":brand_subtle"
+
+    assert_includes changelog, "## 2.4.0"
+    assert_includes changelog, "docs/UPGRADING.md#upgrading-to-240"
+    assert_includes changelog, "v0.1.254"
+    assert_includes changelog, "border: :strong"
+
+    assert_includes readme, "2.4.0"
+    assert_includes readme, "v0.1.254"
+    assert_includes readme, "border: :strong"
+    assert_includes readme, "FlatPack `~> 0.1.254`"
+    assert_includes readme, "overrides must move to `border: :strong`"
+  end
+
   def test_upgrading_doc_covers_the_2_3_0_trashable_api_release
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
@@ -53,7 +86,7 @@ class UpgradeNotesTest < Minitest::Test
     gemfile = File.read(File.join(ROOT, "Gemfile"))
     resolver = File.read(File.join(ROOT, "lib/recording_studio_admin/section_recording_resolver.rb"))
 
-    assert_includes version, 'VERSION = "2.3.3"'
+    assert_includes version, 'VERSION = "2.4.0"'
     assert_includes gemspec, 'recording_studio_trashable", "~> 0.10"'
     assert_includes gemfile, 'tag: "v0.11.0"'
     assert_includes gemfile, "require: false"

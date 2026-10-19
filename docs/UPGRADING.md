@@ -1,5 +1,41 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.4.0
+
+Admin `2.4.0` requires Flatpack `~> 0.1.254`. Flatpack `0.1.237` removed Card
+`style: :outlined`. Engine screens, widgets, and chart placeholders now pass
+`border: :strong`, which is the surface fill with a 2px border.
+
+### What Changed
+
+- Gemspec dependency is `flat_pack ~> 0.1.254`.
+- Engine and dummy Gemfiles pin git tag `v0.1.254`.
+- Card call sites that used `style: :outlined` use `border: :strong`.
+
+### Upgrade Steps
+
+1. Pin Flatpack to `v0.1.254` or newer:
+
+```ruby
+gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.254"
+```
+
+2. Hosts' own Card `style: :outlined` overrides must move to
+   `border: :strong`. Colour `style:` is now `:default`, `:shaded`,
+   `:brand`, `:brand_subtle`, or `:gradient`.
+
+### Verify the upgrade
+
+```ruby
+test "admin activity logs screen renders" do
+  sign_in admin_user
+
+  get "/admin/screens/admin_activity_logs"
+
+  assert_response :ok
+end
+```
+
 ## Upgrading to 2.3.0
 
 Admin `2.3.0` depends on RecordingStudioTrashable `~> 0.10` and loads only the

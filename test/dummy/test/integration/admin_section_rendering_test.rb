@@ -265,13 +265,26 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
 
     get "/admin/screens/admin_activity_logs", params: { anchor_url: root_url }
 
-    assert_response :success
+    assert_response :ok
+    assert_select "[data-style=default]" do |cards|
+      assert_predicate cards, :any?
+      cards.each do |card|
+        assert_includes card["class"], "border-2"
+        assert_includes card["class"], "border-[var(--card-border-color)]"
+      end
+    end
     assert_includes response.body, 'id="screen-chart" src="/admin/screens/admin_activity_logs/chart?anchor_url='
     assert_includes response.body, 'id="screen-table" src="/admin/screens/admin_activity_logs/table?anchor_url='
 
     get "/admin/screens/admin_activity_logs/chart", params: { anchor_url: root_url }
 
-    assert_response :success
+    assert_response :ok
+    assert_select "[data-style=default]" do |cards|
+      assert_predicate cards, :any?
+      cards.each do |card|
+        assert_includes card["class"], "border-2"
+      end
+    end
 
     assert_includes response.body, "Activity over time"
     refute_includes response.body, 'id="screen-table"'
@@ -828,14 +841,14 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'id="screen-filters-mobile-form"'
     assert_includes response.body, 'data-turbo-frame="screen-filters"'
     assert_includes response.body, "px-[var(--button-padding-x-lg)]"
-    assert_select "#screen-filters button[data-modal-id='screen-filters-modal'] span.rounded-full", text: "1"
+    assert_select "#screen-filters button[data-modal-id='screen-filters-modal'] span.inline-flex", text: "1"
 
     get "/admin/screens/api_requests", params: { anchor_url: root_url, search: "requests" }, headers: { "Turbo-Frame" => "screen-filters" }
 
     assert_response :success
     assert_includes response.body, '<turbo-frame id="screen-filters">'
     assert_includes response.body, "px-[var(--button-padding-x-lg)]"
-    assert_select "#screen-filters button[data-modal-id='screen-filters-modal'] span.rounded-full", text: "1"
+    assert_select "#screen-filters button[data-modal-id='screen-filters-modal'] span.inline-flex", text: "1"
   end
 
   test "admin screen column picker shows selected columns and falls back to defaults" do

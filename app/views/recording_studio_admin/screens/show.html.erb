@@ -41,7 +41,7 @@
 
 <% if @screen.has_chart %>
   <%= turbo_frame_tag "screen-chart", src: recording_studio_admin_screen_region_path(@screen.key, :chart) do %>
-    <%= render FlatPack::Card::Component.new(style: :outlined, class: "mb-6") do |card| %>
+    <%= render FlatPack::Card::Component.new(border: :strong, class: "mb-6") do |card| %>
       <% card.body do %>
         <div class="space-y-4">
           <%= render FlatPack::Skeleton::Component.new(variant: :text, width: "12rem", shimmer: true) %>

@@ -10,7 +10,7 @@
                               "min-h-[11rem]"
                             end %>
 
-<%= render FlatPack::Card::Component.new(style: :outlined, class: "w-full #{placeholder_height}") do |card| %>
+<%= render FlatPack::Card::Component.new(border: :strong, class: "w-full #{placeholder_height}") do |card| %>
   <% card.body do %>
     <div class="flex <%= compact_card ? "h-full" : placeholder_height %> flex-col space-y-3" aria-busy="true">
       <% if compact_card %>
