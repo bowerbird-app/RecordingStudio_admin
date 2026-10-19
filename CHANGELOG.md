@@ -16,6 +16,29 @@
   (`anchor_href`). Close still needs FlatPack `>= 0.1.197`; this pin keeps
   FlatPack at `v0.1.129`.
 
+## 2.4.0 - 2026-10-19
+
+### Fixed
+
+- Admin activity logs and other screens render with Flatpack `0.1.254`.
+  Card `style: :outlined` was removed in Flatpack `0.1.237`. Those cards now
+  use `border: :strong` (surface fill, 2px border), which matches the old
+  outlined look.
+
+### Changed
+
+- Engine, dummy, and gemspec pin `flat_pack` to `~> 0.1.254` (git tag
+  `v0.1.254`).
+
+### Upgrade notes
+
+- Bump the host `flat_pack` pin to git tag `v0.1.254` or newer. Admin
+  `2.4.0` requires `flat_pack ~> 0.1.254`.
+- Host cards that still pass `style: :outlined` need `border: :strong`.
+  Colour styles are `:default`, `:shaded`, `:brand`, `:brand_subtle`, and
+  `:gradient`.
+- See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
+
 ## 2.3.0 - 2026-10-13
 
 ### Added
@@ -253,6 +276,7 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.3...v2.4.0
 [2.3.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.1.0...v2.2.0
