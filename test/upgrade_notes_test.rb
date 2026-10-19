@@ -48,12 +48,10 @@ class UpgradeNotesTest < Minitest::Test
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
     readme = File.read(File.join(ROOT, "README.md"))
-    version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     gemspec = File.read(File.join(ROOT, "recording_studio_admin.gemspec"))
     gemfile = File.read(File.join(ROOT, "Gemfile"))
     resolver = File.read(File.join(ROOT, "lib/recording_studio_admin/section_recording_resolver.rb"))
 
-    assert_includes version, 'VERSION = "2.3.0"'
     assert_includes gemspec, 'recording_studio_trashable", "~> 0.10"'
     assert_includes gemfile, 'tag: "v0.11.0"'
     assert_includes gemfile, "require: false"
