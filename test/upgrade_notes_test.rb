@@ -44,7 +44,7 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "QUICK_PRESET_LABELS"
   end
 
-  def test_upgrading_doc_covers_the_2_3_4_flatpack_card_release
+  def test_upgrading_doc_covers_the_2_4_0_flatpack_card_release
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
     readme = File.read(File.join(ROOT, "README.md"))
@@ -73,6 +73,8 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "2.4.0"
     assert_includes readme, "v0.1.254"
     assert_includes readme, "border: :strong"
+    assert_includes readme, "FlatPack `~> 0.1.254`"
+    assert_includes readme, "overrides must move to `border: :strong`"
   end
 
   def test_upgrading_doc_covers_the_2_3_0_trashable_api_release

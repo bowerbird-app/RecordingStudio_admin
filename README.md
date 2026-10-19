@@ -17,8 +17,8 @@ Admin `2.3.0` adds RecordingStudioTrashable `~> 0.10` (query-only) and replaces
 `trashed_at: nil` filters with `recording_studio_trashable_kept_sql`. See
 [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-230).
 
-Admin `2.4.0` requires Flatpack `~> 0.1.254` (git tag `v0.1.254`). Card
-`style: :outlined` is `border: :strong`. See
+Admin `2.4.0` requires Flatpack `~> 0.1.254` (git tag `v0.1.254`). Hosts'
+own Card `style: :outlined` overrides must move to `border: :strong`. See
 [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
 
 ## Quick start
@@ -200,7 +200,7 @@ widgets = recording_studio_admin_context.available_admin_widgets(
 - Rails 8.1+
 - RecordingStudio `~> 4.1`
 - RecordingStudioAccessible `~> 0.6`
-- FlatPack `~> 0.1.129`
+- FlatPack `~> 0.1.254`
 
 `RecordingStudioAccessible` is required. Enable Accessible on the admin root (and any other recordable that should hold grants) with `RecordingStudio.enable_capability(:accessible, on: self)`. Keep the admin root owned (`shared: false`).
 

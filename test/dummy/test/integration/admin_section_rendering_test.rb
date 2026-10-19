@@ -266,19 +266,25 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     get "/admin/screens/admin_activity_logs", params: { anchor_url: root_url }
 
     assert_response :ok
-    assert_equal 200, response.status
-    assert_includes response.body, "border-2"
-    assert_includes response.body, "border-[var(--card-border-color)]"
-    assert_includes response.body, 'data-style="default"'
+    assert_select "[data-style=default]" do |cards|
+      assert_predicate cards, :any?
+      cards.each do |card|
+        assert_includes card["class"], "border-2"
+        assert_includes card["class"], "border-[var(--card-border-color)]"
+      end
+    end
     assert_includes response.body, 'id="screen-chart" src="/admin/screens/admin_activity_logs/chart?anchor_url='
     assert_includes response.body, 'id="screen-table" src="/admin/screens/admin_activity_logs/table?anchor_url='
 
     get "/admin/screens/admin_activity_logs/chart", params: { anchor_url: root_url }
 
     assert_response :ok
-    assert_equal 200, response.status
-    assert_includes response.body, "border-2"
-    assert_includes response.body, 'data-style="default"'
+    assert_select "[data-style=default]" do |cards|
+      assert_predicate cards, :any?
+      cards.each do |card|
+        assert_includes card["class"], "border-2"
+      end
+    end
 
     assert_includes response.body, "Activity over time"
     refute_includes response.body, 'id="screen-table"'

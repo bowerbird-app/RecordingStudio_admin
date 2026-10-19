@@ -2,20 +2,6 @@
 
 ## Unreleased
 
-### Changed
-
-- Dummy and engine Gemfiles pin RecordingStudioTrashable to `v0.11.0`
-  (`436cbb8`). Trashable 0.11 requires RecordingStudio `~> 4.7`, so those
-  Gemfiles also pin RecordingStudio to `v4.7.0`.
-- Dummy and engine Gemfiles pin RecordingStudio to `v4.2.2`.
-- Dummy and engine Gemfiles pin RecordingStudio Accessible to `v0.11.1`.
-- Dummy installs Accessible `0.8`–`0.11` migrations (dependent grants,
-  invitations, string roles). Seeds and tests grant access through
-  `bootstrap_owner_access!` and `grant_access` only.
-- Dummy admin root PageNav assertion matches RecordingStudio `4.2.2` layout
-  (`anchor_href`). Close still needs FlatPack `>= 0.1.197`; this pin keeps
-  FlatPack at `v0.1.129`.
-
 ## 2.4.0 - 2026-10-19
 
 ### Fixed
@@ -38,6 +24,27 @@
   Colour styles are `:default`, `:shaded`, `:brand`, `:brand_subtle`, and
   `:gradient`.
 - See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
+
+## 2.3.3 - 2026-10-16
+
+### Changed
+
+- Dummy and engine Gemfiles pin RecordingStudioTrashable to `v0.11.0`
+  (`436cbb8`). Trashable 0.11 requires RecordingStudio `~> 4.7`, so those
+  Gemfiles also pin RecordingStudio to `v4.7.0`.
+
+## 2.3.2 - 2026-10-14
+
+### Changed
+
+- Dummy and engine Gemfiles pin RecordingStudio Accessible to `v0.18.0`.
+
+## 2.3.1 - 2026-10-14
+
+### Changed
+
+- Dummy and engine Gemfiles pin RecordingStudio Accessible to `v0.17.0` and
+  RecordingStudio to `v4.6.0`.
 
 ## 2.3.0 - 2026-10-13
 
@@ -123,6 +130,24 @@
 ### Changed
 
 - Includes the RecordingStudio `v4.3.0` pin bump already on main (#13).
+
+## 2.0.4 - 2026-10-05
+
+### Changed
+
+- Dummy and engine Gemfiles pin RecordingStudio Accessible to `v0.11.1`.
+- Dummy installs Accessible `0.8`–`0.11` migrations (dependent grants,
+  invitations, string roles). Seeds and tests grant access through
+  `bootstrap_owner_access!` and `grant_access` only.
+
+## 2.0.3 - 2026-10-02
+
+### Changed
+
+- Dummy and engine Gemfiles pin RecordingStudio to `v4.2.2`.
+- Dummy admin root PageNav assertion matches RecordingStudio `4.2.2` layout
+  (`anchor_href`). Close still needs FlatPack `>= 0.1.197`; this pin keeps
+  FlatPack at `v0.1.129`.
 
 ## 2.0.2
 
@@ -278,5 +303,10 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 [Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.4.0...HEAD
 [2.4.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.3...v2.4.0
+[2.3.3]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.2...v2.3.3
+[2.3.2]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.1...v2.3.2
+[2.3.1]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.1.0...v2.2.0
+[2.0.4]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.0.3...v2.0.4
+[2.0.3]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.0.2...v2.0.3

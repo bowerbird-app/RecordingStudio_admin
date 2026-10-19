@@ -20,9 +20,9 @@ Admin `2.4.0` requires Flatpack `~> 0.1.254`. Flatpack `0.1.237` removed Card
 gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.254"
 ```
 
-2. In host views, replace Card `style: :outlined` with `border: :strong`.
-   Colour `style:` is now `:default`, `:shaded`, `:brand`, `:brand_subtle`,
-   or `:gradient`.
+2. Hosts' own Card `style: :outlined` overrides must move to
+   `border: :strong`. Colour `style:` is now `:default`, `:shaded`,
+   `:brand`, `:brand_subtle`, or `:gradient`.
 
 ### Verify the upgrade
 
