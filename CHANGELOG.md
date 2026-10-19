@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- GitHub Actions Security workflow (Brakeman, bundler-audit, importmap audit)
+  and a separate CI lint job (sibling gem-template / webhooks pattern)
+
+### Fixed
+
+- Dummy `distinct_date_series` quotes the distinct column name for Brakeman
+- Dummy Brakeman pin bumped to `8.1.0` so `bin/brakeman --ensure-latest` passes
+
 ### Changed
 
 - Dummy and engine Gemfiles pin RecordingStudioTrashable to `v0.11.0`
