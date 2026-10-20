@@ -21,6 +21,11 @@ Admin `2.4.0` requires Flatpack `~> 0.1.254` (git tag `v0.1.254`). Hosts'
 own Card `style: :outlined` overrides must move to `border: :strong`. See
 [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
 
+Admin `2.5.0` fills empty buckets in `AdminActivityLogsSupport.date_series`
+(zeros for missing hours/days/weeks/months/years in the selected range). The
+method signature is unchanged. See
+[docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-250).
+
 ## Quick start
 
 1. Add the gem to the host app and run the install generator:

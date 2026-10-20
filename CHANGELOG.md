@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+## 2.5.0 - 2026-10-20
+
+### Changed
+
+- `AdminActivityLogsSupport.date_series` now returns every hour/day/week/month/year
+  bucket in the selected date range, including buckets with a count of `0`, in
+  order. Screens that already call this helper (MCP Usage, AI, agent runs, and
+  admin activity logs) pick up the filled series with no caller changes.
+- Ranges that would produce more than `1_000` buckets (for example hour grouping
+  over a year) keep the previous sparse series so charts stay bounded.
+
+### Upgrade notes
+
+- Chart series from `date_series` can include extra `{ x:, y: 0 }` points for
+  empty buckets. The method signature is unchanged.
+- See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-250).
+
 ## 2.4.0 - 2026-10-19
 
 ### Fixed

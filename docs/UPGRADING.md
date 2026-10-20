@@ -1,5 +1,43 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.5.0
+
+Admin `2.5.0` fills empty buckets in `AdminActivityLogsSupport.date_series`.
+Callers keep the same arguments. Charts that use this helper now plot a point
+for every hour, day, week, month, or year in the filtered `start_date` /
+`end_date` window (host time zone, inclusive edges). Empty buckets are `0`.
+
+When the relation has no date bounds, the helper still fills gaps between the
+first and last grouped bucket. Series that would exceed `1_000` buckets stay
+sparse so hour grouping over a long range cannot explode.
+
+### What Changed
+
+- `date_series` returns ordered `{ x:, y: }` points for every bucket in range,
+  including zeros.
+- Huge ranges fall back to counts-only output, matching the previous shape.
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.5.0`.
+2. Leave existing `date_series` calls as they are.
+
+### Verify the upgrade
+
+```ruby
+test "date_series includes zero buckets for empty days" do
+  relation = filtered_requests # created_at from Jun 1 through Jun 3, events on Jun 1 and Jun 3
+
+  series = RecordingStudioAdmin::AdminActivityLogsSupport.date_series(relation, bucket: :day)
+
+  assert_equal [
+    { x: "Jun 1", y: 1 },
+    { x: "Jun 2", y: 0 },
+    { x: "Jun 3", y: 1 }
+  ], series
+end
+```
+
 ## Upgrading to 2.4.0
 
 Admin `2.4.0` requires Flatpack `~> 0.1.254`. Flatpack `0.1.237` removed Card
