@@ -88,14 +88,17 @@ module AdminScreens
         [
           {
             name: "Requests",
-            data: relation.group(Arel.sql("DATE_TRUNC('#{bucket}', created_at)"))
-                          .order(Arel.sql("DATE_TRUNC('#{bucket}', created_at)"))
-                          .count
-                          .map { |date, count| { x: date, y: count } }
+            data: RecordingStudioAdmin::AdminActivityLogsSupport.date_series(
+              relation,
+              bucket: bucket
+            )
           }
         ]
       end
     end
+
+    # date_series plots every hour/day/week/month/year in the filtered
+    # start_date/end_date window (zeros for empty buckets, host time zone).
 
     table do
       filter :search, apply: ->(relation, value, _context) {

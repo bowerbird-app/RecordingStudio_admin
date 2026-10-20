@@ -34,6 +34,7 @@ Metrics/ModuleLength:
   Exclude:
     - 'app/helpers/recording_studio_admin/geo_chart_helper.rb'
     - 'lib/recording_studio_admin.rb'
+    - 'lib/recording_studio_admin/admin_activity_logs_support.rb'
 
 Metrics/MethodLength:
   Exclude:
@@ -67,6 +68,7 @@ Metrics/AbcSize:
     - 'app/helpers/recording_studio_admin/geo_chart_helper.rb'
     - 'lib/generators/**/*'
     - 'lib/recording_studio_admin/admin_action_audit.rb'
+    - 'lib/recording_studio_admin/admin_activity_logs_support.rb'
     - 'lib/recording_studio_admin/filters/date_range_filter.rb'
     - 'lib/recording_studio_admin/resource.rb'
     - 'lib/recording_studio_admin/resolvers/**/*'
