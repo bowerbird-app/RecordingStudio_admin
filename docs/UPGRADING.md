@@ -1,5 +1,52 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.5.1
+
+Admin `2.5.1` keeps the Admin activity overview widget on the Admin activity
+logs section. The `admin_activity_logs` screen no longer renders that widget.
+Date range and Group by on that screen are inline; other filters stay in the
+modal. The section link is secondary (not primary).
+
+The generator `AdminRoot` template only enables `section :admin_activity_logs`.
+It never placed the widget on the screen. Hosts that copied the old gem screen
+definition should drop the screen-level widget.
+
+### What Changed
+
+- `AdminActivityLogsScreen` no longer calls `widget "widgets.admin_activity_logs.activity_overview"`.
+- That screen uses `filter_presentation :modal, inline_count: 2`.
+- `AdminActivityLogsSection` still references the overview widget and the
+  secondary "View admin activity logs" link.
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.5.1`.
+2. If a host screen definition still has:
+
+```ruby
+widget "widgets.admin_activity_logs.activity_overview"
+```
+
+remove that line. Keep the widget on the Admin activity logs section.
+
+### Verify the upgrade
+
+```ruby
+test "admin activity overview lives on the section, not the screen" do
+  sign_in admin_user
+
+  get "/admin/sections/admin_activity_logs"
+  assert_response :ok
+  assert_includes response.body, "Admin activity overview"
+
+  get "/admin/screens/admin_activity_logs"
+  assert_response :ok
+  refute_includes response.body, "Admin activity overview"
+  assert_select "#screen-inline-filters-form label", text: "Date range"
+  assert_select "#screen-inline-filters-form label", text: "Group by"
+end
+```
+
 ## Upgrading to 2.5.0
 
 Admin `2.5.0` fills empty buckets in `AdminActivityLogsSupport.date_series`.

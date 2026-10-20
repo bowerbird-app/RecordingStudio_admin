@@ -7,13 +7,13 @@ module RecordingStudioAdmin
     title "Admin activity logs"
     subtitle "Review admin CRUD changes and resource actions"
     blast_radius :site
-    widget "widgets.admin_activity_logs.activity_overview"
 
     query { |_context| audit_log_model.all }
     filter :date_range, field: :occurred_at, default: :last_30_days
     filter :group_by, values: %i[hour day week month year], default: :day
     filter :outcome, options: -> { audit_log_model.distinct.order(:outcome).pluck(:outcome) }
     filter :resource_key, options: -> { audit_log_model.distinct.order(:resource_key).pluck(:resource_key) }
+    filter_presentation :modal, inline_count: 2
 
     summary do
       label "Admin events"

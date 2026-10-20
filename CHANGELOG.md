@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## 2.5.1 - 2026-10-20
+
+### Changed
+
+- The built-in Admin activity overview widget stays on the Admin activity
+  logs **section** and is no longer attached to the `admin_activity_logs`
+  screen.
+- Date range and Group by on that screen sit inline above the content.
+  Outcome, Resource key, and table search stay in the filter modal.
+- The section's "View admin activity logs" link remains non-primary
+  (`style: :secondary`).
+
+### Upgrade notes
+
+- If a host copied the overview widget onto `/admin/screens/admin_activity_logs`,
+  remove that `widget` line so the card lives only on the section.
+- See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-251).
+
 ## 2.5.0 - 2026-10-20
 
 ### Changed
