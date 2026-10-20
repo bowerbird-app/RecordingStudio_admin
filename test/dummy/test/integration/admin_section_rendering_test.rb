@@ -266,6 +266,16 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     get "/admin/screens/admin_activity_logs", params: { anchor_url: root_url }
 
     assert_response :ok
+    refute_includes response.body, "Admin activity overview"
+    refute_includes response.body, "widgets.admin_activity_logs.activity_overview"
+    assert_select "#screen-inline-filters-form label", text: "Date range"
+    assert_select "#screen-inline-filters-form label", text: "Group by"
+    assert_select "#screen-inline-filters-form label", text: "Outcome", count: 0
+    assert_select "#screen-inline-filters-form label", text: "Resource key", count: 0
+    assert_select "#screen-filters-mobile-form label", text: "Outcome"
+    assert_select "#screen-filters-mobile-form label", text: "Resource key"
+    assert_select "#screen-filters-mobile-form label", text: "Date range", count: 0
+    assert_select "#screen-filters-mobile-form label", text: "Group by", count: 0
     assert_select "[data-style=default]" do |cards|
       assert_predicate cards, :any?
       cards.each do |card|

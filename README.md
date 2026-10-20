@@ -26,6 +26,10 @@ Admin `2.5.0` fills empty buckets in `AdminActivityLogsSupport.date_series`
 method signature is unchanged. See
 [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-250).
 
+Admin `2.5.1` keeps the Admin activity overview widget on the Admin activity
+logs section (not the screen) and shows Date range / Group by inline on that
+screen. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-251).
+
 ## Quick start
 
 1. Add the gem to the host app and run the install generator:
