@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_10_000014) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -37,6 +37,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_000014) do
     t.string "request_id"
     t.string "required_role"
     t.string "resource_key", null: false
+    t.uuid "root_recording_id"
     t.string "surface_key"
     t.datetime "updated_at", null: false
     t.string "user_agent"
@@ -44,6 +45,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_000014) do
     t.index ["occurred_at"], name: "index_admin_audit_logs_on_occurred_at"
     t.index ["outcome"], name: "index_admin_audit_logs_on_outcome"
     t.index ["resource_key", "action_key"], name: "index_admin_audit_logs_on_resource_key_and_action_key"
+    t.index ["root_recording_id", "occurred_at"], name: "index_admin_audit_logs_on_root_and_occurred_at"
   end
 
   create_table "admin_roots", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -222,6 +224,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_000014) do
     t.index ["export_key", "status"], name: "idx_rs_exportable_logs_on_export_key_and_status"
     t.index ["impersonator_type", "impersonator_id"], name: "idx_rs_exportable_logs_on_impersonator"
     t.index ["status"], name: "idx_rs_exportable_logs_on_status"
+  end
+
+  create_table "recording_studio_logs_aggregation_runs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "aggregation_name", null: false
+    t.datetime "created_at", null: false
+    t.date "day", null: false
+    t.text "error_message"
+    t.datetime "finished_at"
+    t.string "status", null: false
+    t.datetime "updated_at", null: false
+    t.index ["aggregation_name", "day"], name: "index_rs_logs_aggregation_runs_on_name_and_day", unique: true
+  end
+
+  create_table "recording_studio_logs_maintenance_runs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "details"
+    t.datetime "finished_at", null: false
+    t.string "status", null: false
+    t.string "subject", null: false
+    t.string "task", null: false
+    t.datetime "updated_at", null: false
+    t.index ["task", "subject", "finished_at"], name: "index_rs_logs_maintenance_runs_on_task_and_subject"
   end
 
   create_table "recording_studio_recordings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|

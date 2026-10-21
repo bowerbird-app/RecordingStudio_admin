@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+## 2.6.0 - 2026-10-21
+
+### Added
+
+- `recording_studio_logs` (`>= 0.4.1, < 0.6`). Development and dummy Gemfiles pin GitHub tag `v0.5.0`.
+- RecordingStudioLogs registration for the host `admin_audit_logs` table (`partition_interval: nil`, `root_column: :root_recording_id`, retention `:indefinite`). No summary or aggregate tables.
+- `root_recording_id` on `admin_audit_logs`, backfilled from `access_recording_id` through `recording_studio_recordings`. New inserts stamp it. Existing rows stay in the same unpartitioned table.
+- `config.logs_retention` (default `:indefinite`). Registration always uses `:indefinite` because RS_Logs does not clean a log that has no summaries.
+- `bin/rails generate recording_studio_admin:logs` for existing hosts (adds `root_recording_id` only).
+
+### Upgrade notes
+
+- Bump to `2.6.0`. Pin `recording_studio_logs` to GitHub tag `v0.5.0`.
+- Run `bin/rails generate recording_studio_logs:migrations` if Logs run tables are not already present, then `recording_studio_admin:logs` (existing hosts) and `db:migrate`.
+- Leave `config.logs_retention` as `:indefinite`. Do not schedule Logs partition or retention jobs for this table.
+- See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-260).
+
 ## 2.5.1 - 2026-10-20
 
 ### Changed
@@ -336,7 +353,10 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.4.0...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.0...HEAD
+[2.6.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.5.1...v2.6.0
+[2.5.1]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.5.0...v2.5.1
+[2.5.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.3...v2.4.0
 [2.3.3]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.2...v2.3.3
 [2.3.2]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.3.1...v2.3.2

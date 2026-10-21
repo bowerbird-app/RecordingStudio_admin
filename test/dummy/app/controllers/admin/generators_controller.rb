@@ -44,6 +44,18 @@ class Admin::GeneratorsController < Admin::BaseController
           "Adds /admin/root route and renders the generated admin root page",
           "Enables the built-in admin_activity_logs section on AdminRoot"
         ]
+      },
+      {
+        name: "recording_studio_admin:logs",
+        command: "bin/rails generate recording_studio_admin:logs",
+        summary: "Adds root_recording_id to existing admin_audit_logs.",
+        routes: [],
+        generated_files: [
+          "db/migrate/add_root_recording_id_to_admin_audit_logs.rb"
+        ],
+        outputs: [
+          "Keeps existing audit rows in place. Does not partition the table."
+        ]
       }
     ]
   end

@@ -41,6 +41,8 @@ end
 | `admin_action_auditor` | `nil` | Optional callable that receives one `RecordingStudioAdmin::AdminActionAuditEvent` for each audited admin action outcome |
 | `required_access_role` | `:view` | Role passed into `RecordingStudioAccessible.authorized?` |
 | `max_page` | `1000` | Hard ceiling for table pagination page numbers |
+| `logs_retention` | `:indefinite` | Declared retention for `admin_audit_logs`. Registration always passes `:indefinite` to RecordingStudioLogs. A finite window is not cleaned without summaries. |
+| `audit_log_model` | `"AdminAuditLog"` | Host class name registered with RecordingStudioLogs |
 
 Async widget loading is configured under `config.async_widgets`:
 
@@ -167,6 +169,11 @@ RecordingStudioAdmin.configure do |config|
   end
 end
 ```
+
+Admin registers that host table with RecordingStudioLogs as an unpartitioned,
+indefinite log. `root_recording_id` is stamped from the access recording.
+Actor, IP, user agent, request id, and error text stay off the aggregatable
+allowlist.
 
 Recording Studio events remain optional domain-history records. Add one from inside the admin action block when the changed item should appear in that recordable's timeline or support app-specific revert workflows:
 

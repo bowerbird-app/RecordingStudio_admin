@@ -32,5 +32,20 @@ module RecordingStudioAdmin
         RecordingStudioAdmin.register_widget(RecordingStudioAdmin::AdminActivityLogsActivityOverview)
       end
     end
+
+    initializer "recording_studio_admin.logs" do
+      config.to_prepare do
+        RecordingStudioAdmin::Engine.install_audit_log_root!
+        RecordingStudioAdmin::LogsRegistration.register!
+      end
+    end
+
+    def self.install_audit_log_root!
+      klass = RecordingStudioAdmin::LogsRegistration.source_class
+      return unless klass
+      return if klass.included_modules.include?(RecordingStudioAdmin::AuditLogRoot)
+
+      klass.include RecordingStudioAdmin::AuditLogRoot
+    end
   end
 end

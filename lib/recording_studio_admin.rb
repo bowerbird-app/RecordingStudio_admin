@@ -1,12 +1,15 @@
 # frozen_string_literal: true
 
 require "recording_studio_admin/version"
+require "recording_studio_logs"
 require "recording_studio_admin/errors"
 require "recording_studio_admin/surface"
 require "recording_studio_admin/configuration"
 require "recording_studio_admin/url_safety"
 require "recording_studio_admin/authorization"
 require "recording_studio_admin/admin_action_audit"
+require "recording_studio_admin/audit_log_root"
+require "recording_studio_admin/logs_registration"
 require "recording_studio_admin/blast_radius"
 require "recording_studio_admin/registry"
 require "recording_studio_admin/results/query_result"

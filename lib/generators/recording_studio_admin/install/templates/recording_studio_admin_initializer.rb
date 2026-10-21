@@ -18,6 +18,11 @@ RecordingStudioAdmin.configure do |config|
     # Example: context.controller.current_root_recording if your app exposes one.
   end
 
+  # Admin audit logs register with RecordingStudioLogs as an unpartitioned,
+  # indefinite raw log. A finite window is not cleaned by RS_Logs without
+  # summaries, so leave this as :indefinite.
+  # config.logs_retention = :indefinite
+
   # Add per-route admin surfaces when different URL entrypoints should resolve
   # different access recordings or layouts.
   # config.surface :stats do |surface|

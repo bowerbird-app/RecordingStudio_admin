@@ -1,5 +1,67 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.6.0
+
+Admin `2.6.0` registers the existing host `admin_audit_logs` table with
+RecordingStudioLogs. There is no summary table. Existing rows stay in place.
+The table is not copied or partitioned.
+
+### What Changed
+
+- Gemspec depends on `recording_studio_logs` `>= 0.4.1, < 0.6`. Dummy and
+  development Gemfiles pin GitHub tag `v0.5.0`.
+- Engine registration uses `partition_interval: nil`,
+  `root_column: :root_recording_id`, and retention `:indefinite`. There is
+  no `aggregate` call.
+- `root_recording_id` is added and backfilled from `access_recording_id`.
+- Actor, IP, user agent, request id, and error text are not aggregatable.
+- `config.logs_retention` defaults to `:indefinite`. Registration always
+  passes `:indefinite` to RecordingStudioLogs. A log with no summaries is
+  never cleaned by `RetentionCleanupJob`, so a finite window would sit at
+  "Cleanup waiting".
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.6.0`.
+2. Pin `recording_studio_logs` to GitHub tag `v0.5.0` (allowed range
+   `>= 0.4.1, < 0.6`).
+3. Install Logs run tables if the host does not already have them:
+
+```sh
+bin/rails generate recording_studio_logs:migrations
+```
+
+4. Existing hosts copy the Admin logs migration:
+
+```sh
+bin/rails generate recording_studio_admin:logs
+bin/rails db:migrate
+```
+
+New hosts that run `recording_studio_admin:admin_root` already get
+`root_recording_id` on `admin_audit_logs`. They still need the Logs run
+tables.
+
+That migration adds `root_recording_id` to `admin_audit_logs`, backfills it
+from `recording_studio_recordings` via `access_recording_id`, and adds a
+root-and-time index. Existing audit rows stay in the same table. Do not
+create a summary table.
+
+5. Leave `config.logs_retention` as `:indefinite`. Do not schedule Logs
+   partition or retention jobs for this table.
+
+### Verify the upgrade
+
+```ruby
+test "admin audit logs stay unpartitioned and indefinite" do
+  log = RecordingStudioLogs.registry.log_for("AdminAuditLog")
+  assert_nil log.partition_interval
+  assert_predicate log, :indefinite?
+  assert_equal :root_recording_id, log.root_column
+  assert AdminAuditLog.column_names.include?("root_recording_id")
+end
+```
+
 ## Upgrading to 2.5.1
 
 Admin `2.5.1` keeps the Admin activity overview widget on the Admin activity

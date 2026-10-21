@@ -18,7 +18,19 @@ class ConfigurationTest < Minitest::Test
     assert_equal true, config.async_widgets.enabled
     assert_equal 4, config.async_widgets.max_concurrent_requests
     assert_equal 1, config.async_widgets.retry_count
+    assert_equal :indefinite, config.logs_retention
+    assert_equal "AdminAuditLog", config.audit_log_model
     assert_empty config.surfaces
+  end
+
+  def test_logs_retention_defaults_to_indefinite_and_merges
+    config = RecordingStudioAdmin::Configuration.new
+
+    assert_equal :indefinite, config.logs_retention
+
+    config.merge!(logs_retention: 90.days)
+
+    assert_equal 90.days, config.logs_retention
   end
 
   def test_merge_updates_known_keys_only

@@ -12,6 +12,7 @@ class AdminAuditLog < ApplicationRecord
       record_type: record_type_for(event.record),
       record_id: record_id_for(event.record),
       access_recording_id: record_id_for(event.access_recording),
+      root_recording_id: root_recording_id_for(event.access_recording),
       surface_key: event.surface_key,
       http_method: event.http_method,
       destructive: event.destructive,
@@ -38,4 +39,12 @@ class AdminAuditLog < ApplicationRecord
 
     record.to_s
   end
+
+  def self.root_recording_id_for(record)
+    return unless record
+    return record.root_recording_id.presence || record.id if record.respond_to?(:root_recording_id)
+
+    nil
+  end
 end
+
