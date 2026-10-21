@@ -1,5 +1,79 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.6.0
+
+Admin `2.6.0` registers the existing host `admin_audit_logs` table with
+RecordingStudioLogs. Summaries stay off. Existing rows stay in place. The
+table is not copied or partitioned.
+
+### What Changed
+
+- Gemspec depends on `recording_studio_logs` `>= 0.4.1, < 0.6`. Dummy and
+  development Gemfiles pin GitHub tag `v0.5.0`.
+- Engine registration uses `partition_interval: nil`,
+  `root_column: :root_recording_id`, and retention `:indefinite`.
+- `root_recording_id` is added and backfilled from `access_recording_id`.
+- Daily summaries `admin/audit_counts` group by root, resource, action, and
+  outcome. Actor, IP, user agent, request id, and error text are not
+  aggregatable.
+- `config.logs_summaries_enabled` defaults to false. The activity logs
+  screen, widget, and filters keep reading raw `AdminAuditLog` rows.
+- `config.logs_retention` defaults to `:indefinite`.
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.6.0`.
+2. Pin `recording_studio_logs` to GitHub tag `v0.5.0` (allowed range
+   `>= 0.4.1, < 0.6`).
+3. Install Logs run tables if the host does not already have them:
+
+```sh
+bin/rails generate recording_studio_logs:migrations
+```
+
+4. Existing hosts copy the Admin logs migrations:
+
+```sh
+bin/rails generate recording_studio_admin:logs
+bin/rails db:migrate
+```
+
+New hosts that run `recording_studio_admin:admin_root` already get
+`root_recording_id` on `admin_audit_logs` and `admin_audit_day_summaries`.
+They still need the Logs run tables.
+
+Those migrations add `root_recording_id` to `admin_audit_logs`, backfill it
+from `recording_studio_recordings` via `access_recording_id`, add a
+root-and-time index, and create `admin_audit_day_summaries`. Existing audit
+rows stay in the same table.
+
+5. Leave `config.logs_summaries_enabled` false. Activity logs stay on raw
+   rows. Do not schedule Logs partition jobs for this table.
+
+6. Optional. After you compare a rebuilt UTC range, turn the flag on and
+   rebuild:
+
+```sh
+FROM=2026-10-01 TO=2026-10-20 bin/rails recording_studio_admin:audit_logs:backfill_summaries
+```
+
+To prune later, set `config.logs_retention` (for example `365.days`) and
+schedule `RecordingStudioLogs::RetentionCleanupJob`. The default does not
+delete audit rows.
+
+### Verify the upgrade
+
+```ruby
+test "admin audit logs stay unpartitioned and summaries stay off" do
+  refute RecordingStudioAdmin::LogsRegistration.summaries_enabled?
+
+  log = RecordingStudioLogs.registry.log_for("AdminAuditLog")
+  assert_nil log.partition_interval
+  assert_predicate log, :indefinite?
+  assert AdminAuditLog.column_names.include?("root_recording_id")
+end
+```
+
 ## Upgrading to 2.5.1
 
 Admin `2.5.1` keeps the Admin activity overview widget on the Admin activity

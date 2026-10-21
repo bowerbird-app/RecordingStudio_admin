@@ -46,6 +46,7 @@ class InstallGeneratorTest < Minitest::Test
       assert_includes initializer, 'config.default_mount_path = "/backoffice"'
       assert_includes initializer, "config.access_recording_resolver = lambda do |context|"
       assert_includes initializer, "config.async_widgets.enabled = false"
+      assert_includes initializer, "config.logs_summaries_enabled = false"
     end
   end
 

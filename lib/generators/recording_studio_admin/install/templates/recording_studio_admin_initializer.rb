@@ -18,6 +18,12 @@ RecordingStudioAdmin.configure do |config|
     # Example: context.controller.current_root_recording if your app exposes one.
   end
 
+  # Daily Logs summaries stay off until you install Logs run tables, migrate,
+  # and rebuild admin/audit_counts. Activity logs keep reading raw audit rows
+  # while this is false.
+  # config.logs_summaries_enabled = false
+  # config.logs_retention = :indefinite
+
   # Add per-route admin surfaces when different URL entrypoints should resolve
   # different access recordings or layouts.
   # config.surface :stats do |surface|

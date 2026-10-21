@@ -12,6 +12,7 @@ class CreateAdminAuditLogs < ActiveRecord::Migration[8.1]
       t.string :record_type
       t.string :record_id
       t.uuid :access_recording_id
+      t.uuid :root_recording_id
       t.string :surface_key
       t.string :http_method
       t.boolean :destructive
@@ -33,5 +34,7 @@ class CreateAdminAuditLogs < ActiveRecord::Migration[8.1]
     add_index :admin_audit_logs, :occurred_at
     add_index :admin_audit_logs, %i[resource_key action_key]
     add_index :admin_audit_logs, :outcome
+    add_index :admin_audit_logs, %i[root_recording_id occurred_at],
+              name: "index_admin_audit_logs_on_root_and_occurred_at"
   end
 end

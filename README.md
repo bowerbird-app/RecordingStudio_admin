@@ -30,6 +30,13 @@ Admin `2.5.1` keeps the Admin activity overview widget on the Admin activity
 logs section (not the screen) and shows Date range / Group by inline on that
 screen. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-251).
 
+Admin `2.6.0` registers the host `admin_audit_logs` table with
+RecordingStudioLogs (`>= 0.4.1, < 0.6`, dummy tag `v0.5.0`). Existing rows
+stay. Daily summaries (`admin/audit_counts`) stay behind
+`config.logs_summaries_enabled`, which defaults to false, so the activity
+logs screen still reads raw audit rows. See
+[docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-260).
+
 ## Quick start
 
 1. Add the gem to the host app and run the install generator:
@@ -698,7 +705,17 @@ Generate optional host-app admin root scaffolding:
 bin/rails generate recording_studio_admin:admin_root
 ```
 
-The admin root generator creates editable app-owned files including `Admin::BaseController`, `AdminRoot`, `AdminAuditLog`, admin views, layout, and `admin_roots` plus `admin_audit_logs` migrations. It also enables the built-in `admin_activity_logs` section so the gem-owned Admin activity logs screen appears for the generated admin root.
+The admin root generator creates editable app-owned files including `Admin::BaseController`, `AdminRoot`, `AdminAuditLog`, `AdminAuditDaySummary`, admin views, layout, and `admin_roots` plus `admin_audit_logs` and `admin_audit_day_summaries` migrations. It also enables the built-in `admin_activity_logs` section so the gem-owned Admin activity logs screen appears for the generated admin root.
+
+Admin registers `AdminAuditLog` with RecordingStudioLogs as an unpartitioned, indefinite raw log (`partition_interval: nil`, `root_column: :root_recording_id`). Existing rows stay in `admin_audit_logs`. The table is not copied or partitioned. Daily summaries live in `admin_audit_day_summaries` (`admin/audit_counts`), grouped by root, resource, action, and outcome. Actor, IP, user agent, request id, and error text stay off the aggregatable allowlist.
+
+`config.logs_summaries_enabled` defaults to false. Leave it off. The activity logs screen, widget, and filters keep reading raw audit logs. Turn the flag on only after you have installed Logs run tables, migrated, and rebuilt summaries:
+
+```sh
+FROM=2026-10-01 TO=2026-10-20 bin/rails recording_studio_admin:audit_logs:backfill_summaries
+```
+
+Do not schedule Logs partition jobs for this table. Retention is indefinite unless the host sets `config.logs_retention`. Existing hosts run `bin/rails generate recording_studio_admin:logs` after `recording_studio_logs:migrations`.
 
 ## Documentation map
 
@@ -721,7 +738,7 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
-The dummy pins RecordingStudio `v4.7.0` and Accessible `v0.18.0`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+The dummy pins RecordingStudio `v4.7.0`, Accessible `v0.18.0`, and Logs `v0.5.0`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
 
 ## Cloud Agent boot
 

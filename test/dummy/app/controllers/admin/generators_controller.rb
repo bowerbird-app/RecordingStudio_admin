@@ -32,17 +32,33 @@ class Admin::GeneratorsController < Admin::BaseController
         generated_files: [
           "app/models/admin_root.rb",
           "app/models/admin_audit_log.rb",
+          "app/models/admin_audit_day_summary.rb",
           "app/controllers/admin/base_controller.rb",
           "app/controllers/admin/root_controller.rb",
           "app/views/admin/root/show.html.erb",
           "app/views/layouts/admin.html.erb",
           "app/javascript/controllers/admin/root_search_controller.js",
           "db/migrate/create_admin_roots.rb",
-          "db/migrate/create_admin_audit_logs.rb"
+          "db/migrate/create_admin_audit_logs.rb",
+          "db/migrate/create_admin_audit_day_summaries.rb"
         ],
         outputs: [
           "Adds /admin/root route and renders the generated admin root page",
           "Enables the built-in admin_activity_logs section on AdminRoot"
+        ]
+      },
+      {
+        name: "recording_studio_admin:logs",
+        command: "bin/rails generate recording_studio_admin:logs",
+        summary: "Adds root_recording_id to existing admin_audit_logs and creates admin_audit_day_summaries.",
+        routes: [],
+        generated_files: [
+          "app/models/admin_audit_day_summary.rb",
+          "db/migrate/add_root_recording_id_to_admin_audit_logs.rb",
+          "db/migrate/create_admin_audit_day_summaries.rb"
+        ],
+        outputs: [
+          "Keeps existing audit rows in place. Does not partition the table."
         ]
       }
     ]

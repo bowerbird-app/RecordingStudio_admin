@@ -219,6 +219,7 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: "Generators"
     assert_includes response.body, "recording_studio_admin:install"
     assert_includes response.body, "recording_studio_admin:admin_root"
+    assert_includes response.body, "recording_studio_admin:logs"
     assert_includes response.body, "bin/rails generate recording_studio_admin:install"
     assert_includes response.body, "bin/rails generate recording_studio_admin:admin_root"
     assert_includes response.body, "Routes"
@@ -226,7 +227,9 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "config/initializers/recording_studio_admin.rb"
     assert_includes response.body, "app/views/admin/root/show.html.erb"
     assert_includes response.body, "app/models/admin_audit_log.rb"
+    assert_includes response.body, "app/models/admin_audit_day_summary.rb"
     assert_includes response.body, "create_admin_audit_logs"
+    assert_includes response.body, "create_admin_audit_day_summaries"
     assert_select "div.fp-section-title-anchor", minimum: 2
   end
 
