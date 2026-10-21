@@ -23,7 +23,8 @@ class LogsAdoptionGeneratorsTest < Minitest::Test
   def test_admin_root_generator_copies_audit_logs_with_root_and_skips_summaries
     with_temp_app do |dir|
       generator = RecordingStudioAdmin::Generators::AdminRootGenerator.new([], {}, destination_root: dir)
-      generator.invoke_all
+      generator.copy_model
+      generator.copy_migration
 
       assert File.exist?(File.join(dir, "app/models/admin_audit_log.rb"))
       refute File.exist?(File.join(dir, "app/models/admin_audit_day_summary.rb"))
