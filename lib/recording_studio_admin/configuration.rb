@@ -42,12 +42,9 @@ module RecordingStudioAdmin
       @admin_action_auditor = nil
       @required_access_role = :view
       @max_page = 1_000
-      @logs_summaries_enabled = false
-      @logs_retention = :indefinite
-      @audit_log_model = "AdminAuditLog"
-      @audit_day_summary_model = "AdminAuditDaySummary"
       @surfaces = {}
       @async_widgets = AsyncWidgetConfiguration.new
+      assign_logs_defaults
     end
 
     def merge!(hash)
@@ -101,6 +98,13 @@ module RecordingStudioAdmin
     end
 
     private
+
+    def assign_logs_defaults
+      @logs_summaries_enabled = false
+      @logs_retention = :indefinite
+      @audit_log_model = "AdminAuditLog"
+      @audit_day_summary_model = "AdminAuditDaySummary"
+    end
 
     def merge_surfaces!(value)
       return unless value.respond_to?(:each)

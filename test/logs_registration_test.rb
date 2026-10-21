@@ -32,9 +32,8 @@ class LogsRegistrationTest < Minitest::Test
   def test_logs_upgrade_generator_keeps_the_existing_table
     root = File.expand_path("..", __dir__)
     generator = File.read(File.join(root, "lib/generators/recording_studio_admin/logs/logs_generator.rb"))
-    migration = File.read(
-      File.join(root, "lib/generators/recording_studio_admin/logs/templates/db/migrate/add_root_recording_id_to_admin_audit_logs.rb")
-    )
+    templates = File.join(root, "lib/generators/recording_studio_admin/logs/templates")
+    migration = File.read(File.join(templates, "db/migrate/add_root_recording_id_to_admin_audit_logs.rb"))
 
     assert_includes generator, "class LogsGenerator"
     assert_includes migration, "RecordingStudioLogs::Cutover.add_root_column"
