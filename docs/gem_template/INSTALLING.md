@@ -207,7 +207,7 @@ bin/rails generate recording_studio_admin:admin_root
 
 This generator creates app-owned scaffolding such as `AdminRoot`, `Admin::BaseController`, admin layout files, and the related migration.
 
-It also creates `AdminAuditLog` storage plus the `admin_audit_logs` migration, `AdminAuditDaySummary` plus `admin_audit_day_summaries`, and enables the built-in `admin_activity_logs` section on `AdminRoot`. The section, screen, and widget definitions for Admin activity logs stay gem-owned so gem upgrades can update that UI without regenerating host-app files. The Admin activity overview widget belongs on that section, not on the `admin_activity_logs` screen. Existing hosts adopt Logs with `recording_studio_admin:logs`. Leave `config.logs_summaries_enabled` false unless you have rebuilt `admin/audit_counts`.
+It also creates `AdminAuditLog` storage plus the `admin_audit_logs` migration (with `root_recording_id`) and enables the built-in `admin_activity_logs` section on `AdminRoot`. The section, screen, and widget definitions for Admin activity logs stay gem-owned so gem upgrades can update that UI without regenerating host-app files. The Admin activity overview widget belongs on that section, not on the `admin_activity_logs` screen. Existing hosts adopt Logs with `recording_studio_admin:logs`, which adds `root_recording_id` only. Leave `config.logs_retention` as `:indefinite`.
 
 Use it when the host app needs a real admin root recordable. Do not use it just to define screens; screen and section DSL classes work without the admin root generator.
 

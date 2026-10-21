@@ -53,11 +53,8 @@ class AdminRootGeneratorTest < Minitest::Test
     assert_includes admin_audit_log_template, "root_recording_id: root_recording_id_for(event.access_recording)"
     assert_includes audit_migration_template, "create_table :admin_audit_logs"
     assert_includes audit_migration_template, "t.uuid :root_recording_id"
-    summary_model = File.read(generator_template_path("app/models/admin_audit_day_summary.rb"))
-    summary_migration = File.read(generator_template_path("db/migrate/create_admin_audit_day_summaries.rb"))
-    assert_includes summary_model, "class AdminAuditDaySummary < ApplicationRecord"
-    assert_includes summary_migration, "admin_audit_day_summaries"
-    assert_includes generator_source, 'template "app/models/admin_audit_day_summary.rb"'
+    refute_includes generator_source, "admin_audit_day_summary"
+    refute_includes generator_source, "create_admin_audit_day_summaries"
     refute_includes generator_source, 'template "app/admin/admin_activity_logs/admin_activity_logs/screen.rb"'
     refute_includes generator_source, 'template "app/admin/admin_activity_logs/section.rb"'
   end

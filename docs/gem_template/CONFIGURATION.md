@@ -41,10 +41,8 @@ end
 | `admin_action_auditor` | `nil` | Optional callable that receives one `RecordingStudioAdmin::AdminActionAuditEvent` for each audited admin action outcome |
 | `required_access_role` | `:view` | Role passed into `RecordingStudioAccessible.authorized?` |
 | `max_page` | `1000` | Hard ceiling for table pagination page numbers |
-| `logs_summaries_enabled` | `false` | When false, activity logs keep reading raw `AdminAuditLog` rows. Daily `admin/audit_counts` summaries exist but are unused until you rebuild and opt in. |
-| `logs_retention` | `:indefinite` | RecordingStudioLogs retention for `admin_audit_logs`. Nothing is pruned unless the host sets a window. |
+| `logs_retention` | `:indefinite` | Declared retention for `admin_audit_logs`. Registration always passes `:indefinite` to RecordingStudioLogs. A finite window is not cleaned without summaries. |
 | `audit_log_model` | `"AdminAuditLog"` | Host class name registered with RecordingStudioLogs |
-| `audit_day_summary_model` | `"AdminAuditDaySummary"` | Host class name for the optional daily summary table |
 
 Async widget loading is configured under `config.async_widgets`:
 

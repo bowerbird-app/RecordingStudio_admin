@@ -40,10 +40,6 @@ module RecordingStudioAdmin
       end
     end
 
-    rake_tasks do
-      load File.expand_path("../tasks/recording_studio_admin_audit_logs.rake", __dir__)
-    end
-
     def self.install_audit_log_root!
       klass = RecordingStudioAdmin::LogsRegistration.source_class
       return unless klass

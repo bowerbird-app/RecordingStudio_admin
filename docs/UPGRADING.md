@@ -3,22 +3,22 @@
 ## Upgrading to 2.6.0
 
 Admin `2.6.0` registers the existing host `admin_audit_logs` table with
-RecordingStudioLogs. Summaries stay off. Existing rows stay in place. The
-table is not copied or partitioned.
+RecordingStudioLogs. There is no summary table. Existing rows stay in place.
+The table is not copied or partitioned.
 
 ### What Changed
 
 - Gemspec depends on `recording_studio_logs` `>= 0.4.1, < 0.6`. Dummy and
   development Gemfiles pin GitHub tag `v0.5.0`.
 - Engine registration uses `partition_interval: nil`,
-  `root_column: :root_recording_id`, and retention `:indefinite`.
+  `root_column: :root_recording_id`, and retention `:indefinite`. There is
+  no `aggregate` call.
 - `root_recording_id` is added and backfilled from `access_recording_id`.
-- Daily summaries `admin/audit_counts` group by root, resource, action, and
-  outcome. Actor, IP, user agent, request id, and error text are not
-  aggregatable.
-- `config.logs_summaries_enabled` defaults to false. The activity logs
-  screen, widget, and filters keep reading raw `AdminAuditLog` rows.
-- `config.logs_retention` defaults to `:indefinite`.
+- Actor, IP, user agent, request id, and error text are not aggregatable.
+- `config.logs_retention` defaults to `:indefinite`. Registration always
+  passes `:indefinite` to RecordingStudioLogs. A log with no summaries is
+  never cleaned by `RetentionCleanupJob`, so a finite window would sit at
+  "Cleanup waiting".
 
 ### Upgrade Steps
 
@@ -31,7 +31,7 @@ table is not copied or partitioned.
 bin/rails generate recording_studio_logs:migrations
 ```
 
-4. Existing hosts copy the Admin logs migrations:
+4. Existing hosts copy the Admin logs migration:
 
 ```sh
 bin/rails generate recording_studio_admin:logs
@@ -39,37 +39,25 @@ bin/rails db:migrate
 ```
 
 New hosts that run `recording_studio_admin:admin_root` already get
-`root_recording_id` on `admin_audit_logs` and `admin_audit_day_summaries`.
-They still need the Logs run tables.
+`root_recording_id` on `admin_audit_logs`. They still need the Logs run
+tables.
 
-Those migrations add `root_recording_id` to `admin_audit_logs`, backfill it
-from `recording_studio_recordings` via `access_recording_id`, add a
-root-and-time index, and create `admin_audit_day_summaries`. Existing audit
-rows stay in the same table.
+That migration adds `root_recording_id` to `admin_audit_logs`, backfills it
+from `recording_studio_recordings` via `access_recording_id`, and adds a
+root-and-time index. Existing audit rows stay in the same table. Do not
+create a summary table.
 
-5. Leave `config.logs_summaries_enabled` false. Activity logs stay on raw
-   rows. Do not schedule Logs partition jobs for this table.
-
-6. Optional. After you compare a rebuilt UTC range, turn the flag on and
-   rebuild:
-
-```sh
-FROM=2026-10-01 TO=2026-10-20 bin/rails recording_studio_admin:audit_logs:backfill_summaries
-```
-
-To prune later, set `config.logs_retention` (for example `365.days`) and
-schedule `RecordingStudioLogs::RetentionCleanupJob`. The default does not
-delete audit rows.
+5. Leave `config.logs_retention` as `:indefinite`. Do not schedule Logs
+   partition or retention jobs for this table.
 
 ### Verify the upgrade
 
 ```ruby
-test "admin audit logs stay unpartitioned and summaries stay off" do
-  refute RecordingStudioAdmin::LogsRegistration.summaries_enabled?
-
+test "admin audit logs stay unpartitioned and indefinite" do
   log = RecordingStudioLogs.registry.log_for("AdminAuditLog")
   assert_nil log.partition_interval
   assert_predicate log, :indefinite?
+  assert_equal :root_recording_id, log.root_column
   assert AdminAuditLog.column_names.include?("root_recording_id")
 end
 ```

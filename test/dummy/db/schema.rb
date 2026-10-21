@@ -10,23 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
-
-  create_table "admin_audit_day_summaries", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.string "action_key"
-    t.datetime "created_at", null: false
-    t.date "day", null: false
-    t.bigint "event_count", default: 0, null: false
-    t.string "outcome"
-    t.string "resource_key"
-    t.uuid "root_recording_id"
-    t.datetime "updated_at", null: false
-    t.index ["day", "root_recording_id", "resource_key", "action_key", "outcome"], name: "index_admin_audit_day_summaries_identity", unique: true, nulls_not_distinct: true
-    t.index ["root_recording_id", "day"], name: "index_admin_audit_day_summaries_on_root_and_day"
-  end
 
   create_table "admin_audit_logs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "access_recording_id"

@@ -32,9 +32,8 @@ screen. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-251).
 
 Admin `2.6.0` registers the host `admin_audit_logs` table with
 RecordingStudioLogs (`>= 0.4.1, < 0.6`, dummy tag `v0.5.0`). Existing rows
-stay. Daily summaries (`admin/audit_counts`) stay behind
-`config.logs_summaries_enabled`, which defaults to false, so the activity
-logs screen still reads raw audit rows. See
+stay. There is no summary table. Retention stays `:indefinite` because
+RS_Logs does not clean a log with no summaries. See
 [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-260).
 
 ## Quick start
@@ -705,17 +704,11 @@ Generate optional host-app admin root scaffolding:
 bin/rails generate recording_studio_admin:admin_root
 ```
 
-The admin root generator creates editable app-owned files including `Admin::BaseController`, `AdminRoot`, `AdminAuditLog`, `AdminAuditDaySummary`, admin views, layout, and `admin_roots` plus `admin_audit_logs` and `admin_audit_day_summaries` migrations. It also enables the built-in `admin_activity_logs` section so the gem-owned Admin activity logs screen appears for the generated admin root.
+The admin root generator creates editable app-owned files including `Admin::BaseController`, `AdminRoot`, `AdminAuditLog`, admin views, layout, and `admin_roots` plus `admin_audit_logs` migrations. It also enables the built-in `admin_activity_logs` section so the gem-owned Admin activity logs screen appears for the generated admin root.
 
-Admin registers `AdminAuditLog` with RecordingStudioLogs as an unpartitioned, indefinite raw log (`partition_interval: nil`, `root_column: :root_recording_id`). Existing rows stay in `admin_audit_logs`. The table is not copied or partitioned. Daily summaries live in `admin_audit_day_summaries` (`admin/audit_counts`), grouped by root, resource, action, and outcome. Actor, IP, user agent, request id, and error text stay off the aggregatable allowlist.
+Admin registers `AdminAuditLog` with RecordingStudioLogs as an unpartitioned, indefinite raw log (`partition_interval: nil`, `root_column: :root_recording_id`). Existing rows stay in `admin_audit_logs`. The table is not copied or partitioned. There is no summary table and no `aggregate` call. Actor, IP, user agent, request id, and error text stay off the aggregatable allowlist.
 
-`config.logs_summaries_enabled` defaults to false. Leave it off. The activity logs screen, widget, and filters keep reading raw audit logs. Turn the flag on only after you have installed Logs run tables, migrated, and rebuilt summaries:
-
-```sh
-FROM=2026-10-01 TO=2026-10-20 bin/rails recording_studio_admin:audit_logs:backfill_summaries
-```
-
-Do not schedule Logs partition jobs for this table. Retention is indefinite unless the host sets `config.logs_retention`. Existing hosts run `bin/rails generate recording_studio_admin:logs` after `recording_studio_logs:migrations`.
+`config.logs_retention` defaults to `:indefinite`. Registration always uses `:indefinite`. RecordingStudioLogs does not clean a log with no summaries, so a finite window would sit at "Cleanup waiting". Do not schedule Logs partition or retention jobs for this table. Existing hosts run `bin/rails generate recording_studio_admin:logs` after `recording_studio_logs:migrations` to add `root_recording_id` only.
 
 ## Documentation map
 

@@ -4,7 +4,7 @@ Next steps:
 
 1. Run `bin/rails generate recording_studio_admin:admin_root` if you want editable app-owned admin root scaffolding.
 2. Pin `recording_studio_logs` to GitHub tag `v0.5.0` and run `bin/rails generate recording_studio_logs:migrations` if Logs run tables are not already present. Existing hosts also run `bin/rails generate recording_studio_admin:logs`, then `bin/rails db:migrate`.
-3. Leave `config.logs_summaries_enabled` false unless you have rebuilt `admin/audit_counts`. Activity logs keep reading raw audit rows.
+3. Leave `config.logs_retention` as `:indefinite`. RecordingStudioLogs does not clean a log with no summaries, so a finite window would sit at "Cleanup waiting".
 4. Ensure `RecordingStudioAccessible::Engine` is mounted and `recording_studio_admin_for` declares your admin surface.
 5. Confirm `RecordingStudioAdmin.configuration.authentication_method` matches your host app authentication method. The default is `authenticate_user!`.
 6. Configure `RecordingStudioAdmin.configuration.access_recording_resolver` so every mounted admin request resolves the mandatory `RecordingStudio::Recording` that owns the current admin screen context. RecordingStudioAdmin checks that recording with `RecordingStudioAccessible.authorized?` and fails closed with `403 Forbidden` when the recording is missing or the current actor cannot view it.

@@ -17,7 +17,6 @@ module RecordingStudioAdmin
       def copy_model
         template "app/models/admin_root.rb", "app/models/admin_root.rb"
         template "app/models/admin_audit_log.rb", "app/models/admin_audit_log.rb"
-        template "app/models/admin_audit_day_summary.rb", "app/models/admin_audit_day_summary.rb"
       end
 
       def copy_controllers
@@ -39,8 +38,6 @@ module RecordingStudioAdmin
       def copy_migration
         migration_template "db/migrate/create_admin_roots.rb", "db/migrate/create_admin_roots.rb"
         migration_template "db/migrate/create_admin_audit_logs.rb", "db/migrate/create_admin_audit_logs.rb"
-        migration_template "db/migrate/create_admin_audit_day_summaries.rb",
-                           "db/migrate/create_admin_audit_day_summaries.rb"
       end
 
       def add_route

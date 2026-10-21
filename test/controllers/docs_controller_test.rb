@@ -227,9 +227,8 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "config/initializers/recording_studio_admin.rb"
     assert_includes response.body, "app/views/admin/root/show.html.erb"
     assert_includes response.body, "app/models/admin_audit_log.rb"
-    assert_includes response.body, "app/models/admin_audit_day_summary.rb"
     assert_includes response.body, "create_admin_audit_logs"
-    assert_includes response.body, "create_admin_audit_day_summaries"
+    assert_includes response.body, "add_root_recording_id_to_admin_audit_logs"
     assert_select "div.fp-section-title-anchor", minimum: 2
   end
 

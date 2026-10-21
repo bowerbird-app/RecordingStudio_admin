@@ -60,7 +60,9 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes dummy_gemfile, 'RecordingStudio_logs", tag: "v0.5.0"'
     assert_includes registration, "partition_interval: nil"
     assert_includes registration, "retention: resolved_retention"
-    assert_includes registration, "admin/audit_counts"
+    assert_includes registration, "root_column: :root_recording_id"
+    refute_includes registration, "RecordingStudioLogs.aggregate("
+    refute_includes registration, "admin/audit_counts"
     refute_includes registration, "actor_type:"
     refute_includes registration, "ip_address:"
     refute_includes registration, "user_agent:"
@@ -70,17 +72,22 @@ class UpgradeNotesTest < Minitest::Test
 
     assert_includes upgrading, "## Upgrading to 2.6.0"
     assert_includes upgrading, "recording_studio_admin:logs"
-    assert_includes upgrading, "logs_summaries_enabled"
     assert_includes upgrading, ":indefinite"
     assert_includes upgrading, "admin_audit_logs"
+    assert_includes upgrading, "Cleanup waiting"
+    refute_includes upgrading, "logs_summaries_enabled"
+    refute_includes upgrading, "admin_audit_day_summaries"
 
     assert_includes changelog, "## 2.6.0"
     assert_includes changelog, "docs/UPGRADING.md#upgrading-to-260"
     assert_includes changelog, "recording_studio_logs"
+    assert_includes changelog, "No summary or aggregate tables"
+    refute_includes changelog, "logs_summaries_enabled"
 
     assert_includes readme, "2.6.0"
-    assert_includes readme, "logs_summaries_enabled"
-    assert_includes readme, "admin/audit_counts"
+    assert_includes readme, "There is no summary table"
+    refute_includes readme, "logs_summaries_enabled"
+    refute_includes readme, "admin/audit_counts"
   end
 
   def test_upgrading_doc_covers_the_2_5_1_admin_activity_logs_layout

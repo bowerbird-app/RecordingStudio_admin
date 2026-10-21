@@ -27,7 +27,7 @@ module RecordingStudioAdmin
     attr_accessor :authentication_method, :current_actor_method, :access_recording_method,
                   :access_recording_resolver, :site_admin_recording_resolver, :admin_sections_resolver,
                   :admin_action_auditor, :required_access_role, :default_mount_path, :max_page, :engine_layout,
-                  :logs_summaries_enabled, :logs_retention, :audit_log_model, :audit_day_summary_model
+                  :logs_retention, :audit_log_model
     attr_reader :surfaces, :async_widgets
 
     def initialize
@@ -100,10 +100,8 @@ module RecordingStudioAdmin
     private
 
     def assign_logs_defaults
-      @logs_summaries_enabled = false
       @logs_retention = :indefinite
       @audit_log_model = "AdminAuditLog"
-      @audit_day_summary_model = "AdminAuditDaySummary"
     end
 
     def merge_surfaces!(value)
