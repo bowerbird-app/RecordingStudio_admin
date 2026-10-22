@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.6.1 - 2026-10-22
+
+### Changed
+
+- The Metrics/Logs gemspec ceiling is now `< 1.0` so hosts can use Logs 0.7.0 and Metrics 0.6.1. No code change.
+
 ## 2.6.0 - 2026-10-21
 
 ### Added
@@ -353,7 +359,8 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.0...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.1...HEAD
+[2.6.1]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.5.1...v2.6.0
 [2.5.1]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.5.0...v2.5.1
 [2.5.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.4.0...v2.5.0

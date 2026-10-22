@@ -71,11 +71,11 @@ GIT
 PATH
   remote: ../..
   specs:
-    recording_studio_admin (2.6.0)
+    recording_studio_admin (2.6.1)
       flat_pack (~> 0.1.254)
       rails (~> 8.1.0)
       recording_studio_accessible (~> 0.6)
-      recording_studio_logs (>= 0.4.1, < 0.6)
+      recording_studio_logs (>= 0.4.1, < 1.0)
       recording_studio_trashable (~> 0.10)
 
 GEM
