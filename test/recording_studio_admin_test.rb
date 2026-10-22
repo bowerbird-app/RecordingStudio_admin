@@ -4,14 +4,14 @@ require "test_helper"
 
 class RecordingStudioAdminTest < Minitest::Test
   def test_version_matches_the_current_release
-    assert_equal "2.6.0", ::RecordingStudioAdmin::VERSION
+    assert_equal "2.6.1", ::RecordingStudioAdmin::VERSION
   end
 
   def test_gemspec_pins_recording_studio_logs
     root = File.expand_path("..", __dir__)
     gemspec = File.read(File.join(root, "recording_studio_admin.gemspec"))
 
-    assert_includes gemspec, '"recording_studio_logs", ">= 0.4.1", "< 0.6"'
+    assert_includes gemspec, '"recording_studio_logs", ">= 0.4.1", "< 1.0"'
     %w[Gemfile test/dummy/Gemfile].each do |path|
       contents = File.read(File.join(root, path))
       assert_includes contents, 'RecordingStudio_logs", tag: "v0.5.0"', path
