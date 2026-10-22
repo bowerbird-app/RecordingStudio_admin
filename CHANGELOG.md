@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.6.2 - 2026-10-22
+
+### Changed
+
+- Development and dummy Gemfiles pin `recording_studio_logs` to GitHub tag `v0.7.0` and `recording_studio_metrics` to `v0.6.1`. No runtime code change.
+
 ## 2.6.1 - 2026-10-22
 
 ### Changed
@@ -359,7 +365,8 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.1...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.2...HEAD
+[2.6.2]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.1...v2.6.2
 [2.6.1]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.5.1...v2.6.0
 [2.5.1]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.5.0...v2.5.1

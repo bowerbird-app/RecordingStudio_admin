@@ -1,5 +1,11 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.6.2
+
+No runtime code change. Development and dummy Gemfiles pin Logs GitHub tag
+`v0.7.0` and Metrics `v0.6.1`. The gemspec Logs range is still
+`>= 0.4.1, < 1.0`.
+
 ## Upgrading to 2.6.1
 
 No code change. The gemspec `recording_studio_logs` range is `>= 0.4.1, < 1.0`
