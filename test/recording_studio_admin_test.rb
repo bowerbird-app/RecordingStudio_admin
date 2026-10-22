@@ -15,6 +15,7 @@ class RecordingStudioAdminTest < Minitest::Test
     %w[Gemfile test/dummy/Gemfile].each do |path|
       contents = File.read(File.join(root, path))
       assert_includes contents, 'RecordingStudio_logs", tag: "v0.7.0"', path
+      assert_includes contents, 'RecordingStudio_metrics", tag: "v0.6.1"', path
     end
   end
 
