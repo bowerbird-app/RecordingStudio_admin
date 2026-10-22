@@ -1,5 +1,10 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.6.1
+
+No code change. The gemspec `recording_studio_logs` range is `>= 0.4.1, < 1.0`
+(CI tested with 0.5.0).
+
 ## Upgrading to 2.6.0
 
 Admin `2.6.0` registers the existing host `admin_audit_logs` table with

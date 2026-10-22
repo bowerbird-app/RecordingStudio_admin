@@ -44,6 +44,21 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "QUICK_PRESET_LABELS"
   end
 
+  def test_upgrading_doc_covers_the_2_6_1_logs_ceiling
+    upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
+    changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
+
+    assert_includes upgrading, "## Upgrading to 2.6.1"
+    assert_includes upgrading, ">= 0.4.1, < 1.0"
+    assert_includes upgrading, "CI tested with 0.5.0"
+    assert_includes upgrading, "No code change"
+
+    assert_includes changelog, "## 2.6.1"
+    assert_includes changelog, ">= 0.4.1, < 1.0"
+    assert_includes changelog, "CI tested with 0.5.0"
+    assert_includes changelog, "No code change"
+  end
+
   def test_upgrading_doc_covers_the_2_6_0_logs_adoption
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
