@@ -11,7 +11,7 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
-Admin `2.7.1` requires RecordingStudio `>= 6.1.0` and Flatpack `>= 0.1.315` (development pin is Flatpack commit `1fcbafe94f8eb118f0a22182f63f5110fcc97a56`, version `0.1.319`). Compact widgets stack the title above the metric and clip the mini chart to its box. `config.engine_layout` is now `config.layout`. Page titles use `content_for :title` and `:subtitle`. Back and close use `flat_pack_page_nav`. Page actions use `register_page_nav`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-271).
+Admin `2.7.1` requires RecordingStudio `>= 6.1.0` and Flatpack `>= 0.1.315` (development pin is Flatpack commit `1fcbafe94f8eb118f0a22182f63f5110fcc97a56`, version `0.1.319`). Compact widgets stack the title above the metric and clip the mini chart to its box. Full widget cards share `h-[26rem]`, with a 200px chart and at most 5 list items. `config.engine_layout` is now `config.layout`. Page titles use `content_for :title` and `:subtitle`. Back and close use `flat_pack_page_nav`. Page actions use `register_page_nav`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-271).
 
 Hosts moving from Admin `1.x` (Accessible `~> 0.3`, RecordingStudio 3.x) to `2.0.0` should follow [docs/UPGRADING.md](docs/UPGRADING.md). That release requires Accessible `~> 0.6` and RecordingStudio `~> 4.1`.
 

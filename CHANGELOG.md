@@ -11,6 +11,7 @@
 - Compact cards use `min-h-28` and grow with the title instead of clipping at `max-h-28`.
 - A line or area chart with a single point draws a marker. Apex does not stroke a path through one point, so the chart no longer looks empty.
 - Dummy Tailwind `@source` entries for this engine are directories, including `lib` and `app/javascript`. The install generator points at those directories too.
+- Full widget cards share a fixed `h-[26rem]` height. Charts inside them are 200px tall. A full list shows the first 5 items.
 
 ### Upgrade notes
 

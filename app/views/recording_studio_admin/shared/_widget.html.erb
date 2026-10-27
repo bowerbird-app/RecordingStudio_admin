@@ -20,7 +20,7 @@
     hover: (compact_card ? :subtle : nil),
     clickable: compact_card_href.present? && widget.info.blank?,
     href: (widget.info.blank? ? compact_card_href : nil),
-    class: (compact_card ? "#{'relative ' if widget.info.present?}w-full min-h-28" : "w-full")
+    class: (compact_card ? "#{'relative ' if widget.info.present?}w-full min-h-28" : "w-full #{RecordingStudioAdmin::Widgets::Presenter::FULL_CARD_HEIGHT_CLASS}")
   ) do |card| %>
     <% card.body do %>
       <% if compact_card && compact_card_href.present? && widget.info.present? %>
@@ -129,9 +129,9 @@
             </div>
           </div>
       <% else %>
-        <div class="space-y-4">
+        <div class="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
           <% if header_subtitle.present? || unit_label.present? || widget.title.present? || widget.info.present? || (widget.show_metric && widget.value.present?) || (widget.show_change && widget.change.present?) || widget_href.present? || period_label.present? %>
-            <div class="flex items-start justify-between gap-3">
+            <div class="flex shrink-0 items-start justify-between gap-3">
               <% if header_subtitle.present? || unit_label.present? || widget.title.present? || widget.info.present? || (widget.show_metric && widget.value.present?) || (widget.show_change && widget.change.present?) || period_label.present? %>
                 <div class="space-y-2">
                   <% if widget.info.present? %>
@@ -191,7 +191,9 @@
             </div>
           <% end %>
 
-          <%= render partial: "recording_studio_admin/shared/widgets/#{widget.type}", locals: { widget: widget } %>
+          <div class="min-h-0 flex-1 overflow-hidden">
+            <%= render partial: "recording_studio_admin/shared/widgets/#{widget.type}", locals: { widget: widget } %>
+          </div>
         </div>
       <% end %>
     <% end %>

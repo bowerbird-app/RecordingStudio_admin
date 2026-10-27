@@ -120,6 +120,19 @@ class WidgetPresenterTest < Minitest::Test
     assert_equal({}, marker_options.call(:column, one_point))
   end
 
+  def test_full_list_keeps_the_first_five_items
+    items = 7.times.map { |index| { text: "user#{index}@example.com" } }
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(type: :list, items: items, view_variant: nil)
+    )
+
+    assert_equal 5, presenter.full_list_items.size
+    assert_equal "user0@example.com", presenter.full_list_items.first[:text]
+    assert_equal "user4@example.com", presenter.full_list_items.last[:text]
+    assert_equal "h-[26rem]", RecordingStudioAdmin::Widgets::Presenter::FULL_CARD_HEIGHT_CLASS
+    assert_equal 200, RecordingStudioAdmin::Widgets::Presenter::FULL_CHART_HEIGHT
+  end
+
   def test_compact_gauge_hides_the_center_value_without_dropping_host_formatters
     presenter = RecordingStudioAdmin::Widgets::Presenter.new(
       resolved_widget(

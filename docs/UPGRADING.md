@@ -7,6 +7,7 @@
 - Compact widget cards keep `min-h-28` and no longer set `max-h-28`. The title is a full-width line. The metric, change, and mini chart sit on the next line. The mini chart box is `h-14 w-[104px] overflow-hidden`.
 - Compact gauge options set `plotOptions.radialBar.dataLabels.value.show` and `name.show` to false. A host `chart_options` formatter is still merged.
 - Line and area charts with a single point set `markers.size` to 5 unless the host chart options already set `markers`.
+- Full widget cards share `h-[26rem]`, including the skeleton and the turbo frame. The full chart height is 200. A full list renders the first 5 items.
 - `test/dummy/app/assets/tailwind/application.css` scans this engine with directory `@source` paths, including `lib` and `app/javascript`. The install generator writes the same kind of path for an installed gem.
 
 ### Upgrade Steps

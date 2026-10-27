@@ -4,6 +4,9 @@ module RecordingStudioAdmin
   module Widgets
     class Presenter
       SUPPORTED_CHART_TYPES = %i[line column bar area donut pie radar gauge geochart].freeze
+      FULL_CARD_HEIGHT_CLASS = "h-[26rem]"
+      FULL_CHART_HEIGHT = 200
+      FULL_LIST_LIMIT = 5
       CHART_TYPE_ALIASES = {
         geo: :geochart
       }.freeze
@@ -173,6 +176,10 @@ module RecordingStudioAdmin
         return gauge_mini_chart_options if gauge_chart_type?(mini_chart_type)
 
         default_mini_chart_options.deep_merge(widget.chart_options || {})
+      end
+
+      def full_list_items
+        list_items.first(FULL_LIST_LIMIT)
       end
 
       def change_text_class

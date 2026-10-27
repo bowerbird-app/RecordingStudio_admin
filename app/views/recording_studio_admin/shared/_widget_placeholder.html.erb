@@ -1,18 +1,10 @@
 <% presenter ||= recording_studio_widget_presenter(widget) %>
 <% compact_card = presenter.compact? %>
-<% placeholder_height = if compact_card
-                          "min-h-28"
-                            elsif widget.type == :chart
-                              "min-h-[22rem]"
-                            elsif widget.type == :list
-                              "min-h-[15rem]"
-                            else
-                              "min-h-[11rem]"
-                            end %>
+<% placeholder_height = compact_card ? "min-h-28" : RecordingStudioAdmin::Widgets::Presenter::FULL_CARD_HEIGHT_CLASS %>
 
 <%= render FlatPack::Card::Component.new(border: :strong, class: "w-full #{placeholder_height}") do |card| %>
   <% card.body do %>
-    <div class="flex <%= compact_card ? "h-full" : placeholder_height %> flex-col space-y-3" aria-busy="true">
+    <div class="flex h-full min-h-0 flex-col space-y-3 overflow-hidden" aria-busy="true">
       <% if compact_card %>
         <div class="flex h-full min-w-0 flex-col gap-2">
           <% if widget.title.present? %>
@@ -41,15 +33,14 @@
 
         <% case widget.type %>
         <% when :chart %>
-          <div class="mt-2 min-h-64 flex-1">
-            <%= render FlatPack::Skeleton::Component.new(variant: :rectangle, height: "16rem", shimmer: true) %>
+          <div class="mt-2 min-h-0 flex-1">
+            <%= render FlatPack::Skeleton::Component.new(variant: :rectangle, height: "#{RecordingStudioAdmin::Widgets::Presenter::FULL_CHART_HEIGHT}px", shimmer: true) %>
           </div>
         <% when :list %>
           <div class="space-y-3 pt-2">
-            <%= render FlatPack::Skeleton::Component.new(variant: :text, width: "83%", shimmer: true) %>
-            <%= render FlatPack::Skeleton::Component.new(variant: :text, width: "66%", shimmer: true) %>
-            <%= render FlatPack::Skeleton::Component.new(variant: :text, width: "75%", shimmer: true) %>
-            <%= render FlatPack::Skeleton::Component.new(variant: :text, width: "50%", shimmer: true) %>
+            <% 5.times do %>
+              <%= render FlatPack::Skeleton::Component.new(variant: :text, width: "75%", shimmer: true) %>
+            <% end %>
           </div>
         <% when :progress %>
           <%= render FlatPack::Skeleton::Component.new(variant: :text, width: "50%", shimmer: true) %>
