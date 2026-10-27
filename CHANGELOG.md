@@ -11,6 +11,7 @@
 - `config.engine_layout` and `surface.engine_layout` are `config.layout` and `surface.layout`.
 - Layout resolution is the surface value when it is not `nil`, then the gem `layout`, then `RecordingStudio.configuration.layout`, then `"recording_studio/default_layout"`. `false` skips the layout. A callable must be `call(controller:)`.
 - Engine controllers use `recording_studio_layout`. Section and screen headings are `content_for :title` and `:subtitle`. Back and close use `flat_pack_page_nav`. Actions use `register_page_nav`. Avatars use `recording_studio_page_nav_right`.
+- The dummy Tailwind sheet no longer re-declares `--color-fp-*` or `@theme inline`. `tailwindcss:build` links the installed FlatPack, Recording Studio, Accessible, and root switchable gems into `app/assets/tailwind/gem_sources` and scans their components, helpers, and views. The install generator no longer injects the theme bridge.
 
 ### Upgrade notes
 

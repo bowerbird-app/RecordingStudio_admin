@@ -23,7 +23,7 @@ Admin `2.7.0` follows RecordingStudio `6.1.0` and Flatpack `0.1.319`. The engine
 2. Pin RecordingStudio to tag `v6.1.0` and Flatpack to commit `1fcbafe94f8eb118f0a22182f63f5110fcc97a56` (or a newer `0.1.319` commit). `view_component` resolves to `4.19.0`.
 3. Rename `engine_layout` to `layout` in initializers and `config/recording_studio_admin.yml`.
 4. Host views that called `recording_studio_page_nav` should set `content_for :title`, call `flat_pack_page_nav`, and `register_page_nav` for actions.
-5. Load `flat_pack/variables`, `flat_pack/application`, and `flat_pack/rich_text` before the Tailwind sheet.
+5. Load `flat_pack/variables`, `flat_pack/application`, and `flat_pack/rich_text` before the Tailwind sheet. Point `@source` at real directories for FlatPack `app/components` and `app/helpers`, and at Recording Studio, Accessible, and root switchable `app/views`, `app/components`, and `app/helpers`. Tailwind 4.3 does not expand globs in `@source`. The dummy links those installed gems into `app/assets/tailwind/gem_sources` before `tailwindcss:build`, including gems under `/usr/local/lib/ruby/gems`. Remove host `--color-fp-*` and `@theme inline` blocks.
 6. Replace `include RecordingStudio::UsesDefaultLayout` with `recording_studio_layout { RecordingStudioAdmin.configuration.layout }`.
 
 ### Verify the upgrade
