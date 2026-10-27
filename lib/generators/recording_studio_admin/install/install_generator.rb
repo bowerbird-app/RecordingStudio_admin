@@ -88,9 +88,11 @@ module RecordingStudioAdmin
 
       def tailwind_source_lines
         [
-          '@source "../../vendor/bundle/**/recording_studio_admin/app/views/**/*.erb";',
-          '@source "../../vendor/bundle/**/recording_studio_admin/app/components/**/*.{rb,erb}";',
-          '@source "../../vendor/bundle/**/recording_studio_admin/app/helpers/**/*.rb";',
+          '@source "../../vendor/bundle/**/recording_studio_admin/app/views";',
+          '@source "../../vendor/bundle/**/recording_studio_admin/app/components";',
+          '@source "../../vendor/bundle/**/recording_studio_admin/app/helpers";',
+          '@source "../../vendor/bundle/**/recording_studio_admin/app/javascript";',
+          '@source "../../vendor/bundle/**/recording_studio_admin/lib";',
           '@source "../../vendor/bundle/**/flat_pack/app/components/**/*.{rb,erb}";',
           '@source "../../vendor/bundle/**/flat_pack/app/helpers/**/*.rb";',
           '@source "../../../../../../usr/local/bundle/**/bundler/gems/flatpack-*/app/components";',

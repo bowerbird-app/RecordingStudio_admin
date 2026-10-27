@@ -16,6 +16,25 @@ module RecordingStudioAdmin
         :bar
       end
 
+      def self.marker_options_for_sparse_line(type, series)
+        chart_type = renderable_chart_type(type, default: :line)
+        return {} unless %i[line area].include?(chart_type)
+        return {} unless sparse_line_series?(series)
+
+        { markers: { size: 5 } }
+      end
+
+      def self.sparse_line_series?(series)
+        entries = Array(series)
+        return false if entries.empty?
+
+        entries.all? do |entry|
+          points = entry.is_a?(Hash) ? Array(entry[:data] || entry["data"]) : Array(entry)
+          points.size < 2
+        end
+      end
+      private_class_method :sparse_line_series?
+
       def initialize(widget, link_policy: nil)
         @widget = widget
         @link_policy = link_policy
@@ -151,6 +170,7 @@ module RecordingStudioAdmin
       def mini_chart_options
         return geo_mini_chart_options if geo_chart_type?(mini_chart_type)
         return pie_or_donut_mini_chart_options if %i[pie donut].include?(mini_chart_type.to_s.downcase.to_sym)
+        return gauge_mini_chart_options if gauge_chart_type?(mini_chart_type)
 
         default_mini_chart_options.deep_merge(widget.chart_options || {})
       end
@@ -217,6 +237,19 @@ module RecordingStudioAdmin
         "#{match[:sign]}#{integer}#{match[:fraction]}"
       end
 
+      def gauge_mini_chart_options
+        default_mini_chart_options.deep_merge(
+          plotOptions: {
+            radialBar: {
+              dataLabels: {
+                name: { show: false },
+                value: { show: false }
+              }
+            }
+          }
+        ).deep_merge(widget.chart_options || {})
+      end
+
       def pie_or_donut_mini_chart_options
         (widget.chart_options || {}).deep_merge(
           chart: { sparkline: { enabled: true }, toolbar: { show: false } },
@@ -252,6 +285,10 @@ module RecordingStudioAdmin
 
       def geo_chart_type?(value)
         value.to_s.downcase.to_sym == :geochart
+      end
+
+      def gauge_chart_type?(value)
+        value.to_s.downcase.to_sym == :gauge
       end
     end
   end

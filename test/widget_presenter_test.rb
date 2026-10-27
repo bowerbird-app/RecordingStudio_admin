@@ -108,12 +108,24 @@ class WidgetPresenterTest < Minitest::Test
     assert_nil presenter.compact_metric_tooltip_text
   end
 
+  def test_sparse_line_draws_a_marker_and_a_longer_line_does_not
+    one_point = [{ name: "Activities", data: [{ x: "Oct 27", y: 1 }] }]
+    two_points = [{ name: "Activities", data: [{ x: "Oct 26", y: 2 }, { x: "Oct 27", y: 1 }] }]
+
+    marker_options = RecordingStudioAdmin::Widgets::Presenter.method(:marker_options_for_sparse_line)
+
+    assert_equal({ markers: { size: 5 } }, marker_options.call(:line, one_point))
+    assert_equal({ markers: { size: 5 } }, marker_options.call(:area, one_point))
+    assert_equal({}, marker_options.call(:line, two_points))
+    assert_equal({}, marker_options.call(:column, one_point))
+  end
+
   def test_compact_gauge_hides_the_center_value_without_dropping_host_formatters
     presenter = RecordingStudioAdmin::Widgets::Presenter.new(
       resolved_widget(
         chart_type: :gauge,
         chart_options: {
-          labels: [ "Success rate" ],
+          labels: ["Success rate"],
           dataLabels: { formatter: "function (value) { return Math.round(value) + '%'; }" }
         }
       )
@@ -123,7 +135,7 @@ class WidgetPresenterTest < Minitest::Test
     assert_equal false, options.dig(:plotOptions, :radialBar, :dataLabels, :name, :show)
     assert_equal false, options.dig(:plotOptions, :radialBar, :dataLabels, :value, :show)
     assert_equal "function (value) { return Math.round(value) + '%'; }", options.dig(:dataLabels, :formatter)
-    assert_equal [ "Success rate" ], options[:labels]
+    assert_equal ["Success rate"], options[:labels]
   end
 
   def test_builds_mini_chart_options_without_overwriting_custom_options

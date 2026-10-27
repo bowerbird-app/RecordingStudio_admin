@@ -23,6 +23,8 @@
 @source "../../views/**/*.erb";
 @source "../../helpers/**/*.rb";
 @source "../../components/**/*.{rb,erb}";
-@source "../../../../../app/views/**/*.erb";
-@source "../../../../../app/helpers/**/*.rb";
-@source "../../../../../app/components/**/*.{rb,erb}";
+@source "../../../../../app/views";
+@source "../../../../../app/helpers";
+@source "../../../../../app/components";
+@source "../../../../../app/javascript";
+@source "../../../../../lib";

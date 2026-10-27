@@ -144,7 +144,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'loading="lazy"'
     assert_includes response.body, 'src="/admin/sections/root/widgets/widgets.api_requests.api_activity'
     assert_includes response.body, "/admin/sections/root/widgets/widgets.api_requests.api_activity"
-    assert_includes response.body, "min-h-28 max-h-28"
+    assert_includes response.body, "min-h-28"
+    refute_includes response.body, "max-h-28"
     assert_includes response.body, "min-h-[22rem]"
     assert_includes response.body, "min-h-[15rem]"
     refute_includes response.body, 'data-flat-pack--chart-series-value="[{&quot;name&quot;:&quot;API activity&quot;'
@@ -537,7 +538,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :success
-    assert_includes response.body, "min-h-28 max-h-28"
+    assert_includes response.body, "min-h-28"
+    refute_includes response.body, "max-h-28"
     assert_includes response.body, ">3<"
     assert_includes response.body, "flex -space-x-2"
     assert_includes response.body, 'data-flat-pack--icon-name-value="user-circle"'
@@ -571,7 +573,9 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     title_row = heading.parent
     refute title_row.at_css("[data-controller='flat-pack--chart']")
     assert_includes title_row.parent["class"], "flex-col"
-    chart_box = css_select("[data-controller='flat-pack--chart']").first.parent
+    chart = css_select("[data-controller='flat-pack--chart']").first
+    chart_box = chart.ancestors.find { |node| node["class"].to_s.include?("w-[104px]") }
+    assert chart_box
     assert_includes chart_box["class"], "overflow-hidden"
     assert_match(/"value":\{[^}]*"show":false/, CGI.unescapeHTML(response.body))
   end

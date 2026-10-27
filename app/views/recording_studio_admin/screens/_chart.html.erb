@@ -49,7 +49,11 @@
 
         <% screen_chart_type = RecordingStudioAdmin::Widgets::Presenter.renderable_chart_type(screen.chart.type, default: :line) %>
         <% screen_chart_series = screen_chart_type == :geochart ? recording_studio_flatpack_geochart_series(screen.chart.series) : screen.chart.series %>
-        <% screen_chart_render_options = screen_chart_type == :geochart ? recording_studio_flatpack_geochart_options(screen_chart_options) : screen_chart_options %>
+        <% screen_chart_render_options = if screen_chart_type == :geochart
+                                          recording_studio_flatpack_geochart_options(screen_chart_options)
+                                        else
+                                          RecordingStudioAdmin::Widgets::Presenter.marker_options_for_sparse_line(screen_chart_type, screen_chart_series).deep_merge(screen_chart_options)
+                                        end %>
 
         <%= render FlatPack::Chart::Component.new(
           type: screen_chart_type,

@@ -63,8 +63,10 @@ class InstallGeneratorTest < Minitest::Test
       css = File.read(css_path)
       refute_includes css, "@theme inline {"
       refute_includes css, "--color-fp-primary:"
-      assert_includes css, "recording_studio_admin/app/views/**/*.erb"
-      assert_includes css, "recording_studio_admin/app/helpers/**/*.rb"
+      assert_includes css, "recording_studio_admin/app/views"
+      assert_includes css, "recording_studio_admin/app/helpers"
+      assert_includes css, "recording_studio_admin/app/javascript"
+      assert_includes css, "recording_studio_admin/lib"
       assert_includes css, "flat_pack/app/components/**/*.{rb,erb}"
       assert_includes css, "flat_pack/app/helpers/**/*.rb"
       assert_includes css, "usr/local/lib/ruby/gems/**/bundler/gems/flatpack-*/app/helpers"

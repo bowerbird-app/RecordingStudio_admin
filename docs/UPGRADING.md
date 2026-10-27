@@ -1,5 +1,20 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.7.1
+
+### What Changed
+
+- Compact widget cards keep `min-h-28` and no longer set `max-h-28`. The title is a full-width line. The metric, change, and mini chart sit on the next line. The mini chart box is `h-14 w-[104px] overflow-hidden`.
+- Compact gauge options set `plotOptions.radialBar.dataLabels.value.show` and `name.show` to false. A host `chart_options` formatter is still merged.
+- Line and area charts with a single point set `markers.size` to 5 unless the host chart options already set `markers`.
+- `test/dummy/app/assets/tailwind/application.css` scans this engine with directory `@source` paths, including `lib` and `app/javascript`. The install generator writes the same kind of path for an installed gem.
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.7.1`.
+2. Rebuild Tailwind (`bin/rails tailwindcss:build`).
+3. If `app/assets/tailwind/application.css` still has the 2.7.0 generator globs for this engine, replace them with directory paths for `app/views`, `app/components`, `app/helpers`, `app/javascript`, and `lib`.
+
 ## Upgrading to 2.7.0
 
 Admin `2.7.0` follows RecordingStudio `6.1.0` and Flatpack `0.1.319`. The engine no longer chooses a layout name itself. It asks Recording Studio to resolve one.
