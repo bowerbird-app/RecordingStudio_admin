@@ -7,7 +7,7 @@ class ConfigurationTest < Minitest::Test
     config = RecordingStudioAdmin::Configuration.new
 
     assert_equal "/admin", config.default_mount_path
-    assert_nil config.engine_layout
+    assert_nil config.layout
     assert_equal :authenticate_user!, config.authentication_method
     assert_equal :current_user, config.current_actor_method
     assert_equal :recording_studio_admin_access_recording, config.access_recording_method
@@ -36,10 +36,10 @@ class ConfigurationTest < Minitest::Test
   def test_merge_updates_known_keys_only
     config = RecordingStudioAdmin::Configuration.new
 
-    config.merge!("default_mount_path" => "/backoffice", "engine_layout" => "flat_pack_sidebar", "unknown" => true)
+    config.merge!("default_mount_path" => "/backoffice", "layout" => "flat_pack_sidebar", "unknown" => true)
 
     assert_equal "/backoffice", config.default_mount_path
-    assert_equal "flat_pack_sidebar", config.engine_layout
+    assert_equal "flat_pack_sidebar", config.layout
   end
 
   def test_merge_updates_async_widget_configuration
@@ -90,13 +90,57 @@ class ConfigurationTest < Minitest::Test
   def test_default_surface_reflects_global_configuration
     config = RecordingStudioAdmin::Configuration.new
     config.default_mount_path = "/backoffice"
-    config.engine_layout = "admin"
+    config.layout = "admin"
 
     surface = config.default_surface
 
     assert_equal "default", surface.key
     assert_equal "/backoffice", surface.path
     assert_equal "root", surface.root_section
-    assert_equal "admin", surface.engine_layout
+    assert_equal "admin", surface.layout
+    assert_equal "admin", config.layout_for(surface)
+  end
+
+  def test_layout_accepts_nil_false_string_and_keyword_callable
+    config = RecordingStudioAdmin::Configuration.new
+
+    config.layout = nil
+    assert_nil config.layout
+
+    config.layout = false
+    assert_equal false, config.layout
+
+    config.layout = "admin_pages"
+    assert_equal "admin_pages", config.layout
+
+    callable = ->(controller:) { controller.class.name }
+    config.layout = callable
+    assert_same callable, config.layout
+  end
+
+  def test_invalid_layout_values_raise_argument_error
+    config = RecordingStudioAdmin::Configuration.new
+
+    assert_raises(ArgumentError) { config.layout = "" }
+    assert_raises(ArgumentError) { config.layout = 1 }
+    assert_raises(ArgumentError) { config.layout = ->(_) { "pages" } }
+    assert_raises(ArgumentError) { config.layout = -> { "pages" } }
+  end
+
+  def test_named_surface_layout_overrides_the_gem_layout
+    config = RecordingStudioAdmin::Configuration.new
+    config.layout = "admin_pages"
+    surface = config.surface(:stats, path: "/stats", layout: "stats_pages")
+
+    assert_equal "stats_pages", config.layout_for(surface)
+    assert_equal "admin_pages", config.layout_for(config.surface(:reports, path: "/reports"))
+  end
+
+  def test_false_surface_layout_does_not_fall_through
+    config = RecordingStudioAdmin::Configuration.new
+    config.layout = "admin_pages"
+    surface = config.surface(:bare, path: "/bare", layout: false)
+
+    assert_equal false, config.layout_for(surface)
   end
 end

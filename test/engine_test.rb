@@ -52,20 +52,20 @@ class EngineTest < Minitest::Test
     Dir.mktmpdir do |dir|
       config_path = File.join(dir, "config")
       FileUtils.mkdir_p(config_path)
-      File.write(File.join(config_path, "recording_studio_admin.yml"), "engine_layout: admin_layout\n")
+      File.write(File.join(config_path, "recording_studio_admin.yml"), "layout: admin_layout\n")
 
       app = Struct.new(:root) do
         def config_for(_key)
-          { "engine_layout" => "admin_layout" }
+          { "layout" => "admin_layout" }
         end
       end.new(Pathname.new(dir))
 
-      original_layout = RecordingStudioAdmin.configuration.engine_layout
+      original_layout = RecordingStudioAdmin.configuration.layout
       initializer.block.call(app)
 
-      assert_equal "admin_layout", RecordingStudioAdmin.configuration.engine_layout
+      assert_equal "admin_layout", RecordingStudioAdmin.configuration.layout
     ensure
-      RecordingStudioAdmin.configuration.engine_layout = original_layout
+      RecordingStudioAdmin.configuration.layout = original_layout
     end
   end
 

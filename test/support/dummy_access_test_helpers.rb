@@ -19,6 +19,10 @@ module DummyAccessTestHelpers
       return if bootstrap_result.success?
     end
 
+    manager = existing_test_access_manager(recording, role)
+    manager = bootstrap_test_access_manager!(recording) if manager.nil? && role.to_sym != :admin
+    raise "Failed to grant access in test: no manager holds #{role}" if manager.nil?
+
     previous_access_authorizer = RecordingStudioAccessible.configuration.access_management_authorizer
     begin
       RecordingStudioAccessible.configuration.access_management_authorizer = ->(recording:, **) { recording.present? }
@@ -27,7 +31,7 @@ module DummyAccessTestHelpers
         recording: recording,
         actor: actor,
         role: role,
-        manager_actor: actor
+        manager_actor: manager
       )
 
       raise "Failed to grant access in test: #{result.error}" if result.failure?
@@ -37,6 +41,30 @@ module DummyAccessTestHelpers
   end
 
   private
+
+  def existing_test_access_manager(recording, role)
+    RecordingStudioAccessible.access_recordings_for(recording).each do |access_recording|
+      access = access_recording.recordable
+      next unless access.respond_to?(:actor) && access.actor
+      next unless role_covers?(access.role, role)
+
+      held = RecordingStudioAccessible.role_for(actor: access.actor, recording: recording)
+      return access.actor if role_covers?(held, role)
+    end
+
+    nil
+  end
+
+  def bootstrap_test_access_manager!(recording)
+    manager = User.find_or_create_by!(email: "recording-studio-admin-grant-manager@example.com") do |record|
+      record.password = "Password123!"
+      record.password_confirmation = "Password123!"
+    end
+    bootstrap = RecordingStudioAccessible.bootstrap_owner_access!(recording: recording, actor: manager)
+    raise "Failed to bootstrap test access manager: #{bootstrap.error}" if bootstrap.failure?
+
+    manager
+  end
 
   def role_covers?(current_role, required_role)
     return false if current_role.nil?

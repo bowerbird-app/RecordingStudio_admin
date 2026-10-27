@@ -2,6 +2,7 @@
 
 require_relative "../../helpers/recording_studio_admin/widget_rendering_helper"
 require_relative "../../helpers/recording_studio_admin/geo_chart_helper"
+require_relative "../../helpers/recording_studio_admin/page_nav_helper"
 
 module RecordingStudioAdmin
   # rubocop:disable Metrics/ClassLength
@@ -10,15 +11,16 @@ module RecordingStudioAdmin
       include RecordingStudio::RootSwitchable::ControllerSupport
     end
     include RecordingStudioAdmin::AdminActionAuditing
+    include RecordingStudio::ControllerLayout
 
     # Only meaningful to a widget frame request, so they are dropped when redirecting to a page.
     FRAME_ONLY_QUERY_PARAMS = %w[widget_view_variant widget_usage_index widget_render_variant].freeze
 
-    layout :recording_studio_admin_layout
+    recording_studio_layout { RecordingStudioAdmin.configuration.layout_for(recording_studio_admin_surface) }
 
     helper RecordingStudioAdmin::WidgetRenderingHelper
     helper RecordingStudioAdmin::GeoChartHelper
-    helper ::RecordingStudio::LayoutHelper if defined?(::RecordingStudio::LayoutHelper)
+    helper RecordingStudioAdmin::PageNavHelper
     helper ::RecordingStudioExportable::ExportsHelper if defined?(::RecordingStudioExportable::ExportsHelper)
 
     rescue_from RecordingStudioAdmin::DefinitionNotFound, with: :render_not_found
@@ -299,14 +301,8 @@ module RecordingStudioAdmin
       nil
     end
 
-    def recording_studio_admin_layout
-      recording_studio_admin_surface.engine_layout ||
-        RecordingStudioAdmin.configuration.engine_layout ||
-        RecordingStudioAdmin::Configuration::DEFAULT_ENGINE_LAYOUT
-    end
-
     def recording_studio_admin_default_layout?
-      recording_studio_admin_layout == RecordingStudioAdmin::Configuration::DEFAULT_ENGINE_LAYOUT
+      recording_studio_resolved_layout == RecordingStudio::DEFAULT_LAYOUT
     end
 
     def render_not_found

@@ -29,18 +29,18 @@ class AdminLayoutWidthConsistencyTest < ActionDispatch::IntegrationTest
     get "/admin/screens/api_requests", params: { anchor_url: root_url }
     assert_response :success
     assert_includes response.body, 'data-recording-studio-default-layout="true"'
-    assert_includes response.body, "max-w-6xl"
+    assert_includes response.body, 'data-fp-page-layout-width="default"'
 
     get "/admin/sections", params: { anchor_url: root_url }
     assert_response :success
     assert_includes response.body, 'data-recording-studio-default-layout="true"'
-    assert_includes response.body, "max-w-6xl"
+    assert_includes response.body, 'data-fp-page-layout-width="default"'
     assert_includes response.body, "mx-auto flex w-full flex-col gap-6"
 
     get "/admin/sections/users", params: { anchor_url: root_url }
     assert_response :success
     assert_includes response.body, 'data-recording-studio-default-layout="true"'
-    assert_includes response.body, "max-w-6xl"
+    assert_includes response.body, 'data-fp-page-layout-width="default"'
     assert_includes response.body, "mx-auto flex w-full flex-col gap-6"
   end
 end

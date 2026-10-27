@@ -1,10 +1,13 @@
+<% recording_studio_admin_page_heading(
+     title: "Edit user",
+     anchor: page_nav_anchor_url(default: recording_studio_admin_context.admin_screen_path("users")),
+     subtitle: @user.email
+   ) %>
 <%= render layout: "recording_studio_admin/shared/page_shell" do %>
-  <% recording_studio_page_nav(
-    title: "Edit user",
-    page_nav_anchor_url: page_nav_anchor_url(default: recording_studio_admin_context.admin_screen_path("users"))
-  ) %>
-
-  <%= render FlatPack::PageTitle::Component.new(title: "Edit user", subtitle: @user.email) %>
+  <% unless recording_studio_admin_default_layout? %>
+    <%= render "recording_studio_admin/shared/page_nav" %>
+    <%= render FlatPack::PageTitle::Component.new(title: "Edit user", subtitle: @user.email) %>
+  <% end %>
 
   <%= form_with model: [:admin, @user], class: "space-y-4" do |form| %>
     <%= render FlatPack::EmailInput::Component.new(

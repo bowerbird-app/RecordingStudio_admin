@@ -4,15 +4,20 @@ module RecordingStudioAdmin
   class Surface
     UNSET = Object.new.freeze
 
-    attr_reader :key
+    attr_reader :key, :layout
     attr_accessor :authentication_method, :current_actor_method, :access_recording_method,
-                  :access_recording_resolver, :engine_layout, :allow_export_default_role
+                  :access_recording_resolver, :allow_export_default_role
 
     def initialize(key, **attributes)
       @key = key.to_s
       @path = nil
       @root_section_key = nil
+      @layout = nil
       merge!(attributes)
+    end
+
+    def layout=(value)
+      @layout = RecordingStudio::Layout.accept(value)
     end
 
     def merge!(attributes)

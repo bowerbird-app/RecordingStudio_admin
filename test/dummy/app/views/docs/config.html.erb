@@ -15,7 +15,7 @@
     code: <<~'CODE'
       RecordingStudioAdmin.configure do |config|
         config.default_mount_path = "/admin"
-        config.engine_layout = "application"
+        config.layout = "application"
         config.authentication_method = :authenticate_user!
         config.current_actor_method = :current_user
         config.required_access_role = :view
@@ -42,7 +42,7 @@
     language: :ruby,
     code: <<~'CODE'
       config.default_mount_path
-      config.engine_layout
+      config.layout
       config.authentication_method
       config.current_actor_method
       config.access_recording_method

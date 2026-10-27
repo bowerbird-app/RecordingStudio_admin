@@ -2,8 +2,15 @@
 
 class Admin::BaseController < ApplicationController
   include RecordingStudioAdmin::AdminActionAuditing
+  include RecordingStudio::ControllerLayout
 
-  include RecordingStudio::UsesDefaultLayout
+  recording_studio_layout do
+    surface = RecordingStudioAdmin.configuration.surface_for_request(request)
+    RecordingStudioAdmin.configuration.layout_for(surface)
+  end
+
+  helper RecordingStudioAdmin::PageNavHelper
+  helper_method :recording_studio_admin_default_layout?
 
   skip_before_action :authorize_dummy_page_access!
 
@@ -13,6 +20,10 @@ class Admin::BaseController < ApplicationController
                 :preserve_anchor_url
 
   private
+
+  def recording_studio_admin_default_layout?
+    recording_studio_resolved_layout == RecordingStudio::DEFAULT_LAYOUT
+  end
 
   def authorize_admin_user!
     return if performed?

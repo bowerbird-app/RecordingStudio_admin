@@ -1,14 +1,13 @@
-<% recording_studio_page_nav(
-  title: "Admin",
-  page_nav_anchor_url: page_nav_anchor_url
-) %>
+<% recording_studio_admin_page_heading(title: "Admin", anchor: page_nav_anchor_url, subtitle: "Manage and monitor your application") %>
 <% if @admin_access_recording.present? %>
-  <% content_for :page_nav_right do %>
+  <% recording_studio_page_nav_right do %>
     <%= recording_studio_accessible_avatars(@admin_access_recording, button_style: :ghost, button_size: :md) %>
   <% end %>
 <% end %>
-
-<%= render FlatPack::PageTitle::Component.new(title: "Admin", subtitle: "Manage and monitor your application") %>
+<% unless recording_studio_admin_default_layout? %>
+  <%= render "recording_studio_admin/shared/page_nav" %>
+  <%= render FlatPack::PageTitle::Component.new(title: "Admin", subtitle: "Manage and monitor your application") %>
+<% end %>
 
 <div class="space-y-4" data-controller="admin--root-search" data-action="input->admin--root-search#filter search->admin--root-search#filter">
   <form action="<%= request.path %>" method="get" class="space-y-4" data-admin--root-search-target="form" data-turbo-frame="admin-root-search-results">
