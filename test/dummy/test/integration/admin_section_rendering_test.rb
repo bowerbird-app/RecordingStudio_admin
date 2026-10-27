@@ -144,9 +144,11 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'loading="lazy"'
     assert_includes response.body, 'src="/admin/sections/root/widgets/widgets.api_requests.api_activity'
     assert_includes response.body, "/admin/sections/root/widgets/widgets.api_requests.api_activity"
-    assert_includes response.body, "min-h-28 max-h-28"
-    assert_includes response.body, "min-h-[22rem]"
-    assert_includes response.body, "min-h-[15rem]"
+    assert_includes response.body, "min-h-28"
+    refute_includes response.body, "max-h-28"
+    assert_includes response.body, "h-[26rem]"
+    refute_includes response.body, "min-h-[22rem]"
+    refute_includes response.body, "min-h-[15rem]"
     refute_includes response.body, 'data-flat-pack--chart-series-value="[{&quot;name&quot;:&quot;API activity&quot;'
 
     get "/admin/sections/root/widgets/widgets.api_requests.api_activity", params: { anchor_url: root_url }
@@ -155,6 +157,14 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'id="recording-studio-admin-widget-section-'
     assert_includes response.body, "API activity"
     assert_includes response.body, 'data-controller="flat-pack--chart"'
+    get "/admin/sections/root/widgets/widgets.api_requests.api_activity", params: {
+      anchor_url: root_url,
+      widget_view_variant: "__default__"
+    }
+
+    assert_response :success
+    assert_includes response.body, "h-[26rem]"
+    assert_includes response.body, 'data-flat-pack--chart-height-value="200"'
     body = CGI.unescapeHTML(response.body)
     assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"API activity"'
   end
@@ -537,7 +547,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     }
 
     assert_response :success
-    assert_includes response.body, "min-h-28 max-h-28"
+    assert_includes response.body, "min-h-28"
+    refute_includes response.body, "max-h-28"
     assert_includes response.body, ">3<"
     assert_includes response.body, "flex -space-x-2"
     assert_includes response.body, 'data-flat-pack--icon-name-value="user-circle"'
@@ -553,6 +564,68 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "[-webkit-line-clamp:2]"
   ensure
     RecordingStudioAdmin.configuration.async_widgets.enabled = original_async_enabled
+  end
+
+  test "full list widget renders at most five items inside the shared card height" do
+    sign_in_admin_user
+    widget = RecordingStudioAdmin::Results::ResolvedWidget.new(
+      key: "widgets.test.long_list",
+      type: :list,
+      title: "Long list",
+      subtitle: nil,
+      description: nil,
+      info: nil,
+      value: nil,
+      change: nil,
+      change_good_when: :up,
+      link_to: nil,
+      link_label: nil,
+      series: nil,
+      chart_type: nil,
+      chart_options: {},
+      list_options: {},
+      items: 7.times.map { |index| { text: "capped-user-#{index}@example.com" } },
+      rows: nil,
+      metadata: {},
+      view_variant: nil,
+      show_metric: false,
+      show_change: false,
+      show_period: false
+    )
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(widget)
+    html = ApplicationController.renderer.render(
+      partial: "recording_studio_admin/shared/widgets/list",
+      locals: { widget: widget, presenter: presenter }
+    )
+
+    assert_equal 5, html.scan("capped-user-").size
+    assert_includes html, "capped-user-0@example.com"
+    assert_includes html, "capped-user-4@example.com"
+    refute_includes html, "capped-user-5@example.com"
+    assert_includes html, "[--list-item-padding-y:0.5rem]"
+  end
+
+  test "compact gauge keeps the title above the metric and hides the arc value" do
+    sign_in_admin_user
+
+    get "/admin/sections/root/widgets/widgets.api_requests.api_activity_gauge", params: {
+      anchor_url: root_url,
+      widget_view_variant: :compact
+    }
+
+    assert_response :success
+    refute_includes response.body, "max-h-28"
+    heading = css_select("h3").find { |node| node.text.include?("API success rate") }
+    assert heading
+    assert_includes heading["class"], "text-sm"
+    title_row = heading.parent
+    refute title_row.at_css("[data-controller='flat-pack--chart']")
+    assert_includes title_row.parent["class"], "flex-col"
+    chart = css_select("[data-controller='flat-pack--chart']").first
+    chart_box = chart.ancestors.find { |node| node["class"].to_s.include?("w-[104px]") }
+    assert chart_box
+    assert_includes chart_box["class"], "overflow-hidden"
+    assert_match(/"value":\{[^}]*"show":false/, CGI.unescapeHTML(response.body))
   end
 
   test "user activity screen async compact widgets preserve the compact frame variant" do

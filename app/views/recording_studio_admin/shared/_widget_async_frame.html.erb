@@ -13,6 +13,6 @@
                       recording_studio_admin__async_widgets_target: "widget",
                       recording_studio_admin__async_widgets_src_value: widget_frame_src
                     },
-                    class: "block w-full" do %>
+                    class: "block w-full #{RecordingStudioAdmin::Widgets::Presenter::FULL_CARD_HEIGHT_CLASS unless recording_studio_widget_presenter(widget).compact?}" do %>
   <%= render partial: "recording_studio_admin/shared/widget_placeholder", locals: { widget: widget } %>
 <% end %>

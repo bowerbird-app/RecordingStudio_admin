@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## 2.7.1 - 2026-10-27
+
+### Fixed
+
+- Compact widgets stack the title above the metric. The mini chart sits in a fixed 104px box with `overflow-hidden`, so a gauge percent and a bar no longer paint over the title.
+- Compact gauge charts hide the arc's center value. The metric already shows that number.
+- Compact cards use `min-h-28` and grow with the title instead of clipping at `max-h-28`.
+- A line or area chart with a single point draws a marker. Apex does not stroke a path through one point, so the chart no longer looks empty.
+- Dummy Tailwind `@source` entries for this engine are directories, including `lib` and `app/javascript`. The install generator points at those directories too.
+- Full widget cards share a fixed `h-[26rem]` height. Charts inside them are 200px tall. A full list shows the first 5 items.
+
+### Upgrade notes
+
+- Rebuild Tailwind after bumping. If you added the install-generator `@source` lines by hand, point them at `recording_studio_admin` `app/views`, `app/helpers`, `app/javascript`, and `lib` directories.
+- See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-271).
+
 ## 2.7.0 - 2026-10-27
 
 ### Changed

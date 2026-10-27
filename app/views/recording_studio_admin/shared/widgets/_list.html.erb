@@ -1,8 +1,10 @@
+<% presenter ||= recording_studio_widget_presenter(widget) %>
 <% list_options = (widget.list_options || {}).dup %>
 <% list_options.delete(:compact_preview) %>
 <% default_hover = list_options.delete(:hover) %>
+<div class="[--list-item-padding-y:0.5rem]">
 <%= render FlatPack::List::Component.new(**list_options) do %>
-  <% Array(widget.items).each do |item| %>
+  <% presenter.full_list_items.each do |item| %>
     <% item_options = {} %>
     <% item_text = item %>
     <% if item.is_a?(Hash) %>
@@ -19,3 +21,4 @@
     <% end %>
   <% end %>
 <% end %>
+</div>

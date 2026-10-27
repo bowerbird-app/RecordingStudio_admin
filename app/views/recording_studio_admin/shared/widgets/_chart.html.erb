@@ -4,14 +4,16 @@
 <% chart_options = if chart_type == :geochart
                      recording_studio_flatpack_geochart_options(widget.chart_options || {})
                    else
-                     {
-                       grid: { show: false }
-                     }.deep_merge(widget.chart_options || {})
+                     RecordingStudioAdmin::Widgets::Presenter.marker_options_for_sparse_line(chart_type, chart_series).deep_merge(
+                       { grid: { show: false } }.deep_merge(widget.chart_options || {})
+                     )
                    end %>
 
 <%= render FlatPack::Chart::Component.new(
   type: chart_type,
   series: chart_series,
   options: chart_options,
-  card: false
+  height: RecordingStudioAdmin::Widgets::Presenter::FULL_CHART_HEIGHT,
+  card: false,
+  class: "h-full max-h-full"
 ) %>

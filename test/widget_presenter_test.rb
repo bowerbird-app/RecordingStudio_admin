@@ -108,6 +108,49 @@ class WidgetPresenterTest < Minitest::Test
     assert_nil presenter.compact_metric_tooltip_text
   end
 
+  def test_sparse_line_draws_a_marker_and_a_longer_line_does_not
+    one_point = [{ name: "Activities", data: [{ x: "Oct 27", y: 1 }] }]
+    two_points = [{ name: "Activities", data: [{ x: "Oct 26", y: 2 }, { x: "Oct 27", y: 1 }] }]
+
+    marker_options = RecordingStudioAdmin::Widgets::Presenter.method(:marker_options_for_sparse_line)
+
+    assert_equal({ markers: { size: 5 } }, marker_options.call(:line, one_point))
+    assert_equal({ markers: { size: 5 } }, marker_options.call(:area, one_point))
+    assert_equal({}, marker_options.call(:line, two_points))
+    assert_equal({}, marker_options.call(:column, one_point))
+  end
+
+  def test_full_list_keeps_the_first_five_items
+    items = 7.times.map { |index| { text: "user#{index}@example.com" } }
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(type: :list, items: items, view_variant: nil)
+    )
+
+    assert_equal 5, presenter.full_list_items.size
+    assert_equal "user0@example.com", presenter.full_list_items.first[:text]
+    assert_equal "user4@example.com", presenter.full_list_items.last[:text]
+    assert_equal "h-[26rem]", RecordingStudioAdmin::Widgets::Presenter::FULL_CARD_HEIGHT_CLASS
+    assert_equal 200, RecordingStudioAdmin::Widgets::Presenter::FULL_CHART_HEIGHT
+  end
+
+  def test_compact_gauge_hides_the_center_value_without_dropping_host_formatters
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(
+        chart_type: :gauge,
+        chart_options: {
+          labels: ["Success rate"],
+          dataLabels: { formatter: "function (value) { return Math.round(value) + '%'; }" }
+        }
+      )
+    )
+    options = presenter.mini_chart_options
+
+    assert_equal false, options.dig(:plotOptions, :radialBar, :dataLabels, :name, :show)
+    assert_equal false, options.dig(:plotOptions, :radialBar, :dataLabels, :value, :show)
+    assert_equal "function (value) { return Math.round(value) + '%'; }", options.dig(:dataLabels, :formatter)
+    assert_equal ["Success rate"], options[:labels]
+  end
+
   def test_builds_mini_chart_options_without_overwriting_custom_options
     presenter = RecordingStudioAdmin::Widgets::Presenter.new(
       resolved_widget(chart_options: { chart: { height: 96 }, colors: ["#123456"] })

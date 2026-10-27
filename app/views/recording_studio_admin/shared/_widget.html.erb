@@ -20,7 +20,7 @@
     hover: (compact_card ? :subtle : nil),
     clickable: compact_card_href.present? && widget.info.blank?,
     href: (widget.info.blank? ? compact_card_href : nil),
-    class: (compact_card ? "#{'relative ' if widget.info.present?}w-full min-h-28 max-h-28" : "w-full")
+    class: (compact_card ? "#{'relative ' if widget.info.present?}w-full min-h-28" : "w-full #{RecordingStudioAdmin::Widgets::Presenter::FULL_CARD_HEIGHT_CLASS}")
   ) do |card| %>
     <% card.body do %>
       <% if compact_card && compact_card_href.present? && widget.info.present? %>
@@ -45,101 +45,93 @@
       <% header_subtitle = %i[list progress].include?(widget.type) ? nil : presenter.header_subtitle %>
 
       <% if compact_card %>
-          <div class="relative flex h-full items-start gap-3 overflow-hidden <%= "z-10 pointer-events-none" if compact_card_href.present? && widget.info.present? %>">
-            <div class="min-w-0 flex-1 space-y-2 text-left">
-              <div class="flex items-start gap-3">
+          <div class="relative flex h-full min-w-0 flex-col gap-2 <%= "z-10 pointer-events-none" if compact_card_href.present? && widget.info.present? %>">
+            <div class="flex min-w-0 items-start gap-1">
+              <% if widget.title.present? %>
+                <h3 class="min-w-0 flex-1 text-sm font-semibold leading-snug [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"><%= widget.title %></h3>
+              <% end %>
+              <%= info_trigger if widget.info.present? %>
+            </div>
+
+            <div class="flex min-w-0 items-center gap-3">
+              <div class="min-w-0 flex-1 space-y-1 text-left">
                 <% if compact_metric_value.present? %>
-                  <div class="shrink-0">
-                    <p class="flex items-baseline gap-1 leading-none">
-                      <% compact_metric_span = capture do %>
-                        <span class="whitespace-nowrap text-4xl font-bold tabular-nums"><%= compact_metric_value %></span>
-                      <% end %>
-                      <% if compact_metric_tooltip_text.present? %>
-                        <%= render FlatPack::Tooltip::Component.new(text: compact_metric_tooltip_text) do %>
-                          <%= compact_metric_span %>
-                        <% end %>
-                      <% else %>
+                  <p class="flex items-baseline gap-1 leading-none">
+                    <% compact_metric_span = capture do %>
+                      <span class="whitespace-nowrap text-3xl font-bold tabular-nums"><%= compact_metric_value %></span>
+                    <% end %>
+                    <% if compact_metric_tooltip_text.present? %>
+                      <%= render FlatPack::Tooltip::Component.new(text: compact_metric_tooltip_text) do %>
                         <%= compact_metric_span %>
                       <% end %>
-                      <% if compact_unit_label.present? %>
-                        <span class="text-xs text-(--surface-muted-content-color)"><%= compact_unit_label %></span>
+                    <% else %>
+                      <%= compact_metric_span %>
+                    <% end %>
+                    <% if compact_unit_label.present? %>
+                      <span class="text-xs text-(--surface-muted-content-color)"><%= compact_unit_label %></span>
+                    <% end %>
+                  </p>
+                <% end %>
+
+                <% if widget.type == :list && compact_list_text_summary.present? && !presenter.compact_list_visual_stack? %>
+                  <p class="truncate text-sm text-(--surface-muted-content-color)"><%= compact_list_text_summary %></p>
+                <% end %>
+
+                <% if widget.type == :progress && progress_value.present? %>
+                  <%= render FlatPack::Progress::Component.new(
+                    value: progress_value,
+                    max: progress_max,
+                    variant: progress_variant,
+                    size: :sm,
+                    label: progress_label,
+                    show_label: progress_label.present?
+                  ) %>
+                <% end %>
+
+                <% if (widget.show_change && widget.change.present?) || compact_period_label.present? %>
+                  <p class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-left">
+                    <% if widget.show_change && widget.change.present? %>
+                      <span class="text-sm font-semibold <%= change_text_class %>"><%= widget.change %></span>
+                    <% end %>
+                    <% if compact_period_label.present? %>
+                      <span class="text-sm text-(--surface-muted-content-color)"><%= compact_period_label %></span>
+                    <% end %>
+                  </p>
+                <% end %>
+              </div>
+
+              <% if widget.type == :list && presenter.compact_list_visual_stack? && presenter.compact_list_visual_items.any? %>
+                <div class="flex w-[104px] shrink-0 justify-end overflow-hidden">
+                  <div class="flex -space-x-2">
+                    <% presenter.compact_list_visual_items.each do |item| %>
+                      <% if item.is_a?(Hash) && item[:icon].present? %>
+                        <span class="flex size-8 items-center justify-center rounded-full border border-(--surface-border-color) bg-(--surface-background-color)">
+                          <%= render FlatPack::Shared::IconComponent.new(name: item[:icon], size: :sm, class: "text-(--surface-muted-content-color)") %>
+                        </span>
+                      <% else %>
+                        <%= render FlatPack::Avatar::Component.new(name: presenter.list_item_avatar_name(item), size: :sm) %>
                       <% end %>
-                    </p>
+                    <% end %>
                   </div>
-                <% end %>
-
-                <div class="min-w-0 flex-1 space-y-2 text-left">
-                  <% if widget.info.present? %>
-                    <div class="flex items-start gap-1">
-                      <% if widget.title.present? %>
-                        <h3 class="min-w-0 overflow-hidden text-lg font-semibold leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"><%= widget.title %></h3>
-                      <% end %>
-                      <%= info_trigger %>
-                    </div>
-                  <% elsif widget.title.present? %>
-                    <h3 class="overflow-hidden text-lg font-semibold leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"><%= widget.title %></h3>
-                  <% end %>
-
-                  <% if widget.type == :list && compact_list_text_summary.present? && !presenter.compact_list_visual_stack? %>
-                    <p class="truncate text-sm font-semibold text-(--surface-muted-content-color)"><%= compact_list_text_summary %></p>
-                  <% end %>
-
-                  <% if widget.type == :progress && progress_value.present? %>
-                    <%= render FlatPack::Progress::Component.new(
-                      value: progress_value,
-                      max: progress_max,
-                      variant: progress_variant,
-                      size: :sm,
-                      label: progress_label,
-                      show_label: progress_label.present?
-                    ) %>
-                  <% end %>
                 </div>
-              </div>
-
-            <% if (widget.show_change && widget.change.present?) || compact_period_label.present? %>
-              <p class="flex items-center gap-2 text-left">
-                <% if widget.show_change && widget.change.present? %>
-                  <span class="text-sm font-semibold <%= change_text_class %>"><%= widget.change %></span>
-                <% end %>
-                <% if compact_period_label.present? %>
-                  <span class="text-sm font-semibold text-(--surface-muted-content-color)"><%= compact_period_label %></span>
-                <% end %>
-                </p>
+              <% elsif widget.series.present? %>
+                <div class="h-14 w-[104px] shrink-0 overflow-hidden">
+                  <%= render FlatPack::Chart::Component.new(
+                    type: mini_chart_type,
+                    series: mini_chart_series,
+                    card: false,
+                    height: 56,
+                    class: "w-full",
+                    options: mini_chart_render_options
+                  ) %>
+                </div>
               <% end %>
+            </div>
           </div>
-
-          <% if widget.type == :list && presenter.compact_list_visual_stack? && presenter.compact_list_visual_items.any? %>
-            <div class="flex w-[104px] min-w-[104px] shrink-0 justify-end">
-              <div class="flex -space-x-2">
-                <% presenter.compact_list_visual_items.each do |item| %>
-                  <% if item.is_a?(Hash) && item[:icon].present? %>
-                    <span class="flex size-8 items-center justify-center rounded-full border border-(--surface-border-color) bg-(--surface-background-color)">
-                      <%= render FlatPack::Shared::IconComponent.new(name: item[:icon], size: :sm, class: "text-(--surface-muted-content-color)") %>
-                    </span>
-                  <% else %>
-                    <%= render FlatPack::Avatar::Component.new(name: presenter.list_item_avatar_name(item), size: :sm) %>
-                  <% end %>
-                <% end %>
-              </div>
-            </div>
-          <% elsif widget.series.present? %>
-            <div class="w-[104px] min-w-[104px] shrink-0">
-              <%= render FlatPack::Chart::Component.new(
-                type: mini_chart_type,
-                series: mini_chart_series,
-                card: false,
-                height: 56,
-                class: "w-full",
-                options: mini_chart_render_options
-              ) %>
-            </div>
-          <% end %>
-        </div>
       <% else %>
-        <div class="space-y-4">
+        <div class="flex h-full min-h-0 flex-col gap-4 overflow-hidden">
           <% if header_subtitle.present? || unit_label.present? || widget.title.present? || widget.info.present? || (widget.show_metric && widget.value.present?) || (widget.show_change && widget.change.present?) || widget_href.present? || period_label.present? %>
-            <div class="flex items-start justify-between gap-3">
+            <div class="flex shrink-0 items-start justify-between gap-3">
               <% if header_subtitle.present? || unit_label.present? || widget.title.present? || widget.info.present? || (widget.show_metric && widget.value.present?) || (widget.show_change && widget.change.present?) || period_label.present? %>
                 <div class="space-y-2">
                   <% if widget.info.present? %>
@@ -199,7 +191,9 @@
             </div>
           <% end %>
 
-          <%= render partial: "recording_studio_admin/shared/widgets/#{widget.type}", locals: { widget: widget } %>
+          <div class="min-h-0 flex-1 overflow-hidden">
+            <%= render partial: "recording_studio_admin/shared/widgets/#{widget.type}", locals: { widget: widget } %>
+          </div>
         </div>
       <% end %>
     <% end %>

@@ -1,4 +1,5 @@
 <%= turbo_frame_tag recording_studio_widget_frame_id(parent: parent, parent_key: parent_key, widget: widget),
-                    target: "_top" do %>
+                    target: "_top",
+                    class: "block w-full #{RecordingStudioAdmin::Widgets::Presenter::FULL_CARD_HEIGHT_CLASS unless recording_studio_widget_presenter(widget).compact?}" do %>
   <%= render_recording_studio_widget(widget) %>
 <% end %>
