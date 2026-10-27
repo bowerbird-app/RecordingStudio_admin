@@ -17,6 +17,8 @@ class DummyTailwindSourceTest < Minitest::Test
     assert_includes @css, "./gem_sources/recording_studio/app/helpers"
     assert_includes @css, "./gem_sources/recording_studio_accessible/app/components"
     assert_includes @css, "./gem_sources/recording_studio_root_switchable/app/helpers"
+    assert_includes @css, '@source "../../../../../lib";'
+    assert_includes @css, '@source "../../../../../app/javascript";'
     refute_includes @css, "@theme inline {"
     refute_includes @css, "@theme {"
     refute_includes @css, "--color-fp-primary:"

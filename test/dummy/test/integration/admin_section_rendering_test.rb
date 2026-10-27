@@ -555,6 +555,27 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     RecordingStudioAdmin.configuration.async_widgets.enabled = original_async_enabled
   end
 
+  test "compact gauge keeps the title above the metric and hides the arc value" do
+    sign_in_admin_user
+
+    get "/admin/sections/root/widgets/widgets.api_requests.api_activity_gauge", params: {
+      anchor_url: root_url,
+      widget_view_variant: :compact
+    }
+
+    assert_response :success
+    refute_includes response.body, "max-h-28"
+    heading = css_select("h3").find { |node| node.text.include?("API success rate") }
+    assert heading
+    assert_includes heading["class"], "text-sm"
+    title_row = heading.parent
+    refute title_row.at_css("[data-controller='flat-pack--chart']")
+    assert_includes title_row.parent["class"], "flex-col"
+    chart_box = css_select("[data-controller='flat-pack--chart']").first.parent
+    assert_includes chart_box["class"], "overflow-hidden"
+    assert_match(/"value":\{[^}]*"show":false/, CGI.unescapeHTML(response.body))
+  end
+
   test "user activity screen async compact widgets preserve the compact frame variant" do
     sign_in_admin_user
     original_async_enabled = RecordingStudioAdmin.configuration.async_widgets.enabled
