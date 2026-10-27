@@ -3,6 +3,10 @@
 require "test_helper"
 require "action_controller"
 require "action_dispatch/testing/test_response"
+require File.join(
+  Gem.loaded_specs.fetch("recording_studio").full_gem_path,
+  "app/helpers/recording_studio/layout_helper"
+)
 require File.expand_path("../app/controllers/recording_studio_admin/application_controller", __dir__)
 
 class ApplicationControllerSecurityTest < Minitest::Test
@@ -17,14 +21,17 @@ class ApplicationControllerSecurityTest < Minitest::Test
   def setup
     @original_authentication_method = RecordingStudioAdmin.configuration.authentication_method
     @original_current_actor_method = RecordingStudioAdmin.configuration.current_actor_method
-    @original_engine_layout = RecordingStudioAdmin.configuration.engine_layout
+    @original_layout = RecordingStudioAdmin.configuration.layout
+    @original_recording_studio_layout = RecordingStudio.configuration.layout
+    RecordingStudio.configuration.layout = nil
     @original_surfaces = RecordingStudioAdmin.configuration.surfaces.dup
   end
 
   def teardown
     RecordingStudioAdmin.configuration.authentication_method = @original_authentication_method
     RecordingStudioAdmin.configuration.current_actor_method = @original_current_actor_method
-    RecordingStudioAdmin.configuration.engine_layout = @original_engine_layout
+    RecordingStudioAdmin.configuration.layout = @original_layout
+    RecordingStudio.configuration.layout = @original_recording_studio_layout
     RecordingStudioAdmin.configuration.surfaces.clear
     @original_surfaces.each do |key, surface|
       RecordingStudioAdmin.configuration.surfaces[key] = surface
@@ -34,34 +41,71 @@ class ApplicationControllerSecurityTest < Minitest::Test
   def test_engine_controller_has_fail_closed_authentication_hook
     source = File.read(File.join(ROOT, "app/controllers/recording_studio_admin/application_controller.rb"))
 
-    assert_includes source, "layout :recording_studio_admin_layout"
+    assert_includes source, "recording_studio_layout"
+    assert_includes source, "RecordingStudioAdmin.configuration.layout_for(recording_studio_admin_surface)"
     assert_includes source, "before_action :authenticate_recording_studio_admin!"
     assert_includes source, "head :unauthorized"
     assert_includes source, "head :forbidden"
     assert_includes source, "set_recording_studio_admin_current_actor"
   end
 
-  def test_engine_layout_uses_configuration
+  def test_layout_uses_configuration
     controller = build_controller
-    RecordingStudioAdmin.configuration.engine_layout = "flat_pack_sidebar"
+    RecordingStudioAdmin.configuration.layout = "flat_pack_sidebar"
 
-    assert_equal "flat_pack_sidebar", controller.send(:recording_studio_admin_layout)
+    assert_equal "flat_pack_sidebar", controller.send(:recording_studio_resolved_layout)
+    refute controller.send(:recording_studio_admin_default_layout?)
   end
 
-  def test_engine_layout_defaults_to_recording_studio_default_layout
+  def test_nil_layout_falls_through_to_recording_studio_then_the_default_name
     controller = build_controller
-    RecordingStudioAdmin.configuration.engine_layout = nil
+    RecordingStudioAdmin.configuration.layout = nil
+    RecordingStudio.configuration.layout = nil
 
-    assert_equal "recording_studio/default_layout", controller.send(:recording_studio_admin_layout)
+    assert_equal "recording_studio/default_layout", controller.send(:recording_studio_resolved_layout)
     assert controller.send(:recording_studio_admin_default_layout?)
+
+    RecordingStudio.configuration.layout = "host_pages"
+
+    assert_equal "host_pages", controller.send(:recording_studio_resolved_layout)
+    refute controller.send(:recording_studio_admin_default_layout?)
   end
 
-  def test_engine_layout_can_be_overridden_by_surface
-    RecordingStudioAdmin.configuration.surface(:stats, path: "/stats", engine_layout: "stats_layout")
+  def test_false_layout_renders_no_layout
+    controller = build_controller
+    RecordingStudioAdmin.configuration.layout = false
+
+    assert_equal false, controller.send(:recording_studio_resolved_layout)
+    refute controller.send(:recording_studio_admin_default_layout?)
+  end
+
+  def test_keyword_layout_callable_receives_the_controller
+    seen = nil
+    RecordingStudioAdmin.configuration.layout = lambda { |controller:|
+      seen = controller
+      "from_callable"
+    }
+    controller = build_controller
+
+    assert_equal "from_callable", controller.send(:recording_studio_resolved_layout)
+    assert_same controller, seen
+  end
+
+  def test_layout_can_be_overridden_by_surface
+    RecordingStudioAdmin.configuration.layout = "admin_pages"
+    RecordingStudioAdmin.configuration.surface(:stats, path: "/stats", layout: "stats_layout")
     controller = build_controller(path: "/stats/sections/page_views", script_name: "/stats")
 
-    assert_equal "stats_layout", controller.send(:recording_studio_admin_layout)
+    assert_equal "stats_layout", controller.send(:recording_studio_resolved_layout)
     refute controller.send(:recording_studio_admin_default_layout?)
+  end
+
+  def test_controllers_do_not_hardcode_a_recording_studio_layout
+    gem_root = File.expand_path("..", __dir__)
+    dummy_root = File.expand_path("dummy", __dir__)
+
+    assert_empty RecordingStudio::Layout.hardcoded_layout_paths(gem_root)
+    assert_empty RecordingStudio::Layout.hardcoded_layout_paths(dummy_root)
   end
 
   def test_private_authentication_hook_is_supported

@@ -1,5 +1,45 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.7.0
+
+Admin `2.7.0` follows RecordingStudio `6.1.0` and Flatpack `0.1.319`. The engine no longer chooses a layout name itself. It asks Recording Studio to resolve one.
+
+### What Changed
+
+- Gemspec depends on `recording_studio` `>= 6.1.0`, `flat_pack` `>= 0.1.315`, and `view_component` `>= 4.14, < 5`.
+- Development and dummy Gemfiles pin RecordingStudio tag `v6.1.0`, Flatpack commit `1fcbafe94f8eb118f0a22182f63f5110fcc97a56` (`FlatPack::VERSION` `0.1.319`), Accessible `v0.21.0`, Trashable `v0.12.0`, and `view_component` `4.19.0`. Logs stays `v0.7.0`. Metrics stays `v0.6.1`. Dummy root switchable stays `v0.8.0`. `v0.10.0` still requires Recording Studio `~> 4.1`, and its dropdown template calls `button_attributes`, which Flatpack `0.1.319` removed. The dummy overrides that gem's switch page so close uses `with_close` and the list card uses `border: :default`. Sibling gemspecs that still require Recording Studio below 6 are widened to `>= 6.1.0` by `test/support/widen_recording_studio_requirement.rb` while Bundler loads them.
+- `config.engine_layout` and `surface.engine_layout` are `config.layout` and `surface.layout`.
+- A layout value is `nil`, `false`, a layout name, or a callable invoked as `call(controller:)`. Anything else raises `ArgumentError`.
+- Resolution order is the surface layout when it is not `nil`, then `RecordingStudioAdmin.configuration.layout` when that is not `nil`, then `RecordingStudio.configuration.layout`, then `"recording_studio/default_layout"`.
+- Engine controllers call `recording_studio_layout`. They do not hard-code a Recording Studio layout name.
+- Section and screen views set `content_for :title` and `content_for :subtitle`. Under the default layout that is the only page heading.
+- Back and close use `flat_pack_page_nav(round: true, style: :default, back_tooltip:, anchor_href:, anchor_tooltip:)`.
+- Section links and screen buttons use `register_page_nav`. Access avatars stay in `recording_studio_page_nav_right`.
+- `recording_studio_page_nav` and the old `:page_nav_back_*` / `:page_nav_anchor_*` slots are gone.
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.7.0`.
+2. Pin RecordingStudio to tag `v6.1.0` and Flatpack to commit `1fcbafe94f8eb118f0a22182f63f5110fcc97a56` (or a newer `0.1.319` commit). `view_component` resolves to `4.19.0`.
+3. Rename `engine_layout` to `layout` in initializers and `config/recording_studio_admin.yml`.
+4. Host views that called `recording_studio_page_nav` should set `content_for :title`, call `flat_pack_page_nav`, and `register_page_nav` for actions.
+5. Load `flat_pack/variables`, `flat_pack/application`, and `flat_pack/rich_text` before the Tailwind sheet. Point `@source` at real directories for FlatPack `app/components` and `app/helpers`, and at Recording Studio, Accessible, and root switchable `app/views`, `app/components`, and `app/helpers`. Tailwind 4.3 does not expand globs in `@source`. The dummy links those installed gems into `app/assets/tailwind/gem_sources` before `tailwindcss:build`, including gems under `/usr/local/lib/ruby/gems`. Remove host `--color-fp-*` and `@theme inline` blocks.
+6. Replace `include RecordingStudio::UsesDefaultLayout` with `recording_studio_layout { RecordingStudioAdmin.configuration.layout }`.
+
+### Verify the upgrade
+
+```ruby
+test "nil layout falls through to the Recording Studio default" do
+  RecordingStudioAdmin.configuration.layout = nil
+  RecordingStudio.configuration.layout = nil
+
+  get "/admin/sections"
+
+  assert_response :ok
+  assert_includes response.body, 'data-recording-studio-default-layout="true"'
+end
+```
+
 ## Upgrading to 2.6.2
 
 No runtime code change. Development and dummy Gemfiles pin Logs GitHub tag

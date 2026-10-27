@@ -1,67 +1,28 @@
 @import "tailwindcss" source(none);
 
-/* Scan FlatPack components so utility classes defined in Ruby constants are generated. */
-@source "../../../vendor/bundle/**/bundler/gems/flatpack-*/app/components/**/*.rb";
-@source "../../../vendor/bundle/**/bundler/gems/flatpack-*/app/components/**/*.erb";
-@source "../../../../../vendor/bundle/**/bundler/gems/flatpack-*/app/components/**/*.rb";
-@source "../../../../../vendor/bundle/**/bundler/gems/flatpack-*/app/components/**/*.erb";
-@source "../../../../../../usr/local/bundle/**/bundler/gems/flatpack-*/app/components/**/*.rb";
-@source "../../../../../../usr/local/bundle/**/bundler/gems/flatpack-*/app/components/**/*.erb";
-@source "../../../../../../home/*/.rbenv/**/bundler/gems/flatpack-*/app/components/**/*.rb";
-@source "../../../../../../home/*/.rbenv/**/bundler/gems/flatpack-*/app/components/**/*.erb";
+/* Design tokens live in flat_pack/variables, loaded before this sheet.
+ * Do not add --color-fp-*, and do not re-declare --font-* or --radius-* here.
+ *
+ * Tailwind 4.3 does not expand * or ** in @source. tailwindcss:build links the
+ * installed gems into ./gem_sources first, wherever Bundler put them
+ * (vendor/bundle, /usr/local/bundle, /usr/local/lib/ruby/gems, or rbenv).
+ */
 
-/* Scan companion engine views used by the dummy app. */
-@source "../../../vendor/bundle/**/bundler/gems/RecordingStudio*/app/views/**/*.erb";
-@source "../../../vendor/bundle/**/bundler/gems/recording_studio_root_switchable-*/app/views/**/*.erb";
-@source "../../../vendor/bundle/**/bundler/gems/RecordingStudio_root_switchable*/app/views/**/*.erb";
-@source "../../../../../vendor/bundle/**/bundler/gems/RecordingStudio*/app/views/**/*.erb";
-@source "../../../../../vendor/bundle/**/bundler/gems/recording_studio_root_switchable-*/app/views/**/*.erb";
-@source "../../../../../vendor/bundle/**/bundler/gems/RecordingStudio_root_switchable*/app/views/**/*.erb";
-@source "../../../../../../usr/local/bundle/**/bundler/gems/RecordingStudio*/app/views/**/*.erb";
-@source "../../../../../../usr/local/bundle/**/bundler/gems/recording_studio_root_switchable-*/app/views/**/*.erb";
-@source "../../../../../../usr/local/bundle/**/bundler/gems/RecordingStudio_root_switchable*/app/views/**/*.erb";
-@source "../../../../../../home/*/.rbenv/**/bundler/gems/RecordingStudio*/app/views/**/*.erb";
-@source "../../../../../../home/*/.rbenv/**/bundler/gems/recording_studio_root_switchable-*/app/views/**/*.erb";
-@source "../../../../../../home/*/.rbenv/**/bundler/gems/RecordingStudio_root_switchable*/app/views/**/*.erb";
+@source "./gem_sources/flatpack/app/components";
+@source "./gem_sources/flatpack/app/helpers";
+@source "./gem_sources/recording_studio/app/views";
+@source "./gem_sources/recording_studio/app/components";
+@source "./gem_sources/recording_studio/app/helpers";
+@source "./gem_sources/recording_studio_accessible/app/views";
+@source "./gem_sources/recording_studio_accessible/app/components";
+@source "./gem_sources/recording_studio_accessible/app/helpers";
+@source "./gem_sources/recording_studio_root_switchable/app/views";
+@source "./gem_sources/recording_studio_root_switchable/app/components";
+@source "./gem_sources/recording_studio_root_switchable/app/helpers";
 
-/* Dummy app and this engine. */
 @source "../../views/**/*.erb";
+@source "../../helpers/**/*.rb";
 @source "../../components/**/*.{rb,erb}";
 @source "../../../../../app/views/**/*.erb";
+@source "../../../../../app/helpers/**/*.rb";
 @source "../../../../../app/components/**/*.{rb,erb}";
-
-/* Extend Tailwind theme with FlatPack design tokens */
-@theme {
-	/* Primary Button Colors */
-	--color-fp-primary: oklch(0.52 0.26 250);
-	--color-fp-primary-hover: oklch(0.42 0.24 250);
-	--color-fp-primary-text: oklch(1.0 0 0);
-
-	/* Secondary Button Colors */
-	--color-fp-secondary: oklch(0.95 0.01 250);
-	--color-fp-secondary-hover: oklch(0.90 0.02 250);
-	--color-fp-secondary-text: oklch(0.25 0.02 250);
-
-	/* Ghost Button Colors */
-	--color-fp-ghost: transparent;
-	--color-fp-ghost-hover: oklch(0.96 0.01 250);
-	--color-fp-ghost-text: oklch(0.35 0.02 250);
-
-	/* Border and Ring Colors */
-	--color-fp-border: oklch(0.89 0.01 250);
-	--color-ring: oklch(0.52 0.26 250);
-
-	/* Shadows */
-	--shadow-fp-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-
-	/* Border Radius */
-	--radius-md: 0.375rem;
-}
-
-@theme inline {
-	--color-primary: var(--color-primary);
-	--color-primary-hover: var(--color-primary-hover);
-	--color-primary-text: var(--color-primary-text);
-	--color-danger-background-color: var(--color-danger-background-color);
-	--color-danger-text-color: var(--color-danger-text-color);
-}

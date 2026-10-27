@@ -1,10 +1,16 @@
+<% recording_studio_admin_page_heading(
+     title: "User details",
+     anchor: page_nav_anchor_url(default: recording_studio_admin_context.admin_screen_path("users")),
+     subtitle: @user.email
+   ) %>
+<% if @edit_user_action %>
+  <% register_page_nav "Edit", preserve_anchor_url(@edit_user_action.url), role: :primary %>
+<% end %>
 <%= render layout: "recording_studio_admin/shared/page_shell" do %>
-  <% recording_studio_page_nav(
-    title: "User details",
-    page_nav_anchor_url: page_nav_anchor_url(default: recording_studio_admin_context.admin_screen_path("users"))
-  ) %>
-
-  <%= render FlatPack::PageTitle::Component.new(title: "User details", subtitle: @user.email) %>
+  <% unless recording_studio_admin_default_layout? %>
+    <%= render "recording_studio_admin/shared/page_nav" %>
+    <%= render FlatPack::PageTitle::Component.new(title: "User details", subtitle: @user.email) %>
+  <% end %>
 
   <% attribute_rows = @user.attributes.sort_by { |name, _| name }.map do |name, value|
        formatted_value = case value
@@ -25,16 +31,6 @@
      end %>
 
   <div class="space-y-4">
-    <% if @edit_user_action %>
-      <div class="flex items-center gap-2 pt-2">
-        <%= render FlatPack::Button::Component.new(
-          text: "Edit",
-          href: preserve_anchor_url(@edit_user_action.url),
-          style: :primary
-        ) %>
-      </div>
-    <% end %>
-
     <%= render FlatPack::Table::Component.new(data: attribute_rows, class: "text-sm") do |table| %>
       <% table.column(title: "Attribute") { |attribute_row| attribute_row.fetch(:attribute) } %>
       <% table.column(title: "Value") { |attribute_row| attribute_row.fetch(:value) } %>

@@ -14,7 +14,7 @@ The refactored gem keeps configuration, routing, and registration separate:
 RecordingStudioAdmin.configure do |config|
   config.default_mount_path = "/admin"
   # Leave unset to use RecordingStudio core's shared default layout.
-  # config.engine_layout = "application"
+  # config.layout = "application"
   config.authentication_method = :authenticate_user!
   config.current_actor_method = :current_user
   config.required_access_role = :view
@@ -31,7 +31,7 @@ end
 | Option | Default | Purpose |
 |--------|---------|---------|
 | `default_mount_path` | `"/admin"` | Fallback path used by `Context#admin_screen_path` and related helpers when route helpers are not available |
-| `engine_layout` | `nil` | Rails layout used by engine controllers. Leave unset to use RecordingStudio core's `recording_studio/default_layout`; set to a host layout name to override it. |
+| `layout` | `nil` | Layout for engine controllers. `nil` uses `RecordingStudio.configuration.layout`, then `recording_studio/default_layout`. A String is that layout name. `false` renders no layout. A callable is `call(controller:)`. |
 | `authentication_method` | `:authenticate_user!` | Controller method called before each engine request |
 | `current_actor_method` | `:current_user` | Controller method used to resolve the current actor |
 | `access_recording_method` | `:recording_studio_admin_access_recording` | Optional controller method fallback when no resolver is configured |
@@ -74,7 +74,7 @@ Per-surface overrides live under `config.surface(:name)` and support these reque
 | `current_actor_method` | global configuration | Per-surface actor lookup |
 | `access_recording_method` | global configuration | Per-surface controller fallback for access recording lookup |
 | `access_recording_resolver` | global configuration | Per-surface callable for access recording lookup |
-| `engine_layout` | global configuration | Per-surface layout override |
+| `layout` | global configuration | Per-surface layout override. `nil` uses the global `layout`. |
 
 ## Admin surfaces
 
@@ -96,15 +96,16 @@ RecordingStudioAdmin.configure do |config|
     surface.authentication_method = :authenticate_user!
     surface.current_actor_method = :current_user
     surface.access_recording_resolver = ->(context) { context.controller.current_user_recording }
-    surface.engine_layout = "application" # optional: override RecordingStudio's default layout for this surface
+    surface.layout = "application" # optional: override RecordingStudio's default layout for this surface
   end
 end
 ```
 
-When neither global nor per-surface `engine_layout` is set, RecordingStudioAdmin sections and screens use
-RecordingStudio core's shared `recording_studio/default_layout`. That layout provides the standard PageNav shell,
-flash rendering, head slots, and SEO metadata helpers. Host apps can still choose their own layout by setting
-`config.engine_layout` globally or `surface.engine_layout` for a named surface.
+When neither global nor per-surface `layout` is set, RecordingStudioAdmin sections and screens use
+`RecordingStudio.configuration.layout` and then RecordingStudio core's shared `recording_studio/default_layout`.
+That layout renders the page heading from `content_for :title` and `:subtitle`, back and close from
+`flat_pack_page_nav`, and page actions from `register_page_nav`. Host apps can still choose their own layout by setting
+`config.layout` globally or `surface.layout` for a named surface.
 
 Surfaces do not own section definitions. Sections remain globally registered, and recordable classes opt into section keys with `recording_studio_admin_sections`.
 
@@ -122,7 +123,7 @@ Request flow:
 4. resolve the access recording
 5. authorize the actor against that recording
 
-If the configured authentication method does not exist on the controller stack, the engine returns `401 Unauthorized`. A surface can override `authentication_method`, `current_actor_method`, and `engine_layout`; otherwise it inherits the global configuration.
+If the configured authentication method does not exist on the controller stack, the engine returns `401 Unauthorized`. A surface can override `authentication_method`, `current_actor_method`, and `layout`; otherwise it inherits the global configuration.
 
 ## Access recording resolution
 

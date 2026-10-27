@@ -1,19 +1,20 @@
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio.git
-  revision: 613501164c57b6f0bf6e8e356d593b1e5c151368
-  tag: v4.7.0
+  revision: 403521dddc141ddb12d1ed8d8b30bd4105a9d6f8
+  tag: v6.1.0
   specs:
-    recording_studio (4.7.0)
+    recording_studio (6.1.0)
+      flat_pack (>= 0.1.315)
       rails (>= 8.1.0)
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_accessible.git
-  revision: 2cd0a0117a9018cf3a8374823b5bf58578fa6eb9
-  tag: v0.18.0
+  revision: 3830c0f6cc4adc49495eaf33a3fd1377b669a735
+  tag: v0.21.0
   specs:
-    recording_studio_accessible (0.18.0)
+    recording_studio_accessible (0.21.0)
       rails (~> 8.1.0)
-      recording_studio (~> 4.2)
+      recording_studio (>= 6.1.0)
       recording_studio_trashable (~> 0.10)
 
 GIT
@@ -23,7 +24,7 @@ GIT
   specs:
     recording_studio_logs (0.7.0)
       rails (~> 8.1.0)
-      recording_studio (~> 4.2)
+      recording_studio (>= 6.1.0)
       recording_studio_metrics (~> 0.6.1)
 
 GIT
@@ -33,39 +34,41 @@ GIT
   specs:
     recording_studio_metrics (0.6.1)
       rails (~> 8.1.0)
-      recording_studio (~> 4.2)
+      recording_studio (>= 6.1.0)
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_trashable.git
-  revision: 436cbb838e9d30b7a91b6d25c74fb3b749e8afe5
-  tag: v0.11.0
+  revision: 120c5874a2d57e21c435c0599ff6dfa56560b194
+  tag: v0.12.0
   specs:
-    recording_studio_trashable (0.11.0)
-      flat_pack (>= 0.1.74)
+    recording_studio_trashable (0.12.0)
+      flat_pack (>= 0.1.315)
       rails (~> 8.1.0)
-      recording_studio (~> 4.7)
-      recording_studio_metrics (~> 0.2)
+      recording_studio (>= 6.1.0)
+      recording_studio_metrics (>= 0.3.0, < 1.0)
 
 GIT
   remote: https://github.com/bowerbird-app/flatpack.git
-  revision: a17074f91915f7b52ffc755a1411e186bd9e20e7
-  tag: v0.1.254
+  revision: 1fcbafe94f8eb118f0a22182f63f5110fcc97a56
+  ref: 1fcbafe94f8eb118f0a22182f63f5110fcc97a56
   specs:
-    flat_pack (0.1.254)
+    flat_pack (0.1.319)
       pagy (~> 9.0)
       rails (>= 7.1, < 9)
       tailwind_merge (~> 0.13)
-      view_component (~> 4.12.0)
+      view_component (>= 4.14, < 5)
 
 PATH
   remote: .
   specs:
-    recording_studio_admin (2.6.2)
-      flat_pack (~> 0.1.254)
+    recording_studio_admin (2.7.0)
+      flat_pack (>= 0.1.315)
       rails (~> 8.1.0)
+      recording_studio (>= 6.1.0)
       recording_studio_accessible (~> 0.6)
       recording_studio_logs (>= 0.4.1, < 1.0)
       recording_studio_trashable (~> 0.10)
+      view_component (>= 4.14, < 5)
 
 GEM
   remote: https://rubygems.org/
@@ -332,10 +335,9 @@ GEM
     unicode-emoji (4.2.0)
     uri (1.1.1)
     useragent (0.16.11)
-    view_component (4.12.0)
+    view_component (4.19.0)
       actionview (>= 7.1.0)
       activesupport (>= 7.1.0)
-      concurrent-ruby (~> 1)
     warden (1.2.9)
       rack (>= 2.0.9)
     websocket-driver (0.8.2)
@@ -370,6 +372,7 @@ DEPENDENCIES
   rubocop-rails
   simplecov
   sprockets-rails
+  view_component (= 4.19.0)
 
 BUNDLED WITH
    2.5.22

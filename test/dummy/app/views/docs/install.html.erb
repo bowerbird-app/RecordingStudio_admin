@@ -34,7 +34,7 @@
       # config/initializers/recording_studio_admin.rb
       RecordingStudioAdmin.configure do |config|
         config.default_mount_path = "/admin"
-        config.engine_layout = "application"
+        config.layout = "application"
         config.authentication_method = :authenticate_user!
         config.current_actor_method = :current_user
         config.access_recording_resolver = lambda do |_context|
@@ -63,19 +63,14 @@
   <%= render FlatPack::CodeBlock::Component.new(
     language: :css,
     code: <<~'CODE'
-      /* app/assets/tailwind/application.css */
-      @theme inline {
-        --color-primary: var(--color-primary);
-        --color-primary-hover: var(--color-primary-hover);
-        --color-primary-text: var(--color-primary-text);
-        --color-danger-background-color: var(--color-danger-background-color);
-        --color-danger-text-color: var(--color-danger-text-color);
-      }
-
+      /* app/assets/tailwind/application.css
+         Tokens stay in flat_pack/variables. Do not add --color-fp-* or @theme inline. */
       @source "../../vendor/bundle/**/recording_studio_admin/app/views/**/*.erb";
       @source "../../vendor/bundle/**/recording_studio_admin/app/components/**/*.{rb,erb}";
+      @source "../../vendor/bundle/**/recording_studio_admin/app/helpers/**/*.rb";
       @source "../../vendor/bundle/**/flat_pack/app/components/**/*.{rb,erb}";
-      @source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/flatpack-*/app/components/**/*.{rb,erb}";
+      @source "../../vendor/bundle/**/flat_pack/app/helpers/**/*.rb";
+      @source "../../../../../../usr/local/lib/ruby/gems/**/bundler/gems/flatpack-*/app/helpers";
     CODE
   ) %>
 

@@ -107,24 +107,21 @@ The `/stats` surface then exposes whatever sections are enabled on the resolved 
 
 ### Tailwind
 
-When `app/assets/tailwind/application.css` exists, the generator injects sources for the engine and FlatPack components:
+When `app/assets/tailwind/application.css` exists, the generator injects sources for the engine and FlatPack components and helpers. Tokens stay in `flat_pack/variables`. Do not add `--color-fp-*`, and do not re-declare `--font-*` or `--radius-*` in the host sheet. Tailwind 4.3 does not expand `*` in `@source`. If a generated path does not match the installed gem, point `@source` at that gem's real `app/components` and `app/helpers` directories.
 
 ```css
-@theme inline {
-  --color-primary: var(--color-primary);
-  --color-primary-hover: var(--color-primary-hover);
-  --color-primary-text: var(--color-primary-text);
-  --color-danger-background-color: var(--color-danger-background-color);
-  --color-danger-text-color: var(--color-danger-text-color);
-}
-
 @source "../../vendor/bundle/**/recording_studio_admin/app/views/**/*.erb";
 @source "../../vendor/bundle/**/recording_studio_admin/app/components/**/*.{rb,erb}";
+@source "../../vendor/bundle/**/recording_studio_admin/app/helpers/**/*.rb";
 @source "../../vendor/bundle/**/flat_pack/app/components/**/*.{rb,erb}";
-@source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/flatpack-*/app/components/**/*.{rb,erb}";
+@source "../../vendor/bundle/**/flat_pack/app/helpers/**/*.rb";
+@source "../../../../../../usr/local/bundle/**/bundler/gems/flatpack-*/app/components";
+@source "../../../../../../usr/local/bundle/**/bundler/gems/flatpack-*/app/helpers";
+@source "../../../../../../usr/local/lib/ruby/gems/**/bundler/gems/flatpack-*/app/components";
+@source "../../../../../../usr/local/lib/ruby/gems/**/bundler/gems/flatpack-*/app/helpers";
 ```
 
-The `@theme inline` bridge lets Tailwind semantic utilities reuse FlatPack theme tokens, and the extra `/usr/local/bundle` source covers bundled gem paths in containerized installs.
+Load `flat_pack/variables`, `flat_pack/application`, and `flat_pack/rich_text` before the Tailwind sheet. The `/usr/local/bundle` and `/usr/local/lib/ruby/gems` sources cover git gems in container installs.
 
 ## Manual installation
 

@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.7.0` requires RecordingStudio `>= 6.1.0` and Flatpack `>= 0.1.315` (development pin is Flatpack commit `1fcbafe94f8eb118f0a22182f63f5110fcc97a56`, version `0.1.319`). `config.engine_layout` is now `config.layout`. Page titles use `content_for :title` and `:subtitle`. Back and close use `flat_pack_page_nav`. Page actions use `register_page_nav`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-270).
+
 Hosts moving from Admin `1.x` (Accessible `~> 0.3`, RecordingStudio 3.x) to `2.0.0` should follow [docs/UPGRADING.md](docs/UPGRADING.md). That release requires Accessible `~> 0.6` and RecordingStudio `~> 4.1`.
 
 Admin `2.3.0` adds RecordingStudioTrashable `~> 0.10` (query-only) and replaces
@@ -289,14 +291,15 @@ RecordingStudioAdmin.configure do |config|
     surface.authentication_method = :authenticate_user!
     surface.current_actor_method = :current_user
     surface.access_recording_resolver = ->(context) { context.controller.current_user_recording }
-    surface.engine_layout = "application" # optional: override RecordingStudio's default layout
+    surface.layout = "application" # optional: override RecordingStudio's default layout
   end
 end
 ```
 
 By default, mounted admin sections and screens use RecordingStudio core's shared `recording_studio/default_layout`.
-Set `config.engine_layout` globally or `surface.engine_layout` per surface when the host app should supply its own
-layout instead.
+Set `config.layout` globally or `surface.layout` per surface when the host app should supply its own
+layout instead. `nil` falls through to `RecordingStudio.configuration.layout`, then that default name.
+`false` renders no layout. A callable is invoked as `call(controller:)`.
 
 For legacy or minimal setup, mounting the engine directly still works:
 
@@ -641,6 +644,8 @@ context.available_admin_widgets(placement: :root, include: :section_widgets)
 not resolve widget values, list items, rows, or chart series, so it can answer which widgets are available without
 running dashboard queries.
 
+Engine screens set the page heading with `content_for :title` and `content_for :subtitle`. The default layout renders that heading once. Back and close go through `flat_pack_page_nav(round: true, style: :default, ...)`. Section links and screen buttons register with `register_page_nav`. Custom markup, such as access avatars, uses `recording_studio_page_nav_right`.
+
 Mounted controllers also expose helper methods for safe navigation back to host-app pages:
 
 ```ruby
@@ -731,7 +736,7 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
-The dummy pins RecordingStudio `v4.7.0`, Accessible `v0.18.0`, and Logs `v0.5.0`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+The dummy pins RecordingStudio `v6.1.0`, Flatpack `0.1.319`, Accessible `v0.21.0`, Logs `v0.7.0`, and Trashable `v0.12.0`. Root switchable stays `v0.8.0`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
 
 ## Cloud Agent boot
 

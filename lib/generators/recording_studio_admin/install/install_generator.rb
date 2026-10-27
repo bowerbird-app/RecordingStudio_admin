@@ -26,20 +26,18 @@ module RecordingStudioAdmin
         return show_missing_tailwind_notice unless File.exist?(tailwind_css_path)
 
         content = File.read(tailwind_css_path)
-        missing_theme_lines = flatpack_theme_bridge_missing?(content) ? flatpack_theme_bridge_lines : []
         missing_source_lines = tailwind_source_lines.reject { |line| content.include?(line) }
-        if missing_theme_lines.empty? && missing_source_lines.empty?
-          return say("Tailwind already includes RecordingStudioAdmin and FlatPack sources.",
-                     :green)
+        if missing_source_lines.empty?
+          return say("Tailwind already includes RecordingStudioAdmin and FlatPack sources.", :green)
         end
 
         if content.include?('@import "tailwindcss"')
           inject_into_file tailwind_css_path, after: "@import \"tailwindcss\";\n" do
-            tailwind_injection(missing_theme_lines: missing_theme_lines, missing_source_lines: missing_source_lines)
+            tailwind_injection(missing_source_lines: missing_source_lines)
           end
         else
           say "Could not find @import \"tailwindcss\". Add these Tailwind lines manually:", :yellow
-          (missing_theme_lines + missing_source_lines).each { |line| say "  #{line}", :yellow }
+          missing_source_lines.each { |line| say "  #{line}", :yellow }
         end
       end
 
@@ -92,43 +90,24 @@ module RecordingStudioAdmin
         [
           '@source "../../vendor/bundle/**/recording_studio_admin/app/views/**/*.erb";',
           '@source "../../vendor/bundle/**/recording_studio_admin/app/components/**/*.{rb,erb}";',
+          '@source "../../vendor/bundle/**/recording_studio_admin/app/helpers/**/*.rb";',
           '@source "../../vendor/bundle/**/flat_pack/app/components/**/*.{rb,erb}";',
-          '@source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/flatpack-*/app/components/**/*.{rb,erb}";'
+          '@source "../../vendor/bundle/**/flat_pack/app/helpers/**/*.rb";',
+          '@source "../../../../../../usr/local/bundle/**/bundler/gems/flatpack-*/app/components";',
+          '@source "../../../../../../usr/local/bundle/**/bundler/gems/flatpack-*/app/helpers";',
+          '@source "../../../../../../usr/local/lib/ruby/gems/**/bundler/gems/flatpack-*/app/components";',
+          '@source "../../../../../../usr/local/lib/ruby/gems/**/bundler/gems/flatpack-*/app/helpers";'
         ]
       end
 
-      def flatpack_theme_bridge_lines
+      def tailwind_injection(missing_source_lines:)
         [
-          "@theme inline {",
-          "  --color-primary: var(--color-primary);",
-          "  --color-primary-hover: var(--color-primary-hover);",
-          "  --color-primary-text: var(--color-primary-text);",
-          "  --color-danger-background-color: var(--color-danger-background-color);",
-          "  --color-danger-text-color: var(--color-danger-text-color);",
-          "}"
-        ]
-      end
-
-      def flatpack_theme_bridge_missing?(content)
-        !flatpack_theme_bridge_lines.all? { |line| content.include?(line) }
-      end
-
-      def tailwind_injection(missing_theme_lines:, missing_source_lines:)
-        sections = []
-        if missing_theme_lines.any?
-          sections << [
-            "/* Bridge FlatPack theme tokens into Tailwind semantic utilities */",
-            *missing_theme_lines
-          ].join("\n")
-        end
-        if missing_source_lines.any?
-          sections << [
-            "/* Include RecordingStudioAdmin engine and FlatPack sources */",
-            *missing_source_lines
-          ].join("\n")
-        end
-
-        "\n#{sections.join("\n\n")}\n"
+          "",
+          "/* Include RecordingStudioAdmin engine and FlatPack sources.",
+          " * Tokens stay in flat_pack/variables. Do not add --color-fp-* or @theme inline. */",
+          *missing_source_lines,
+          ""
+        ].join("\n")
       end
     end
   end

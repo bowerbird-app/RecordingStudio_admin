@@ -22,17 +22,16 @@ module RecordingStudioAdmin
 
   class Configuration
     DEFAULT_SURFACE_KEY = "default"
-    DEFAULT_ENGINE_LAYOUT = "recording_studio/default_layout"
 
     attr_accessor :authentication_method, :current_actor_method, :access_recording_method,
                   :access_recording_resolver, :site_admin_recording_resolver, :admin_sections_resolver,
-                  :admin_action_auditor, :required_access_role, :default_mount_path, :max_page, :engine_layout,
+                  :admin_action_auditor, :required_access_role, :default_mount_path, :max_page,
                   :logs_retention, :audit_log_model
-    attr_reader :surfaces, :async_widgets
+    attr_reader :surfaces, :async_widgets, :layout
 
     def initialize
       @default_mount_path = "/admin"
-      @engine_layout = nil
+      @layout = nil
       @authentication_method = :authenticate_user!
       @current_actor_method = :current_user
       @access_recording_method = :recording_studio_admin_access_recording
@@ -66,6 +65,18 @@ module RecordingStudioAdmin
       end
     end
 
+    def layout=(value)
+      @layout = RecordingStudio::Layout.accept(value)
+    end
+
+    # Surface layout when set. Otherwise the gem layout, which may itself be nil.
+    def layout_for(surface)
+      surface_layout = surface&.layout
+      return surface_layout unless surface_layout.nil?
+
+      layout
+    end
+
     def surface(key, **attributes)
       configured_surface = @surfaces[key.to_s] ||= Surface.new(key)
       configured_surface.merge!(attributes) if attributes.any?
@@ -93,7 +104,7 @@ module RecordingStudioAdmin
         current_actor_method: current_actor_method,
         access_recording_method: access_recording_method,
         access_recording_resolver: access_recording_resolver,
-        engine_layout: engine_layout
+        layout: layout
       )
     end
 

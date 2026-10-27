@@ -64,7 +64,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'href="/admin/sections/api?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, ">More<"
     assert_includes response.body, 'data-recording-studio-default-layout="true"'
-    assert_includes response.body, "max-w-6xl"
+    assert_includes response.body, 'data-fp-page-layout-width="default"'
     assert_includes response.body, "mx-auto flex w-full flex-col gap-6"
     refute_includes response.body, "Admin menu"
     assert_includes response.body, "Most common errors"
@@ -214,7 +214,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'href="/admin/sections/root?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'href="/admin/sections/users?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'data-recording-studio-default-layout="true"'
-    assert_includes response.body, "max-w-6xl"
+    assert_includes response.body, 'data-fp-page-layout-width="default"'
     assert_includes response.body, "mx-auto flex w-full flex-col gap-6"
   end
 
@@ -276,7 +276,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_select "#screen-filters-mobile-form label", text: "Resource key"
     assert_select "#screen-filters-mobile-form label", text: "Date range", count: 0
     assert_select "#screen-filters-mobile-form label", text: "Group by", count: 0
-    assert_select "[data-style=default]" do |cards|
+    assert_select ".fp-card" do |cards|
       assert_predicate cards, :any?
       cards.each do |card|
         assert_includes card["class"], "border-2"
@@ -289,7 +289,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     get "/admin/screens/admin_activity_logs/chart", params: { anchor_url: root_url }
 
     assert_response :ok
-    assert_select "[data-style=default]" do |cards|
+    assert_select ".fp-card" do |cards|
       assert_predicate cards, :any?
       cards.each do |card|
         assert_includes card["class"], "border-2"
@@ -479,7 +479,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'href="/admin/screens/user_reviews?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'href="/admin/screens/user_invitations?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'data-recording-studio-default-layout="true"'
-    assert_includes response.body, "max-w-6xl"
+    assert_includes response.body, 'data-fp-page-layout-width="default"'
     assert_includes response.body, "mx-auto flex w-full flex-col gap-6"
     assert_includes response.body, "Active users"
     assert_includes response.body, "Sign-in activity"

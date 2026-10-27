@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## 2.7.0 - 2026-10-27
+
+### Changed
+
+- Requires RecordingStudio `>= 6.1.0` and Flatpack `>= 0.1.315`. Development and dummy Gemfiles pin RecordingStudio tag `v6.1.0` and Flatpack commit `1fcbafe94f8eb118f0a22182f63f5110fcc97a56` (`0.1.319`). `view_component` is `>= 4.14, < 5` (`4.19.0`).
+- Accessible pin is `v0.21.0`. Trashable pin is `v0.12.0`. Logs stays `v0.7.0`. Metrics stays `v0.6.1`. Dummy root switchable stays `v0.8.0`.
+- `config.engine_layout` and `surface.engine_layout` are `config.layout` and `surface.layout`.
+- Layout resolution is the surface value when it is not `nil`, then the gem `layout`, then `RecordingStudio.configuration.layout`, then `"recording_studio/default_layout"`. `false` skips the layout. A callable must be `call(controller:)`.
+- Engine controllers use `recording_studio_layout`. Section and screen headings are `content_for :title` and `:subtitle`. Back and close use `flat_pack_page_nav`. Actions use `register_page_nav`. Avatars use `recording_studio_page_nav_right`.
+- The dummy Tailwind sheet no longer re-declares `--color-fp-*` or `@theme inline`. `tailwindcss:build` links the installed FlatPack, Recording Studio, Accessible, and root switchable gems into `app/assets/tailwind/gem_sources` and scans their components, helpers, and views. The install generator no longer injects the theme bridge.
+
+### Upgrade notes
+
+- Rename `engine_layout` to `layout`. Replace `RecordingStudio::UsesDefaultLayout` with `recording_studio_layout`.
+- Move page headings out of the view body when the page uses the default layout. Register actions with `register_page_nav`.
+- Load the three Flatpack stylesheets before Tailwind.
+- See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-270).
+
 ## 2.6.2 - 2026-10-22
 
 ### Changed
