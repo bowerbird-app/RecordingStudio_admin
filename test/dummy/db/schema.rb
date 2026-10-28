@@ -152,6 +152,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_000001) do
     t.check_constraint "accepted_at IS NULL OR revoked_at IS NULL", name: "access_invitations_not_accepted_and_revoked"
   end
 
+  create_table "recording_studio_access_request_intents", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "action"
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "fulfilled_at"
+    t.uuid "otp_challenge_id", null: false
+    t.uuid "recording_id", null: false
+    t.string "role"
+    t.string "submitted_name"
+    t.uuid "user_id", null: false
+    t.index ["recording_id"], name: "index_recording_studio_access_request_intents_on_recording_id"
+    t.check_constraint "action IS NULL OR char_length(action::text) <= 120", name: "recording_studio_access_request_intents_action_length"
+    t.check_constraint "char_length(email::text) <= 255", name: "recording_studio_access_request_intents_email_length"
+    t.check_constraint "submitted_name IS NULL OR char_length(submitted_name::text) <= 120", name: "recording_studio_access_request_intents_name_length"
+  end
+
+  create_table "recording_studio_access_requests", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "access_recording_id"
+    t.string "action"
+    t.uuid "actor_id", null: false
+    t.string "actor_type", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "gate_metadata", default: {}, null: false
+    t.text "message"
+    t.string "pending_key"
+    t.text "review_note"
+    t.string "role"
+    t.string "status", default: "pending", null: false
+    t.uuid "target_recording_id", null: false
+    t.index ["actor_type", "actor_id"], name: "index_recording_studio_access_requests_on_actor"
+    t.index ["pending_key"], name: "index_recording_studio_access_requests_one_pending", unique: true, where: "(pending_key IS NOT NULL)"
+    t.check_constraint "action IS NULL OR char_length(action::text) <= 120", name: "recording_studio_access_requests_action_length"
+    t.check_constraint "message IS NULL OR char_length(message) <= 2000", name: "recording_studio_access_requests_message_length"
+    t.check_constraint "review_note IS NULL OR char_length(review_note) <= 2000", name: "recording_studio_access_requests_note_length"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'approved'::character varying, 'denied'::character varying]::text[])", name: "recording_studio_access_requests_status"
+  end
+
   create_table "recording_studio_access_rules", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "action", null: false
     t.string "audience", null: false
