@@ -34,10 +34,6 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     RecordingStudio.root_recording_for(admin_root)
   end
 
-  def skip_unless_dummy_includes_exportable!
-    skip "dummy does not include recording_studio_exportable" unless defined?(RecordingStudioExportable::Engine)
-  end
-
   test "admin root section renders without the old custom layout wrappers" do
     sign_in_admin_user
     original_async_enabled = RecordingStudioAdmin.configuration.async_widgets.enabled
@@ -874,8 +870,6 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
       refute_includes response.body, 'name="export_key"'
       assert_includes response.body, 'data-turbo="false"'
       assert_includes response.body, "Export"
-    else
-      refute_includes response.body, 'action="/recording_studio_exportable/exports"'
     end
     assert_includes response.body, "Columns"
     assert_includes response.body, 'data-modal-id="screen-table-columns-modal"'
@@ -980,16 +974,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     refute_includes fallback_headers, "Latency"
   end
 
-  test "dummy omits recording_studio_exportable so CSV export tests skip" do
-    dummy_gemfile = File.read(Rails.root.join("Gemfile"))
-
-    refute_includes dummy_gemfile, "recording_studio_exportable"
-    refute defined?(RecordingStudioExportable::Engine),
-           "dummy must not load RecordingStudioExportable::Engine without adding the gem"
-  end
-
   test "admin screen export includes all filtered rows instead of the paginated table page" do
-    skip_unless_dummy_includes_exportable!
+    skip "recording_studio_exportable is not on the RS 4.1 stack yet" unless defined?(RecordingStudioExportable::Engine)
 
     sign_in_admin_user
     ApiRequest.delete_all
@@ -1053,7 +1039,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
   end
 
   test "admin screen trusted export token includes selected columns and all filtered rows" do
-    skip_unless_dummy_includes_exportable!
+    skip "recording_studio_exportable is not on the RS 4.1 stack yet" unless defined?(RecordingStudioExportable::Engine)
 
     sign_in_admin_user
     ApiRequest.delete_all

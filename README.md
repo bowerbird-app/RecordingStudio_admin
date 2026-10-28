@@ -40,7 +40,7 @@ Admin `2.6.0` registers the host `admin_audit_logs` table with
 RecordingStudioLogs. Existing rows stay. There is no summary table. Retention
 stays `:indefinite` because RS_Logs does not clean a log with no summaries.
 The current Logs constraint is `>= 0.4.1, < 1.0` (development and dummy pin
-`v0.7.0`). See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-260).
+`v0.7.1`). See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-260).
 
 ## Quick start
 
@@ -222,7 +222,7 @@ Runtime (gemspec):
 
 - Ruby `>= 3.3.0`
 - Rails `~> 8.1.0`
-- RecordingStudio `>= 6.1.0`
+- RecordingStudio `>= 6.3.0`
 - RecordingStudioAccessible `~> 0.6`
 - RecordingStudioLogs `>= 0.4.1, < 1.0`
 - RecordingStudioTrashable `~> 0.10`
@@ -231,13 +231,13 @@ Runtime (gemspec):
 
 Development and dummy Gemfile pins:
 
-- RecordingStudio `v6.1.0`
-- Accessible `v0.21.0`
-- Logs `v0.7.0`
+- RecordingStudio `v6.3.0`
+- Accessible `v0.23.1`
+- Logs `v0.7.1`
 - Trashable `v0.12.0` (`require: false` in the root Gemfile)
-- Metrics `v0.6.1` (`require: false` in the root Gemfile)
-- Flatpack git commit `1fcbafe94f8eb118f0a22182f63f5110fcc97a56` (`0.1.319`)
-- `view_component` `4.19.0`
+- Metrics `v0.7.0` (`require: false` in the root Gemfile)
+- Flatpack tag `v0.1.328`
+- `view_component` `4.20.0`
 
 `RecordingStudioAccessible` is required. Enable Accessible on the admin root (and any other recordable that should hold grants) with `RecordingStudio.enable_capability(:accessible, on: self)`. Keep the admin root owned (`shared: false`).
 

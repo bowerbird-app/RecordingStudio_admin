@@ -13,7 +13,7 @@
 - Delete leftover gem-template docs under `docs/gem_template/` and Copilot agents under `.github/agents/`.
 - Codespaces setup script points at `/admin` instead of `/gem_template`.
 - Gemspec homepage, source, and changelog URLs use `https://github.com/bowerbird-app/RecordingStudio_admin`.
-- Dummy export tests skip with an explicit "dummy does not include recording_studio_exportable" message and assert that omission. CSV export still needs `recording_studio_exportable`; this release does not add that gem.
+- CSV export still needs `recording_studio_exportable`; this release does not add that gem. Dummy export tests stay skipped unless that engine is loaded.
 
 ### Upgrade notes
 
