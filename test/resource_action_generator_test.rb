@@ -95,11 +95,9 @@ class ResourceActionGeneratorTest < Minitest::Test
   end
 
   def test_docs_mention_resource_action_generator
-    guide = File.read(File.expand_path(File.join("..", "docs", "gem_template", "ADMIN_SCREENS.md"), __dir__))
     install_guide = File.read(File.expand_path("../lib/generators/recording_studio_admin/install/INSTALL.md", __dir__))
 
-    assert_includes guide, "recording_studio_admin:resource_action"
-    assert_includes guide, "custom member actions"
     assert_includes install_guide, "recording_studio_admin:resource_action"
+    assert_includes install_guide, "custom member actions"
   end
 end

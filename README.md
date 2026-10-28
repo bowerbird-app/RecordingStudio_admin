@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.7.3` is a housekeeping patch on `2.7.2`. Runtime requirements are in [Requirements](#requirements). See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-273).
+
 Admin `2.7.2` is a pin-only bump. The gemspec depends on RecordingStudio `>= 6.3.0` with no minor ceiling. Development and dummy pins are RecordingStudio `v6.3.0`, Flatpack `v0.1.328`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, Trashable `v0.12.0`, and `view_component` `4.20.0`. Dummy root switchable is `v0.11.0` with Cache `v0.6.0`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-272).
 
 Admin `2.7.1` compact widgets stack the title above the metric and clip the mini chart to its box. Full widget cards share `h-[26rem]`, with a 200px chart and at most 5 list items. `config.engine_layout` is now `config.layout`. Page titles use `content_for :title` and `:subtitle`. Back and close use `flat_pack_page_nav`. Page actions use `register_page_nav`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-271).
@@ -21,7 +23,7 @@ Admin `2.3.0` adds RecordingStudioTrashable `~> 0.10` (query-only) and replaces
 `trashed_at: nil` filters with `recording_studio_trashable_kept_sql`. See
 [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-230).
 
-Admin `2.4.0` requires Flatpack `~> 0.1.254` (git tag `v0.1.254`). Hosts'
+Admin `2.4.0` requires FlatPack `~> 0.1.254` (git tag `v0.1.254`). Hosts'
 own Card `style: :outlined` overrides must move to `border: :strong`. See
 [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
 
@@ -35,10 +37,10 @@ logs section (not the screen) and shows Date range / Group by inline on that
 screen. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-251).
 
 Admin `2.6.0` registers the host `admin_audit_logs` table with
-RecordingStudioLogs (`>= 0.4.1, < 0.6`, dummy tag `v0.5.0`). Existing rows
-stay. There is no summary table. Retention stays `:indefinite` because
-RS_Logs does not clean a log with no summaries. See
-[docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-260).
+RecordingStudioLogs. Existing rows stay. There is no summary table. Retention
+stays `:indefinite` because RS_Logs does not clean a log with no summaries.
+The current Logs constraint is `>= 0.4.1, < 1.0` (development and dummy pin
+`v0.7.1`). See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-260).
 
 ## Quick start
 
@@ -216,10 +218,26 @@ widgets = recording_studio_admin_context.available_admin_widgets(
 
 ## Requirements
 
-- Rails 8.1+
-- RecordingStudio `~> 4.1`
+Runtime (gemspec):
+
+- Ruby `>= 3.3.0`
+- Rails `~> 8.1.0`
+- RecordingStudio `>= 6.3.0`
 - RecordingStudioAccessible `~> 0.6`
-- FlatPack `~> 0.1.254`
+- RecordingStudioLogs `>= 0.4.1, < 1.0`
+- RecordingStudioTrashable `~> 0.10`
+- FlatPack `>= 0.1.315`
+- view_component `>= 4.14, < 5`
+
+Development and dummy Gemfile pins:
+
+- RecordingStudio `v6.3.0`
+- Accessible `v0.23.1`
+- Logs `v0.7.1`
+- Trashable `v0.12.0` (`require: false` in the root Gemfile)
+- Metrics `v0.7.0` (`require: false` in the root Gemfile)
+- Flatpack tag `v0.1.328`
+- `view_component` `4.20.0`
 
 `RecordingStudioAccessible` is required. Enable Accessible on the admin root (and any other recordable that should hold grants) with `RecordingStudio.enable_capability(:accessible, on: self)`. Keep the admin root owned (`shared: false`).
 
@@ -719,9 +737,9 @@ Admin registers `AdminAuditLog` with RecordingStudioLogs as an unpartitioned, in
 
 ## Documentation map
 
-- Admin screens guide: practical setup and DSL guide for screens, sections, widgets, and registration
-- Installation guide: host-app installation and generator behavior
-- Configuration guide: initializer options, access recording patterns, and runtime wiring
+- This README: setup, screens, configuration, and dummy app
+- Install generator notes: `lib/generators/recording_studio_admin/install/INSTALL.md`
+- Upgrade notes: [docs/UPGRADING.md](docs/UPGRADING.md)
 - Cloud Agent boot: [Cursor skills in Cloud Agents](docs/cursor-skills.md)
 
 ## Dummy app

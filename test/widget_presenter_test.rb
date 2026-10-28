@@ -198,6 +198,7 @@ class WidgetPresenterTest < Minitest::Test
       resolved_widget(chart_type: :geo)
     )
 
+    assert_equal :geochart, RecordingStudioAdmin::Widgets::Presenter.renderable_chart_type(:geo)
     assert_equal :geochart, presenter.chart_type
     assert_equal :geochart, presenter.mini_chart_type
   end
