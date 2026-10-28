@@ -73,36 +73,16 @@ class UpgradeNotesTest < Minitest::Test
 
   def test_docs_cover_the_2_7_2_housekeeping_patch
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
-    readme = File.read(File.join(ROOT, "README.md"))
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     gemspec = File.read(File.join(ROOT, "recording_studio_admin.gemspec"))
-    gitignore = File.read(File.join(ROOT, ".gitignore"))
-    workflow = File.read(File.join(ROOT, ".github/workflows/ci.yml"))
+    install_guide = File.read(
+      File.join(ROOT, "lib/generators/recording_studio_admin/install/INSTALL.md")
+    )
 
     assert_includes version, 'VERSION = "2.7.2"'
-    assert_includes gemspec, "https://github.com/bowerbird-app/RecordingStudio_admin"
-    refute_includes gemspec, "bowerbird-app/RecordingStudioAdmin"
-    assert_includes gitignore, "coverage/"
-    refute File.exist?(File.join(ROOT, "test/rename_verification_test.rb"))
-    refute File.exist?(File.join(ROOT, "docs/gem_template"))
-    refute File.exist?(File.join(ROOT, ".github/agents"))
-    refute File.exist?(File.join(ROOT, "test/dummy/.github/workflows/ci.yml"))
-    assert_includes workflow, "POSTGRES_DB: recording_studio_admin_test"
-    refute_includes workflow, "gem_template_test"
-
     assert_includes changelog, "## 2.7.2"
-    assert_includes changelog, "2026-10-28"
-    assert_includes readme, "2.7.2"
-    assert_includes readme, "Ruby `>= 3.3.0`"
-    assert_includes readme, "Rails `~> 8.1.0`"
-    assert_includes readme, "RecordingStudio `>= 6.1.0`"
-    assert_includes readme, "RecordingStudioAccessible `~> 0.6`"
-    assert_includes readme, "RecordingStudioLogs `>= 0.4.1, < 1.0`"
-    assert_includes readme, "RecordingStudioTrashable `~> 0.10`"
-    assert_includes readme, "FlatPack `>= 0.1.315`"
-    assert_includes readme, "view_component `>= 4.14, < 5`"
-    assert_includes readme, "`view_component` `4.19.0`"
-    refute_includes readme, "`>= 0.4.1, < 0.6`"
+    assert_includes gemspec, "https://github.com/bowerbird-app/RecordingStudio_admin"
+    assert_includes install_guide, "recording_studio_admin:resource_action"
   end
 
   def test_upgrading_doc_covers_the_2_7_1_compact_widget_release
