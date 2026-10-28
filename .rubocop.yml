@@ -49,6 +49,7 @@ Metrics/MethodLength:
     - 'lib/recording_studio_admin/authorization.rb'
     - 'lib/recording_studio_admin/configuration.rb'
     - 'lib/recording_studio_admin/filters/date_range_filter.rb'
+    - 'lib/recording_studio_admin/flat_pack_geo_chart_support.rb'
     - 'lib/recording_studio_admin/resolvers/**/*'
     - 'lib/recording_studio_admin/resource.rb'
     - 'lib/recording_studio_admin/section.rb'
