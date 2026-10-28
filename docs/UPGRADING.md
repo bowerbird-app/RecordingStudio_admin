@@ -11,6 +11,8 @@ No runtime code change. Gemspec `recording_studio` is `>= 6.3.0` with no `~>` mi
 3. Pin Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, and `view_component` `4.20.0`. Trashable stays `v0.12.0`.
 4. If the host uses root switchable, pin `v0.11.0` and Cache `v0.6.0`.
 5. Rebuild Tailwind (`bin/rails tailwindcss:build`).
+6. If a host sets root switchable `config.layout` to a symbol such as `:application_layout`, change it to a layout name string or a callable invoked as `call(controller:)`. The dummy uses `"flat_pack_sidebar"`.
+7. Accessible `v0.23.1` adds access-request tables. Run `bin/rails generate recording_studio_accessible:migrations` and `db:migrate` if those tables are not present. The dummy copies the Accessible 0.23.1 request migrations.
 
 ## Upgrading to 2.7.1
 

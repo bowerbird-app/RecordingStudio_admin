@@ -6,7 +6,7 @@
 
 ### Changed
 
-- Development and dummy Gemfiles pin RecordingStudio `v6.3.0`, Flatpack `v0.1.328`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, Trashable `v0.12.0`, and `view_component` `4.20.0`. Dummy root switchable is `v0.11.0` with Cache `v0.6.0`. Gemspec `recording_studio` is `>= 6.3.0` with no minor ceiling. No runtime code change.
+- Development and dummy Gemfiles pin RecordingStudio `v6.3.0`, Flatpack `v0.1.328`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, Trashable `v0.12.0`, and `view_component` `4.20.0`. Dummy root switchable is `v0.11.0` with Cache `v0.6.0`. Gemspec `recording_studio` is `>= 6.3.0` with no minor ceiling. Dummy root switchable layout is `"flat_pack_sidebar"`. Dummy copies Accessible 0.23.1 access-request migrations. No engine runtime code change.
 
 ### Upgrade notes
 

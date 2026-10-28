@@ -8,9 +8,7 @@ module WidenRecordingStudioRequirement
   CORE_VERSION = Gem::Version.new("6.3.0")
 
   def add_dependency(name, *requirements)
-    if name.to_s == "recording_studio" && !accepts_core_floor?(requirements)
-      requirements = [CORE_FLOOR]
-    end
+    requirements = [CORE_FLOOR] if name.to_s == "recording_studio" && !accepts_core_floor?(requirements)
 
     super
   end

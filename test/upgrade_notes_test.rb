@@ -91,6 +91,9 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes dummy_gemfile, 'tag: "v0.11.0"'
     assert_includes dummy_gemfile, 'RecordingStudio_cache", tag: "v0.6.0"'
     assert_includes dummy_gemfile, 'view_component", "4.20.0"'
+    initializer = File.read(File.join(ROOT, "test/dummy/config/initializers/recording_studio_root_switchable.rb"))
+    assert_includes initializer, 'config.layout = "flat_pack_sidebar"'
+    refute_includes initializer, ":application_layout"
     assert_includes widen, 'CORE_FLOOR = ">= 6.3.0"'
     assert_includes gemfile, "require: false"
     assert_includes dummy_gemfile, "require: false"
@@ -99,6 +102,8 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes upgrading, ">= 6.3.0"
     assert_includes upgrading, "v0.11.0"
     assert_includes upgrading, "v0.6.0"
+    assert_includes upgrading, "flat_pack_sidebar"
+    assert_includes upgrading, "recording_studio_accessible:migrations"
     assert_includes upgrading, "No runtime code change"
 
     assert_includes changelog, "## 2.7.2"
