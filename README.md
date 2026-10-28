@@ -11,7 +11,7 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
-Admin `2.7.1` requires RecordingStudio `>= 6.1.0` and Flatpack `>= 0.1.315` (development pin is Flatpack commit `1fcbafe94f8eb118f0a22182f63f5110fcc97a56`, version `0.1.319`). Compact widgets stack the title above the metric and clip the mini chart to its box. Full widget cards share `h-[26rem]`, with a 200px chart and at most 5 list items. `config.engine_layout` is now `config.layout`. Page titles use `content_for :title` and `:subtitle`. Back and close use `flat_pack_page_nav`. Page actions use `register_page_nav`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-271).
+Admin `2.7.2` is a housekeeping patch on `2.7.1`. Runtime requirements are in [Requirements](#requirements). Compact widgets stack the title above the metric and clip the mini chart to its box. Full widget cards share `h-[26rem]`, with a 200px chart and at most 5 list items. `config.engine_layout` is now `config.layout`. Page titles use `content_for :title` and `:subtitle`. Back and close use `flat_pack_page_nav`. Page actions use `register_page_nav`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-271).
 
 Hosts moving from Admin `1.x` (Accessible `~> 0.3`, RecordingStudio 3.x) to `2.0.0` should follow [docs/UPGRADING.md](docs/UPGRADING.md). That release requires Accessible `~> 0.6` and RecordingStudio `~> 4.1`.
 
@@ -33,10 +33,10 @@ logs section (not the screen) and shows Date range / Group by inline on that
 screen. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-251).
 
 Admin `2.6.0` registers the host `admin_audit_logs` table with
-RecordingStudioLogs (`>= 0.4.1, < 0.6`, dummy tag `v0.5.0`). Existing rows
-stay. There is no summary table. Retention stays `:indefinite` because
-RS_Logs does not clean a log with no summaries. See
-[docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-260).
+RecordingStudioLogs. Existing rows stay. There is no summary table. Retention
+stays `:indefinite` because RS_Logs does not clean a log with no summaries.
+The current Logs constraint is `>= 0.4.1, < 1.0` (development and dummy pin
+`v0.7.0`). See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-260).
 
 ## Quick start
 
@@ -214,10 +214,26 @@ widgets = recording_studio_admin_context.available_admin_widgets(
 
 ## Requirements
 
-- Rails 8.1+
-- RecordingStudio `~> 4.1`
+Runtime (gemspec):
+
+- Ruby `>= 3.3.0`
+- Rails `~> 8.1.0`
+- RecordingStudio `>= 6.1.0`
 - RecordingStudioAccessible `~> 0.6`
-- FlatPack `~> 0.1.254`
+- RecordingStudioLogs `>= 0.4.1, < 1.0`
+- RecordingStudioTrashable `~> 0.10`
+- FlatPack `>= 0.1.315`
+- view_component `>= 4.14, < 5`
+
+Development and dummy Gemfile pins:
+
+- RecordingStudio `v6.1.0`
+- Accessible `v0.21.0`
+- Logs `v0.7.0`
+- Trashable `v0.12.0` (`require: false` in the root Gemfile)
+- Metrics `v0.6.1` (`require: false` in the root Gemfile)
+- Flatpack git commit `1fcbafe94f8eb118f0a22182f63f5110fcc97a56` (`0.1.319`)
+- `view_component` `4.19.0`
 
 `RecordingStudioAccessible` is required. Enable Accessible on the admin root (and any other recordable that should hold grants) with `RecordingStudio.enable_capability(:accessible, on: self)`. Keep the admin root owned (`shared: false`).
 
@@ -717,9 +733,9 @@ Admin registers `AdminAuditLog` with RecordingStudioLogs as an unpartitioned, in
 
 ## Documentation map
 
-- Admin screens guide: practical setup and DSL guide for screens, sections, widgets, and registration
-- Installation guide: host-app installation and generator behavior
-- Configuration guide: initializer options, access recording patterns, and runtime wiring
+- This README: setup, screens, configuration, and dummy app
+- Install generator notes: `lib/generators/recording_studio_admin/install/INSTALL.md`
+- Upgrade notes: [docs/UPGRADING.md](docs/UPGRADING.md)
 - Cloud Agent boot: [Cursor skills in Cloud Agents](docs/cursor-skills.md)
 
 ## Dummy app

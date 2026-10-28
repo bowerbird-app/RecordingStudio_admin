@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 2.7.2 - 2026-10-28
+
+### Changed
+
+- Stop tracking SimpleCov output under `coverage/` and `test/dummy/coverage/`. `coverage/` is gitignored.
+- Remove the dummy app's nested GitHub Actions workflow.
+- CI Postgres and `DATABASE_URL` use `recording_studio_admin_test`, matching the Rakefile.
+- Delete `test/rename_verification_test.rb` (it still asserted version `1.0.1`).
+- Delete leftover gem-template docs under `docs/gem_template/` and Copilot agents under `.github/agents/`.
+- Codespaces setup script points at `/admin` instead of `/gem_template`.
+- Gemspec homepage, source, and changelog URLs use `https://github.com/bowerbird-app/RecordingStudio_admin`.
+- README requirements match the gemspec and Gemfile (including Logs `>= 0.4.1, < 1.0` and development pin `v0.7.0`).
+- Dummy export tests skip with an explicit "dummy does not include recording_studio_exportable" message and assert that omission. CSV export still needs `recording_studio_exportable`; this release does not add that gem.
+
 ## 2.7.1 - 2026-10-27
 
 ### Fixed

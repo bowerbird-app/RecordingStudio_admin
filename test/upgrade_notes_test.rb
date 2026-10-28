@@ -51,7 +51,7 @@ class UpgradeNotesTest < Minitest::Test
     gemspec = File.read(File.join(ROOT, "recording_studio_admin.gemspec"))
     gemfile = File.read(File.join(ROOT, "Gemfile"))
 
-    assert_includes version, 'VERSION = "2.7.1"'
+    assert_includes version, 'VERSION = "2.7.2"'
     assert_includes gemspec, 'recording_studio", ">= 6.1.0"'
     assert_includes gemspec, 'view_component", ">= 4.14", "< 5"'
     assert_includes gemfile, 'tag: "v6.1.0"'
@@ -71,13 +71,47 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes upgrading, "engine_layout"
   end
 
+  def test_docs_cover_the_2_7_2_housekeeping_patch
+    changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
+    readme = File.read(File.join(ROOT, "README.md"))
+    version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
+    gemspec = File.read(File.join(ROOT, "recording_studio_admin.gemspec"))
+    gitignore = File.read(File.join(ROOT, ".gitignore"))
+    workflow = File.read(File.join(ROOT, ".github/workflows/ci.yml"))
+
+    assert_includes version, 'VERSION = "2.7.2"'
+    assert_includes gemspec, "https://github.com/bowerbird-app/RecordingStudio_admin"
+    refute_includes gemspec, "bowerbird-app/RecordingStudioAdmin"
+    assert_includes gitignore, "coverage/"
+    refute File.exist?(File.join(ROOT, "test/rename_verification_test.rb"))
+    refute File.exist?(File.join(ROOT, "docs/gem_template"))
+    refute File.exist?(File.join(ROOT, ".github/agents"))
+    refute File.exist?(File.join(ROOT, "test/dummy/.github/workflows/ci.yml"))
+    assert_includes workflow, "POSTGRES_DB: recording_studio_admin_test"
+    refute_includes workflow, "gem_template_test"
+
+    assert_includes changelog, "## 2.7.2"
+    assert_includes changelog, "2026-10-28"
+    assert_includes readme, "2.7.2"
+    assert_includes readme, "Ruby `>= 3.3.0`"
+    assert_includes readme, "Rails `~> 8.1.0`"
+    assert_includes readme, "RecordingStudio `>= 6.1.0`"
+    assert_includes readme, "RecordingStudioAccessible `~> 0.6`"
+    assert_includes readme, "RecordingStudioLogs `>= 0.4.1, < 1.0`"
+    assert_includes readme, "RecordingStudioTrashable `~> 0.10`"
+    assert_includes readme, "FlatPack `>= 0.1.315`"
+    assert_includes readme, "view_component `>= 4.14, < 5`"
+    assert_includes readme, "`view_component` `4.19.0`"
+    refute_includes readme, "`>= 0.4.1, < 0.6`"
+  end
+
   def test_upgrading_doc_covers_the_2_7_1_compact_widget_release
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
     readme = File.read(File.join(ROOT, "README.md"))
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
 
-    assert_includes version, 'VERSION = "2.7.1"'
+    assert_includes version, 'VERSION = "2.7.2"'
     assert_includes upgrading, "## Upgrading to 2.7.1"
     assert_includes upgrading, "min-h-28"
     assert_includes upgrading, "plotOptions.radialBar.dataLabels.value.show"
@@ -99,7 +133,7 @@ class UpgradeNotesTest < Minitest::Test
     gemfile = File.read(File.join(ROOT, "Gemfile"))
     dummy_gemfile = File.read(File.join(ROOT, "test/dummy/Gemfile"))
 
-    assert_includes version, 'VERSION = "2.7.1"'
+    assert_includes version, 'VERSION = "2.7.2"'
     assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.7.0"'
     assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.6.1"'
     assert_includes dummy_gemfile, 'RecordingStudio_logs", tag: "v0.7.0"'
@@ -141,7 +175,7 @@ class UpgradeNotesTest < Minitest::Test
     dummy_gemfile = File.read(File.join(ROOT, "test/dummy/Gemfile"))
     registration = File.read(File.join(ROOT, "lib/recording_studio_admin/logs_registration.rb"))
 
-    assert_includes version, 'VERSION = "2.7.1"'
+    assert_includes version, 'VERSION = "2.7.2"'
     assert_includes gemspec, '"recording_studio_logs", ">= 0.4.1", "< 1.0"'
     assert_includes gemfile, 'tag: "v0.7.0"'
     assert_includes dummy_gemfile, 'RecordingStudio_logs", tag: "v0.7.0"'
@@ -185,7 +219,7 @@ class UpgradeNotesTest < Minitest::Test
     screen = File.read(File.join(ROOT, "lib/recording_studio_admin/admin_activity_logs_screen.rb"))
     section = File.read(File.join(ROOT, "lib/recording_studio_admin/admin_activity_logs_section.rb"))
 
-    assert_includes version, 'VERSION = "2.7.1"'
+    assert_includes version, 'VERSION = "2.7.2"'
     refute_includes screen, 'widget "widgets.admin_activity_logs.activity_overview"'
     assert_includes screen, "filter_presentation :modal, inline_count: 2"
     assert_includes section, 'widget "widgets.admin_activity_logs.activity_overview"'
@@ -211,7 +245,7 @@ class UpgradeNotesTest < Minitest::Test
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     support = File.read(File.join(ROOT, "lib/recording_studio_admin/admin_activity_logs_support.rb"))
 
-    assert_includes version, 'VERSION = "2.7.1"'
+    assert_includes version, 'VERSION = "2.7.2"'
     assert_includes support, "def date_series(relation, field: :created_at, bucket: :day)"
     assert_includes support, "MAX_DATE_SERIES_BUCKETS = 1_000"
 
@@ -239,7 +273,7 @@ class UpgradeNotesTest < Minitest::Test
     dummy_gemfile = File.read(File.join(ROOT, "test/dummy/Gemfile"))
     views = Dir[File.join(ROOT, "app/views/**/*.erb")].map { |path| File.read(path) }.join
 
-    assert_includes version, 'VERSION = "2.7.1"'
+    assert_includes version, 'VERSION = "2.7.2"'
     assert_includes gemspec, 'flat_pack", ">= 0.1.315"'
     assert_includes gemfile, 'ref: "1fcbafe94f8eb118f0a22182f63f5110fcc97a56"'
     assert_includes dummy_gemfile, 'ref: "1fcbafe94f8eb118f0a22182f63f5110fcc97a56"'
@@ -271,7 +305,7 @@ class UpgradeNotesTest < Minitest::Test
     gemfile = File.read(File.join(ROOT, "Gemfile"))
     resolver = File.read(File.join(ROOT, "lib/recording_studio_admin/section_recording_resolver.rb"))
 
-    assert_includes version, 'VERSION = "2.7.1"'
+    assert_includes version, 'VERSION = "2.7.2"'
     assert_includes gemspec, 'recording_studio_trashable", "~> 0.10"'
     assert_includes gemfile, 'tag: "v0.12.0"'
     assert_includes gemfile, "require: false"

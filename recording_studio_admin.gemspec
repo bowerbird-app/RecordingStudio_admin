@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.name        = "recording_studio_admin"
   spec.version     = RecordingStudioAdmin::VERSION
   spec.authors     = ["Bowerbird"]
-  spec.homepage    = "https://github.com/bowerbird-app/RecordingStudioAdmin"
+  spec.homepage    = "https://github.com/bowerbird-app/RecordingStudio_admin"
   spec.summary     = "RecordingStudioAdmin screens and admin scaffolding for Recording Studio"
   spec.description = "A Rails engine for code-defined Recording Studio admin and reporting screens " \
                      "rendered with FlatPack."
