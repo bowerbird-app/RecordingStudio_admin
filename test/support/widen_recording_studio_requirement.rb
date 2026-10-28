@@ -1,14 +1,23 @@
 # frozen_string_literal: true
 
-# Accessible, Logs, Metrics, and Root Switchable still require recording_studio below 6.
-# Widen that requirement when Bundler loads gemspecs so this app can resolve 6.1.0.
 module WidenRecordingStudioRequirement
+  CORE_FLOOR = ">= 6.3.0"
+  CORE_VERSION = Gem::Version.new("6.3.0")
+
   def add_dependency(name, *requirements)
-    if name.to_s == "recording_studio" && requirements.none? { |requirement| requirement.to_s.include?("6") }
-      requirements = [">= 6.1.0"]
-    end
+    requirements = [CORE_FLOOR] if name.to_s == "recording_studio" && !accepts_core_floor?(requirements)
 
     super
+  end
+
+  private
+
+  def accepts_core_floor?(requirements)
+    return false if requirements.empty?
+
+    Gem::Requirement.new(*requirements.flatten).satisfied_by?(CORE_VERSION)
+  rescue ArgumentError
+    false
   end
 end
 

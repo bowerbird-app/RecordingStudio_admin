@@ -11,7 +11,11 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
-Admin `2.7.2` is a housekeeping patch on `2.7.1`. Runtime requirements are in [Requirements](#requirements). Compact widgets stack the title above the metric and clip the mini chart to its box. Full widget cards share `h-[26rem]`, with a 200px chart and at most 5 list items. `config.engine_layout` is now `config.layout`. Page titles use `content_for :title` and `:subtitle`. Back and close use `flat_pack_page_nav`. Page actions use `register_page_nav`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-271).
+Admin `2.7.3` is a housekeeping patch on `2.7.2`. Runtime requirements are in [Requirements](#requirements). See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-273).
+
+Admin `2.7.2` is a pin-only bump. The gemspec depends on RecordingStudio `>= 6.3.0` with no minor ceiling. Development and dummy pins are RecordingStudio `v6.3.0`, Flatpack `v0.1.328`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, Trashable `v0.12.0`, and `view_component` `4.20.0`. Dummy root switchable is `v0.11.0` with Cache `v0.6.0`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-272).
+
+Admin `2.7.1` compact widgets stack the title above the metric and clip the mini chart to its box. Full widget cards share `h-[26rem]`, with a 200px chart and at most 5 list items. `config.engine_layout` is now `config.layout`. Page titles use `content_for :title` and `:subtitle`. Back and close use `flat_pack_page_nav`. Page actions use `register_page_nav`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-271).
 
 Hosts moving from Admin `1.x` (Accessible `~> 0.3`, RecordingStudio 3.x) to `2.0.0` should follow [docs/UPGRADING.md](docs/UPGRADING.md). That release requires Accessible `~> 0.6` and RecordingStudio `~> 4.1`.
 
@@ -752,7 +756,7 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
-The dummy pins RecordingStudio `v6.1.0`, Flatpack `0.1.319`, Accessible `v0.21.0`, Logs `v0.7.0`, and Trashable `v0.12.0`. Root switchable stays `v0.8.0`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+The dummy pins RecordingStudio `v6.3.0`, Flatpack `v0.1.328`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, and Trashable `v0.12.0`. Root switchable is `v0.11.0` with Cache `v0.6.0`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
 
 ## Cloud Agent boot
 

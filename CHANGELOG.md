@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 2.7.2 - 2026-10-28
+## 2.7.3 - 2026-10-28
 
 ### Changed
 
@@ -13,8 +13,21 @@
 - Delete leftover gem-template docs under `docs/gem_template/` and Copilot agents under `.github/agents/`.
 - Codespaces setup script points at `/admin` instead of `/gem_template`.
 - Gemspec homepage, source, and changelog URLs use `https://github.com/bowerbird-app/RecordingStudio_admin`.
-- README requirements match the gemspec and Gemfile (including Logs `>= 0.4.1, < 1.0` and development pin `v0.7.0`).
 - Dummy export tests skip with an explicit "dummy does not include recording_studio_exportable" message and assert that omission. CSV export still needs `recording_studio_exportable`; this release does not add that gem.
+
+### Upgrade notes
+
+- Bump the host gem to `2.7.3`. Development pins stay as in `2.7.2`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-273).
+
+## 2.7.2 - 2026-10-28
+
+### Changed
+
+- Development and dummy Gemfiles pin RecordingStudio `v6.3.0`, Flatpack `v0.1.328`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, Trashable `v0.12.0`, and `view_component` `4.20.0`. Dummy root switchable is `v0.11.0` with Cache `v0.6.0`. Gemspec `recording_studio` is `>= 6.3.0` with no minor ceiling. Dummy root switchable layout is `"flat_pack_sidebar"`. Dummy copies Accessible 0.23.1 access-request migrations. No engine runtime code change.
+
+### Upgrade notes
+
+- Bump the host gem to `2.7.2` and match the development pins. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-272).
 
 ## 2.7.1 - 2026-10-27
 
