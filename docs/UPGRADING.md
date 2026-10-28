@@ -2,7 +2,7 @@
 
 ## Upgrading to 2.7.2
 
-No runtime code change. Gemspec `recording_studio` is `>= 6.3.0` with no `~>` minor ceiling. Development and dummy Gemfiles pin RecordingStudio GitHub tag `v6.3.0`, Flatpack `v0.1.328`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, Trashable `v0.12.0`, and `view_component` `4.20.0`. Dummy root switchable is `v0.11.0` and pins Cache `v0.6.0` because that gem requires `recording_studio_cache ~> 0.5`. Sibling gemspecs that still reject Recording Studio `6.3.0` (Accessible `v0.23.1` uses `~> 6.1`) are widened to `>= 6.3.0` by `test/support/widen_recording_studio_requirement.rb` while Bundler loads them. Trashable stays `require: false` and query-only.
+No runtime code change. Gemspec `recording_studio` is `>= 6.3.0` with no `~>` minor ceiling. Development and dummy Gemfiles pin RecordingStudio GitHub tag `v6.3.0`, Flatpack `v0.1.328`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, Trashable `v0.12.0`, and `view_component` `4.20.0`. Dummy root switchable is `v0.11.0` and pins Cache `v0.6.0` because that gem requires `recording_studio_cache ~> 0.5`. Accessible `v0.23.1` already accepts Recording Studio `6.3.0` (`~> 6.1`). `test/support/widen_recording_studio_requirement.rb` still rewrites a sibling `recording_studio` requirement that would reject `6.3.0`. Trashable stays `require: false` and query-only.
 
 ### Upgrade Steps
 
