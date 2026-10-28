@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2.7.2 - 2026-10-28
+
+### Changed
+
+- Development and dummy Gemfiles pin RecordingStudio `v6.3.0`, Flatpack `v0.1.328`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, Trashable `v0.12.0`, and `view_component` `4.20.0`. Dummy root switchable is `v0.11.0` with Cache `v0.6.0`. Gemspec `recording_studio` is `>= 6.3.0` with no minor ceiling. No runtime code change.
+
+### Upgrade notes
+
+- Bump the host gem to `2.7.2` and match the development pins. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-272).
+
 ## 2.7.1 - 2026-10-27
 
 ### Fixed
