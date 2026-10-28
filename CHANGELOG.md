@@ -15,6 +15,7 @@
 - Gemspec homepage, source, and changelog URLs use `https://github.com/bowerbird-app/RecordingStudio_admin`.
 - README requirements match the gemspec and Gemfile (including Logs `>= 0.4.1, < 1.0` and development pin `v0.7.0`).
 - Dummy export tests skip with an explicit "dummy does not include recording_studio_exportable" message and assert that omission. CSV export still needs `recording_studio_exportable`; this release does not add that gem.
+- Remove the unused FlatPack `:geo` scatter/centroid patch: `FlatPackGeoChartSupport`, `recording_studio_flatpack_geo_series`, `recording_studio_flatpack_geo_options`, `recording_studio_flatpack_geo_container_style`, `COUNTRY_CENTROIDS`, and `world_map_light.svg`. Admin `:geo` charts are per-country (ISO2 + count) and still render through FlatPack `:geochart`.
 
 ## 2.7.1 - 2026-10-27
 
