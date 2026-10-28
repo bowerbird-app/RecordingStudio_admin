@@ -19,7 +19,7 @@ Admin `2.3.0` adds RecordingStudioTrashable `~> 0.10` (query-only) and replaces
 `trashed_at: nil` filters with `recording_studio_trashable_kept_sql`. See
 [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-230).
 
-Admin `2.4.0` requires Flatpack `~> 0.1.254` (git tag `v0.1.254`). Hosts'
+Admin `2.4.0` requires FlatPack `~> 0.1.254` (git tag `v0.1.254`). Hosts'
 own Card `style: :outlined` overrides must move to `border: :strong`. See
 [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-240).
 
