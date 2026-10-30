@@ -1,5 +1,49 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.5.2
+
+Admin `2.5.2` is a patch on `2.5.1` for hosts that must stay on Admin `2.5.x`.
+It does not add Logs.
+
+### What Changed
+
+- `RecordingStudioAdmin::Period.from_preset_key(:last_4_weeks)` starts 27 days before the reference date and ends on that date (`Period::LAST_4_WEEKS_LOOKBACK_DAYS`). Flatpack labels that same window "Last 4 weeks". Other week presets still jump by seven days. `Period.from_duration(4.weeks)` is still 28 days back.
+- `config.current_root_recording_resolver` and `surface.current_root_recording_resolver` take a callable invoked as `call(context)`. The return value is the root used for the admin root check. A configured resolver is used even when it returns `nil`, which skips the product-root match. Leave the setting unset to keep the previous lookup: the controller's `current_root_recording`, then RootSwitchable.
+- Admin layout is unchanged. Set `config.engine_layout` or `surface.engine_layout`. `nil` uses `recording_studio/default_layout`. Do not include `RecordingStudio::UsesDefaultLayout` on `RecordingStudioAdmin::ApplicationController`.
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.5.2`.
+2. Screens that default a date filter to `:last_4_weeks` now cover today and the previous 27 days.
+3. Replace a prepend that forces `current_root_recording` to return `nil` with:
+
+```ruby
+RecordingStudioAdmin.configure do |config|
+  config.current_root_recording_resolver = ->(_context) { nil }
+end
+```
+
+4. Keep host layout overrides on `config.engine_layout`.
+
+### Verify the upgrade
+
+```ruby
+test "last 4 weeks is the 27 day flatpack window" do
+  today = Date.new(2026, 9, 8)
+  period = RecordingStudioAdmin::Period.from_preset_key(:last_4_weeks, reference_date: today)
+
+  assert_equal today - 27, period.start_date
+  assert_equal today, period.end_date
+  assert_equal :last_4_weeks, period.preset_key
+end
+
+test "a nil root resolver ignores the switched product root" do
+  RecordingStudioAdmin.configuration.current_root_recording_resolver = ->(_context) { nil }
+
+  assert_nil RecordingStudioAdmin::Authorization.resolve_current_root_recording(admin_context)
+end
+```
+
 ## Upgrading to 2.5.1
 
 Admin `2.5.1` keeps the Admin activity overview widget on the Admin activity
