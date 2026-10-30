@@ -10,6 +10,7 @@ module RecordingStudioAdmin
       CHART_TYPE_ALIASES = {
         geo: :geochart
       }.freeze
+      INTEGER_TICK_CHART_TYPES = %i[line column bar stacked_column stacked_bar area radar].freeze
 
       def self.renderable_chart_type(type, default: :line)
         normalized = (type || default).to_s.downcase.to_sym
@@ -17,6 +18,14 @@ module RecordingStudioAdmin
         return normalized if SUPPORTED_CHART_TYPES.include?(normalized)
 
         :bar
+      end
+
+      def self.integer_ticks?(type, series: nil, default: :line, chart_options: nil)
+        options = chart_options || {}
+        return false if options[:integer_ticks] == false || options["integer_ticks"] == false
+        return false unless INTEGER_TICK_CHART_TYPES.include?(renderable_chart_type(type, default: default))
+
+        integer_y_values?(series)
       end
 
       def self.marker_options_for_sparse_line(type, series)
@@ -37,6 +46,53 @@ module RecordingStudioAdmin
         end
       end
       private_class_method :sparse_line_series?
+
+      def self.integer_y_values?(series)
+        return false if series.nil?
+
+        plotted_y_values(series).all?(Integer)
+      end
+      private_class_method :integer_y_values?
+
+      def self.plotted_y_values(series)
+        series_entries(series).flat_map { |entry| series_entry_y_values(entry) }
+      end
+      private_class_method :plotted_y_values
+
+      def self.series_entries(series)
+        case series
+        when nil
+          []
+        when Hash
+          [series]
+        else
+          Array(series)
+        end
+      end
+      private_class_method :series_entries
+
+      def self.series_entry_y_values(entry)
+        points = if entry.is_a?(Hash)
+                   entry[:data] || entry["data"] || entry[:y] || entry["y"]
+                 else
+                   entry
+                 end
+
+        Array(points).flat_map { |point| point_y_value(point) }
+      end
+      private_class_method :series_entry_y_values
+
+      def self.point_y_value(point)
+        case point
+        when Hash
+          [point[:y] || point["y"]]
+        when Array
+          [point.last]
+        else
+          [point]
+        end
+      end
+      private_class_method :point_y_value
 
       def initialize(widget, link_policy: nil)
         @widget = widget
@@ -168,6 +224,19 @@ module RecordingStudioAdmin
 
       def chart_type(default: :line)
         self.class.renderable_chart_type(widget.chart_type, default: default)
+      end
+
+      def integer_ticks?
+        self.class.integer_ticks?(chart_type, series: widget.series, chart_options: widget.chart_options)
+      end
+
+      def mini_chart_integer_ticks?
+        self.class.integer_ticks?(
+          mini_chart_type,
+          series: widget.series,
+          default: :area,
+          chart_options: widget.chart_options
+        )
       end
 
       def mini_chart_options

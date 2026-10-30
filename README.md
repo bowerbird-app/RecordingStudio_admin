@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.8.0` adds FlatPack's last-30-days date-range preset on Admin filters and whole-number ticks on count charts. Gemspec FlatPack is `>= 0.1.331`. Development and dummy pins use tag `v0.1.331`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-280).
+
 Admin `2.7.3` is a housekeeping patch on `2.7.2`. Runtime requirements are in [Requirements](#requirements). See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-273).
 
 Admin `2.7.2` is a pin-only bump. The gemspec depends on RecordingStudio `>= 6.3.0` with no minor ceiling. Development and dummy pins are RecordingStudio `v6.3.0`, Flatpack `v0.1.328`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, Trashable `v0.12.0`, and `view_component` `4.20.0`. Dummy root switchable is `v0.11.0` with Cache `v0.6.0`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-272).
@@ -226,7 +228,7 @@ Runtime (gemspec):
 - RecordingStudioAccessible `~> 0.6`
 - RecordingStudioLogs `>= 0.4.1, < 1.0`
 - RecordingStudioTrashable `~> 0.10`
-- FlatPack `>= 0.1.315`
+- FlatPack `>= 0.1.331`
 - view_component `>= 4.14, < 5`
 
 Development and dummy Gemfile pins:
@@ -236,7 +238,7 @@ Development and dummy Gemfile pins:
 - Logs `v0.7.1`
 - Trashable `v0.12.0` (`require: false` in the root Gemfile)
 - Metrics `v0.7.0` (`require: false` in the root Gemfile)
-- Flatpack tag `v0.1.328`
+- Flatpack tag `v0.1.331`
 - `view_component` `4.20.0`
 
 `RecordingStudioAccessible` is required. Enable Accessible on the admin root (and any other recordable that should hold grants) with `RecordingStudio.enable_capability(:accessible, on: self)`. Keep the admin root owned (`shared: false`).
@@ -756,7 +758,7 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
-The dummy pins RecordingStudio `v6.3.0`, Flatpack `v0.1.328`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, and Trashable `v0.12.0`. Root switchable is `v0.11.0` with Cache `v0.6.0`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+The dummy pins RecordingStudio `v6.3.0`, Flatpack `v0.1.331`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, and Trashable `v0.12.0`. Root switchable is `v0.11.0` with Cache `v0.6.0`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
 
 ## Cloud Agent boot
 

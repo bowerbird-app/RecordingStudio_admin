@@ -1,5 +1,15 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.8.0
+
+Admin date range pickers pass FlatPack `presets: [{ key: :last_30_days, label: "Last 30 days", days: 31 }, *FlatPack::DateRangeInput::Component::DEFAULT_PRESET_KEYS]`. Charts of type line, column, bar, stacked, area, or radar pass `integer_ticks: true` when every plotted y-value is an Integer. Set `integer_ticks: false` in chart options to opt out. Geo, gauge, pie, and donut charts stay off. Gemspec FlatPack is `>= 0.1.331`. Development and dummy Gemfiles pin tag `v0.1.331`.
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.8.0`.
+2. Pin Flatpack to tag `v0.1.331` (or another `>= 0.1.331` source).
+3. Rebuild Tailwind (`bin/rails tailwindcss:build`).
+
 ## Upgrading to 2.7.3
 
 Housekeeping only. No runtime code change and no dependency pin change. `2.7.2` already shipped the Recording Studio ecosystem pins.

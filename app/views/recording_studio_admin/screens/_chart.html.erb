@@ -59,7 +59,12 @@
           type: screen_chart_type,
           series: screen_chart_series,
           options: screen_chart_render_options,
-          card: false
+          card: false,
+          integer_ticks: RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(
+            screen_chart_type,
+            series: screen_chart_series,
+            chart_options: screen_chart_options
+          )
         ) %>
       <% end %>
     <% end %>

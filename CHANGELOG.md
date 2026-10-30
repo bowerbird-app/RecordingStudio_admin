@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 2.8.0 - 2026-10-30
+
+### Added
+
+- Date range filters include FlatPack's `:last_30_days` preset at the top of the default picker list, so a last-30-days default shows as that preset instead of a raw from–to string.
+- Charts of type line, column, bar, stacked, area, or radar pass `integer_ticks: true` when every plotted y-value is an Integer. Set `integer_ticks: false` in chart options to opt out.
+
+### Upgrade notes
+
+- Bump the host gem to `2.8.0`. Gemspec FlatPack is `>= 0.1.331`. Development and dummy Gemfiles pin Flatpack tag `v0.1.331`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-280).
+
 ## 2.7.3 - 2026-10-28
 
 ### Changed

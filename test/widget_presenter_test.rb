@@ -193,6 +193,56 @@ class WidgetPresenterTest < Minitest::Test
     assert_nil options.dig(:chart, :sparkline, :enabled)
   end
 
+  def test_integer_ticks_for_integer_series_and_not_geo_or_gauge
+    integer_series = [{ name: "Counts", data: [1, 2, 3] }]
+    xy_series = [{ name: "Counts", data: [{ x: "Mon", y: 4 }, { x: "Tue", y: 5 }] }]
+    fractional_series = [{ name: "Rates", data: [1.5, 2.25] }]
+    whole_float_series = [{ name: "Rates", data: [3.0, 4.0] }]
+
+    assert RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:area, series: integer_series)
+    assert RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:line, series: integer_series)
+    assert RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:column, series: integer_series)
+    assert RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:bar, series: integer_series)
+    assert RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:radar, series: integer_series)
+    assert RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:area, series: xy_series)
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:area, series: fractional_series)
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:area, series: whole_float_series)
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:area)
+    assert RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:area, series: [{ name: "Counts", data: [] }])
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:geochart, series: integer_series)
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:geo, series: integer_series)
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:gauge, series: integer_series)
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:pie, series: integer_series)
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:donut, series: integer_series)
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(
+      :area,
+      series: integer_series,
+      chart_options: { integer_ticks: false }
+    )
+
+    count_presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(chart_type: :area, series: integer_series)
+    )
+    assert count_presenter.integer_ticks?
+    assert count_presenter.mini_chart_integer_ticks?
+
+    fractional_presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(chart_type: :area, series: fractional_series)
+    )
+    refute fractional_presenter.integer_ticks?
+    refute fractional_presenter.mini_chart_integer_ticks?
+
+    opted_out_presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(chart_type: :area, series: integer_series, chart_options: { integer_ticks: false })
+    )
+    refute opted_out_presenter.integer_ticks?
+    refute opted_out_presenter.mini_chart_integer_ticks?
+
+    geo_presenter = RecordingStudioAdmin::Widgets::Presenter.new(resolved_widget(chart_type: :geo))
+    refute geo_presenter.integer_ticks?
+    refute geo_presenter.mini_chart_integer_ticks?
+  end
+
   def test_maps_legacy_geo_chart_type_to_flat_pack_geochart
     presenter = RecordingStudioAdmin::Widgets::Presenter.new(
       resolved_widget(chart_type: :geo)

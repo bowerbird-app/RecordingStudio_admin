@@ -49,10 +49,10 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/flatpack.git
-  revision: da1ea556b1571539dc6d788fb9af600ce24740b7
-  tag: v0.1.328
+  revision: f6fbbcf7a29c91e73c808ded913747e3f9bd6def
+  tag: v0.1.331
   specs:
-    flat_pack (0.1.328)
+    flat_pack (0.1.331)
       pagy (~> 9.0)
       rails (>= 7.1, < 9)
       tailwind_merge (~> 0.13)
@@ -61,8 +61,8 @@ GIT
 PATH
   remote: .
   specs:
-    recording_studio_admin (2.7.3)
-      flat_pack (>= 0.1.315)
+    recording_studio_admin (2.8.0)
+      flat_pack (>= 0.1.331)
       rails (~> 8.1.0)
       recording_studio (>= 6.3.0)
       recording_studio_accessible (~> 0.6)
