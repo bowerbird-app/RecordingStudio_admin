@@ -42,7 +42,7 @@ gem "jbuilder"
 # Use Tailwind CSS [https://github.com/rails/tailwindcss-rails]
 gem "tailwindcss-rails"
 
-gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.328"
+gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.331"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]

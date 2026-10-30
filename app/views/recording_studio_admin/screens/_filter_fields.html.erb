@@ -6,7 +6,8 @@
         end_name: filter.end_param,
         start_value: filter.value&.start_date,
         end_value: filter.value&.end_date,
-        label: filter.key.to_s.humanize
+        label: filter.key.to_s.humanize,
+        presets: [:last_30_days, *FlatPack::DateRangeInput::Component::DEFAULT_PRESET_KEYS]
       ) %>
       <%= hidden_field_tag filter.preset_param, filter.value&.preset_key %>
     <% else %>

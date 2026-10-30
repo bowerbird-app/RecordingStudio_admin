@@ -272,6 +272,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     body = CGI.unescapeHTML(response.body)
     assert_includes body, 'data-flat-pack--chart-type-value="area"'
     assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Admin events"'
+    assert_includes body, 'data-flat-pack--chart-integer-ticks-value="true"'
 
     get "/admin/screens/admin_activity_logs", params: { anchor_url: root_url }
 
@@ -279,6 +280,11 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "Admin activity overview"
     refute_includes response.body, "widgets.admin_activity_logs.activity_overview"
     assert_select "#screen-inline-filters-form label", text: "Date range"
+    assert_select "#screen-inline-filters-form button[data-flat-pack-date-picker-preset='last_30_days']",
+                  text: "Last 30 days"
+    preset_keys = css_select("#screen-inline-filters-form button[data-flat-pack-date-picker-command='preset']")
+                    .map { |button| button["data-flat-pack-date-picker-preset"] }
+    assert_equal "last_30_days", preset_keys.first
     assert_select "#screen-inline-filters-form label", text: "Group by"
     assert_select "#screen-inline-filters-form label", text: "Outcome", count: 0
     assert_select "#screen-inline-filters-form label", text: "Resource key", count: 0
@@ -311,6 +317,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     body = CGI.unescapeHTML(response.body)
     assert_includes body, 'data-flat-pack--chart-type-value="area"'
     assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Admin events"'
+    assert_includes body, 'data-flat-pack--chart-integer-ticks-value="true"'
 
     get "/admin/screens/admin_activity_logs/table", params: { anchor_url: root_url }
 
@@ -509,6 +516,9 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "2 / 4 reviewed"
     assert_includes response.body, 'role="progressbar"'
     assert_includes response.body, 'data-flat-pack--chart-type-value="geochart"'
+    css_select("[data-flat-pack--chart-type-value='geochart']").each do |chart|
+      refute_equal "true", chart["data-flat-pack--chart-integer-ticks-value"]
+    end
     assert_includes response.body, "member-3@example.com"
   ensure
     RecordingStudioAdmin.configuration.async_widgets.enabled = original_async_enabled
@@ -626,6 +636,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert chart_box
     assert_includes chart_box["class"], "overflow-hidden"
     assert_match(/"value":\{[^}]*"show":false/, CGI.unescapeHTML(response.body))
+    refute_includes CGI.unescapeHTML(response.body), 'data-flat-pack--chart-integer-ticks-value="true"'
   end
 
   test "user activity screen async compact widgets preserve the compact frame variant" do
@@ -846,6 +857,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_response :success
     refute_includes response.body, 'id="screen-table"'
     assert_includes response.body, 'data-controller="flat-pack--chart"'
+    assert_includes CGI.unescapeHTML(response.body), 'data-flat-pack--chart-integer-ticks-value="true"'
     chart_title = css_select("h3").find { |heading| heading.text.strip == "Requests over time" }
     assert chart_title, "expected Requests over time heading"
     chart_count = chart_title.ancestors.find { |node| node["class"].to_s.include?("mb-4") }&.css("p.text-5xl")&.first

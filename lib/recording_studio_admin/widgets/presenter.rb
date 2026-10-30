@@ -10,6 +10,7 @@ module RecordingStudioAdmin
       CHART_TYPE_ALIASES = {
         geo: :geochart
       }.freeze
+      INTEGER_TICK_CHART_TYPES = %i[line column bar stacked_column stacked_bar area radar].freeze
 
       def self.renderable_chart_type(type, default: :line)
         normalized = (type || default).to_s.downcase.to_sym
@@ -17,6 +18,10 @@ module RecordingStudioAdmin
         return normalized if SUPPORTED_CHART_TYPES.include?(normalized)
 
         :bar
+      end
+
+      def self.integer_ticks?(type, default: :line)
+        INTEGER_TICK_CHART_TYPES.include?(renderable_chart_type(type, default: default))
       end
 
       def self.marker_options_for_sparse_line(type, series)
@@ -168,6 +173,14 @@ module RecordingStudioAdmin
 
       def chart_type(default: :line)
         self.class.renderable_chart_type(widget.chart_type, default: default)
+      end
+
+      def integer_ticks?
+        self.class.integer_ticks?(chart_type)
+      end
+
+      def mini_chart_integer_ticks?
+        self.class.integer_ticks?(mini_chart_type, default: :area)
       end
 
       def mini_chart_options

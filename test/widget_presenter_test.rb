@@ -193,6 +193,27 @@ class WidgetPresenterTest < Minitest::Test
     assert_nil options.dig(:chart, :sparkline, :enabled)
   end
 
+  def test_integer_ticks_for_count_charts_and_not_geo_or_gauge
+    assert RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:area)
+    assert RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:line)
+    assert RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:column)
+    assert RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:bar)
+    assert RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:radar)
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:geochart)
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:geo)
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:gauge)
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:pie)
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:donut)
+
+    count_presenter = RecordingStudioAdmin::Widgets::Presenter.new(resolved_widget(chart_type: :area))
+    assert count_presenter.integer_ticks?
+    assert count_presenter.mini_chart_integer_ticks?
+
+    geo_presenter = RecordingStudioAdmin::Widgets::Presenter.new(resolved_widget(chart_type: :geo))
+    refute geo_presenter.integer_ticks?
+    refute geo_presenter.mini_chart_integer_ticks?
+  end
+
   def test_maps_legacy_geo_chart_type_to_flat_pack_geochart
     presenter = RecordingStudioAdmin::Widgets::Presenter.new(
       resolved_widget(chart_type: :geo)
