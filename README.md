@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.7.4` makes `:last_4_weeks` a 27-day window. `Period.from_duration(4.weeks)` is still 28 days back. Hosts can set `config.current_root_recording_resolver` (or the same attribute on a surface) to a `call(context)` callable. Unset keeps the public `current_root_recording` method, then RootSwitchable. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-274).
+
 Admin `2.7.3` is a housekeeping patch on `2.7.2`. Runtime requirements are in [Requirements](#requirements). See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-273).
 
 Admin `2.7.2` is a pin-only bump. The gemspec depends on RecordingStudio `>= 6.3.0` with no minor ceiling. Development and dummy pins are RecordingStudio `v6.3.0`, Flatpack `v0.1.328`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, Trashable `v0.12.0`, and `view_component` `4.20.0`. Dummy root switchable is `v0.11.0` with Cache `v0.6.0`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-272).
@@ -287,6 +289,8 @@ end
 
 If the configured authentication method is unavailable, the engine returns `401 Unauthorized` instead of rendering admin data.
 If the access recording is unavailable or `RecordingStudioAccessible` denies access for the current actor, the engine returns `403 Forbidden`.
+
+Set `config.current_root_recording_resolver` when admin screens should not follow the host's switched product root. The callable is `call(context)`. A `nil` return skips the product-root check. Leave it unset to keep the controller's public `current_root_recording`, then RootSwitchable. A surface can set `current_root_recording_resolver` the same way.
 
 ## Routing and surfaces
 

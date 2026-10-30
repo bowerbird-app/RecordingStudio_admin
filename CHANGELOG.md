@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 2.7.4 - 2026-10-30
+
+### Changed
+
+- `Period.from_preset_key(:last_4_weeks)` uses a 27-day lookback so the range matches Flatpack's "Last 4 weeks" label. Other `last_N_weeks` presets still use seven-day jumps. `Period.from_duration(4.weeks)` is still 28 days back, while the `:last_4_weeks` preset is 27 days back.
+- Hosts can set `config.current_root_recording_resolver` (or the same attribute on a surface) to a callable invoked as `call(context)`. That return value is the root used for the admin root check, including `nil`. When the setting is unset, `current_root_recording` stays public and falls through to an ancestor method, then RootSwitchable.
+
+### Upgrade notes
+
+- Bump the host gem to `2.7.4`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-274).
+
 ## 2.7.3 - 2026-10-28
 
 ### Changed
