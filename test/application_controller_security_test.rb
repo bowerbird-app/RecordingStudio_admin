@@ -88,6 +88,22 @@ class ApplicationControllerSecurityTest < Minitest::Test
     end
   end
 
+  def test_unset_current_root_recording_uses_a_parent_class_method
+    parent_root = Object.new
+    switched_root = Object.new
+    ActionController::Base.define_method(:current_root_recording) { parent_root }
+    RecordingStudioAdmin.configuration.current_root_recording_resolver = nil
+    controller = build_controller
+
+    with_root_switchable_class_method(switched_root) do
+      assert_same parent_root, controller.current_root_recording
+    end
+  ensure
+    if ActionController::Base.method_defined?(:current_root_recording, false)
+      ActionController::Base.undef_method(:current_root_recording)
+    end
+  end
+
   def test_current_root_recording_resolver_can_be_overridden_by_surface
     product_root = Object.new
     RecordingStudioAdmin.configuration.current_root_recording_resolver = ->(_context) { product_root }

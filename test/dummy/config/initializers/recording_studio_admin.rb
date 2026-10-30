@@ -16,7 +16,7 @@ RecordingStudioAdmin.configure do |config|
   end
 
   config.surface :stats do |surface|
-    surface.access_recording_resolver = ->(context) { context.controller.send(:current_root_recording) }
+    surface.access_recording_resolver = ->(context) { context.controller.current_root_recording }
     surface.allow_export_default_role = :admin
   end
 end

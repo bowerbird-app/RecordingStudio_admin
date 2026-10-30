@@ -15,7 +15,7 @@ RecordingStudioAdmin.configure do |config|
 
   config.access_recording_resolver = lambda do |context|
     # Must return the RecordingStudio::Recording that owns the current admin screen context.
-    # Example: context.controller.send(:current_root_recording) if your app exposes one.
+    # Example: context.controller.current_root_recording if your app exposes one.
   end
 
   # Add per-route admin surfaces when different URL entrypoints should resolve

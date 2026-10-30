@@ -56,7 +56,7 @@ RecordingStudioAdmin.configure do |config|
   config.default_mount_path = "/admin"
   config.authentication_method = :authenticate_user!
   config.current_actor_method = :current_user
-  config.access_recording_resolver = ->(context) { context.controller.send(:current_root_recording) }
+  config.access_recording_resolver = ->(context) { context.controller.current_root_recording }
 end
 ```
 
@@ -256,7 +256,7 @@ RecordingStudioAdmin.configure do |config|
   config.authentication_method = :authenticate_user!
   config.current_actor_method = :current_user
   config.access_recording_resolver = lambda do |context|
-    context.controller.send(:current_root_recording)
+    context.controller.current_root_recording
   end
 end
 ```
