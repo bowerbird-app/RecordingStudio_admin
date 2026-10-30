@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.8.1` makes `:last_4_weeks` a 27-day window. `Period.from_duration(4.weeks)` is still 28 days back. Hosts can set `config.current_root_recording_resolver` (or the same attribute on a surface) to a `call(context)` callable. Unset keeps the public `current_root_recording` method, then RootSwitchable. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-281).
+
 Admin `2.8.0` adds FlatPack's last-30-days date-range preset on Admin filters and whole-number ticks on count charts. Gemspec FlatPack is `>= 0.1.331`. Development and dummy pins use tag `v0.1.331`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-280).
 
 Admin `2.7.3` is a housekeeping patch on `2.7.2`. Runtime requirements are in [Requirements](#requirements). See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-273).
@@ -289,6 +291,8 @@ end
 
 If the configured authentication method is unavailable, the engine returns `401 Unauthorized` instead of rendering admin data.
 If the access recording is unavailable or `RecordingStudioAccessible` denies access for the current actor, the engine returns `403 Forbidden`.
+
+Set `config.current_root_recording_resolver` when admin screens should not follow the host's switched product root. The callable is `call(context)`. A `nil` return skips the product-root check. Leave it unset to keep the controller's public `current_root_recording`, then RootSwitchable. A surface can set `current_root_recording_resolver` the same way.
 
 ## Routing and surfaces
 

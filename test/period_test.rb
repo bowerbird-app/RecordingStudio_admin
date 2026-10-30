@@ -85,6 +85,31 @@ class PeriodTest < Minitest::Test
     assert_equal [Date.new(2025, 1, 1), Date.new(2025, 12, 31)], [last_year.start_date, last_year.end_date]
   end
 
+  def test_from_preset_key_last_4_weeks_matches_flatpack_27_day_window
+    today = Date.new(2026, 9, 8)
+    period = RecordingStudioAdmin::Period.from_preset_key(:last_4_weeks, reference_date: today)
+    spaced = RecordingStudioAdmin::Period.from_preset_key(" last_4_weeks ", reference_date: today)
+
+    assert_equal today - 27, period.start_date
+    assert_equal today, period.end_date
+    assert_equal :last_4_weeks, period.preset_key
+    assert_equal 4, period.amount
+    assert_equal :week, period.unit
+    assert_equal "Last 4 weeks", period.label
+    assert_equal period.start_date, spaced.start_date
+    assert_equal :last_4_weeks, spaced.preset_key
+  end
+
+  def test_from_preset_key_other_week_counts_stay_on_seven_day_jumps
+    period = RecordingStudioAdmin::Period.from_preset_key(:last_2_weeks, reference_date: @reference_date)
+    duration = RecordingStudioAdmin::Period.from_duration(4.weeks, reference_time: @reference_time)
+
+    assert_equal @reference_date - 14, period.start_date
+    assert_equal :last_2_weeks, period.preset_key
+    assert_equal @reference_date - 28, duration.start_date
+    assert_equal :last_4_weeks, duration.preset_key
+  end
+
   def test_from_preset_key_parses_last_n_pattern
     period = RecordingStudioAdmin::Period.from_preset_key(" last_24_hours ", reference_date: @reference_date)
 

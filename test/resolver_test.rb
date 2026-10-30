@@ -499,6 +499,43 @@ class ResolverTest < Minitest::Test
     assert_includes error.message, "Current root does not match"
   end
 
+  def test_current_root_recording_resolver_nil_skips_the_product_root_check
+    access_root_recording = Struct.new(:root_recording).new(nil)
+    product_root = Object.new
+    context = allowed_context(recording: access_root_recording, current_root_recording: product_root)
+    original_resolver = RecordingStudioAdmin.configuration.current_root_recording_resolver
+    RecordingStudioAdmin.configuration.current_root_recording_resolver = ->(_context) {}
+
+    with_singleton_stub(RecordingStudioAccessible, :authorized?, true) do
+      assert_equal true, RecordingStudioAdmin::Authorization.authorize!(context, recording: access_root_recording)
+    end
+
+    assert_nil RecordingStudioAdmin::Authorization.resolve_current_root_recording(context)
+  ensure
+    RecordingStudioAdmin.configuration.current_root_recording_resolver = original_resolver
+  end
+
+  def test_surface_current_root_recording_resolver_wins_over_the_controller_method
+    access_root = Object.new
+    product_root = Object.new
+    staff_root = Object.new
+    surface = RecordingStudioAdmin::Surface.new(
+      "stats",
+      current_root_recording_resolver: ->(_context) { staff_root }
+    )
+    context = RecordingStudioAdmin::Context.new(
+      current_actor: :actor,
+      controller: allowed_context_controller(recording: access_root, current_root_recording: product_root),
+      surface: surface
+    )
+    original_resolver = RecordingStudioAdmin.configuration.current_root_recording_resolver
+    RecordingStudioAdmin.configuration.current_root_recording_resolver = ->(_context) { product_root }
+
+    assert_same staff_root, RecordingStudioAdmin::Authorization.resolve_current_root_recording(context)
+  ensure
+    RecordingStudioAdmin.configuration.current_root_recording_resolver = original_resolver
+  end
+
   def test_available_sections_authorizes_explicit_recording
     context_recording = Object.new
     explicit_recording = Object.new

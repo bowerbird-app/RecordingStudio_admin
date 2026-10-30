@@ -25,7 +25,8 @@ module RecordingStudioAdmin
 
     attr_accessor :authentication_method, :current_actor_method, :access_recording_method,
                   :access_recording_resolver, :site_admin_recording_resolver, :admin_sections_resolver,
-                  :admin_action_auditor, :required_access_role, :default_mount_path, :max_page,
+                  :current_root_recording_resolver, :admin_action_auditor, :required_access_role,
+                  :default_mount_path, :max_page,
                   :logs_retention, :audit_log_model
     attr_reader :surfaces, :async_widgets, :layout
 
@@ -38,6 +39,7 @@ module RecordingStudioAdmin
       @access_recording_resolver = nil
       @site_admin_recording_resolver = nil
       @admin_sections_resolver = nil
+      @current_root_recording_resolver = nil
       @admin_action_auditor = nil
       @required_access_role = :view
       @max_page = 1_000
@@ -67,6 +69,15 @@ module RecordingStudioAdmin
 
     def layout=(value)
       @layout = RecordingStudio::Layout.accept(value)
+    end
+
+    # Surface resolver when set. Otherwise the gem resolver, which may itself be nil.
+    # A configured callable is used even when it returns nil.
+    def current_root_recording_resolver_for(surface)
+      surface_resolver = surface&.current_root_recording_resolver
+      return surface_resolver unless surface_resolver.nil?
+
+      current_root_recording_resolver
     end
 
     # Surface layout when set. Otherwise the gem layout, which may itself be nil.
@@ -104,6 +115,7 @@ module RecordingStudioAdmin
         current_actor_method: current_actor_method,
         access_recording_method: access_recording_method,
         access_recording_resolver: access_recording_resolver,
+        current_root_recording_resolver: current_root_recording_resolver,
         layout: layout
       )
     end
