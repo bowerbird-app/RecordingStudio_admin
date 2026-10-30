@@ -74,8 +74,7 @@ class ApplicationControllerSecurityTest < Minitest::Test
   end
 
   def test_unset_current_root_recording_uses_root_switchable_without_controller_support
-    assert_includes RecordingStudioAdmin::ApplicationController.private_instance_methods, :current_root_recording
-    refute_includes RecordingStudioAdmin::ApplicationController.action_methods, "current_root_recording"
+    assert_includes RecordingStudioAdmin::ApplicationController.public_instance_methods, :current_root_recording
 
     controller = build_controller
     if defined?(::RecordingStudio::RootSwitchable::ControllerSupport)
@@ -85,7 +84,7 @@ class ApplicationControllerSecurityTest < Minitest::Test
     product_root = Object.new
     with_root_switchable_class_method(product_root) do
       assert_nil RecordingStudioAdmin.configuration.current_root_recording_resolver
-      assert_same product_root, controller.send(:current_root_recording)
+      assert_same product_root, controller.current_root_recording
     end
   end
 

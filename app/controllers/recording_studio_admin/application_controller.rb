@@ -33,8 +33,6 @@ module RecordingStudioAdmin
                   :recording_studio_admin_export_token, :recording_studio_admin_token_export_available?,
                   :recording_studio_admin_exportable_exports_path, :recording_studio_admin_default_layout?
 
-    private
-
     # Resolver wins over a switched product root, including a nil return.
     # Unset keeps an ancestor method, then RootSwitchable, matching 2.5.1.
     def current_root_recording
@@ -47,6 +45,8 @@ module RecordingStudioAdmin
 
       nil
     end
+
+    private
 
     def authenticate_recording_studio_admin!
       method_name = recording_studio_admin_surface.authentication_method ||
