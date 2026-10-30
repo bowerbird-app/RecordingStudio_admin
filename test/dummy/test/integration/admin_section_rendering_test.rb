@@ -341,6 +341,49 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     RecordingStudioAdmin.configuration.async_widgets.enabled = original_async_enabled
   end
 
+  test "last 30 days date range input shows the preset label and submits Admin's window" do
+    travel_to Time.zone.local(2026, 6, 12, 12, 0, 0) do
+      sign_in_admin_user
+      period = RecordingStudioAdmin::Period.from_preset_key(:last_30_days)
+
+      get "/admin/screens/admin_activity_logs", params: { anchor_url: root_url }
+
+      assert_response :ok
+      assert_select "#screen-inline-filters-form input[data-flat-pack--flatpack-date-picker-target='trigger']" do |inputs|
+        assert_equal "Last 30 days", inputs.first["value"]
+        refute_match(/\d{4}-\d{2}-\d{2}/, inputs.first["value"])
+      end
+      assert_select "#screen-inline-filters-form input[name='start_date'][value=?]", period.start_date.iso8601
+      assert_select "#screen-inline-filters-form input[name='end_date'][value=?]", period.end_date.iso8601
+
+      picker = css_select("#screen-inline-filters-form [data-flat-pack--flatpack-date-picker-preset-ranges-value]").first
+      assert picker
+      ranges = JSON.parse(picker["data-flat-pack--flatpack-date-picker-preset-ranges-value"])
+      assert_equal(
+        { "start" => period.start_date.iso8601, "end" => period.end_date.iso8601 },
+        ranges["last_30_days"]
+      )
+
+      get "/admin/screens/admin_activity_logs", params: {
+        anchor_url: root_url,
+        start_date: ranges.dig("last_30_days", "start"),
+        end_date: ranges.dig("last_30_days", "end"),
+        date_range_preset: "last_30_days"
+      }
+
+      assert_response :ok
+      assert_select "#screen-inline-filters-form input[data-flat-pack--flatpack-date-picker-target='trigger'][value=?]",
+                    "Last 30 days"
+      submitted = RecordingStudioAdmin::Period.from_date_range(
+        start_date: Date.iso8601(ranges.dig("last_30_days", "start")),
+        end_date: Date.iso8601(ranges.dig("last_30_days", "end")),
+        preset_key: :last_30_days
+      )
+      assert_equal period.start_date, submitted.start_date
+      assert_equal period.end_date, submitted.end_date
+    end
+  end
+
   test "admin sections index renders built-in search results across sections and screens" do
     sign_in_admin_user
 
@@ -613,6 +656,14 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes html, "capped-user-4@example.com"
     refute_includes html, "capped-user-5@example.com"
     assert_includes html, "[--list-item-padding-y:0.5rem]"
+  end
+
+  test "chart widgets set integer ticks for integer series and omit them for fractional series" do
+    integer_html = render_admin_chart_widget(series: [{ name: "Counts", data: [1, 2, 3] }])
+    fractional_html = render_admin_chart_widget(series: [{ name: "Rates", data: [1.5, 2.25] }])
+
+    assert_includes CGI.unescapeHTML(integer_html), 'data-flat-pack--chart-integer-ticks-value="true"'
+    refute_includes CGI.unescapeHTML(fractional_html), "data-flat-pack--chart-integer-ticks-value"
   end
 
   test "compact gauge keeps the title above the metric and hides the arc value" do
@@ -1414,5 +1465,39 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     body = CGI.unescapeHTML(response.body)
 
     assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Requests","data":[{"x":"2024","y":2},{"x":"2025","y":1}]}]"'
+  end
+
+  private
+
+  def render_admin_chart_widget(series:)
+    widget = RecordingStudioAdmin::Results::ResolvedWidget.new(
+      key: "widgets.test.chart_ticks",
+      type: :chart,
+      title: "Chart ticks",
+      subtitle: nil,
+      description: nil,
+      info: nil,
+      value: nil,
+      change: nil,
+      change_good_when: :up,
+      link_to: nil,
+      link_label: nil,
+      series: series,
+      chart_type: :area,
+      chart_options: {},
+      list_options: {},
+      items: nil,
+      rows: nil,
+      metadata: {},
+      view_variant: nil,
+      show_metric: false,
+      show_change: false,
+      show_period: false
+    )
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(widget)
+    RecordingStudioAdmin::ApplicationController.renderer.render(
+      partial: "recording_studio_admin/shared/widgets/chart",
+      locals: { widget: widget, presenter: presenter }
+    )
   end
 end

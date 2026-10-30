@@ -7,7 +7,7 @@
 ### Added
 
 - Date range filters include FlatPack's `:last_30_days` preset at the top of the default picker list, so a last-30-days default shows as that preset instead of a raw from–to string.
-- Count charts (line, column, bar, stacked, area, radar) pass `integer_ticks: true` so axis labels stay whole numbers.
+- Charts of type line, column, bar, stacked, area, or radar pass `integer_ticks: true` when every plotted y-value is an Integer. Set `integer_ticks: false` in chart options to opt out.
 
 ### Upgrade notes
 
