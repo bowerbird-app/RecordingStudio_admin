@@ -65,12 +65,28 @@ class ApplicationControllerSecurityTest < Minitest::Test
       staff_root if context.controller.equal?(staff_controller)
     }
 
-    assert_same staff_root, staff_controller.current_root_recording
+    assert_same staff_root, staff_controller.send(:current_root_recording)
 
     RecordingStudioAdmin.configuration.current_root_recording_resolver = ->(_context) {}
     ignored_controller = build_controller
 
-    assert_nil ignored_controller.current_root_recording
+    assert_nil ignored_controller.send(:current_root_recording)
+  end
+
+  def test_unset_current_root_recording_uses_root_switchable_without_controller_support
+    assert_includes RecordingStudioAdmin::ApplicationController.private_instance_methods, :current_root_recording
+    refute_includes RecordingStudioAdmin::ApplicationController.action_methods, "current_root_recording"
+
+    controller = build_controller
+    if defined?(::RecordingStudio::RootSwitchable::ControllerSupport)
+      refute_includes controller.class.ancestors, RecordingStudio::RootSwitchable::ControllerSupport
+    end
+
+    product_root = Object.new
+    with_root_switchable_class_method(product_root) do
+      assert_nil RecordingStudioAdmin.configuration.current_root_recording_resolver
+      assert_same product_root, controller.send(:current_root_recording)
+    end
   end
 
   def test_current_root_recording_resolver_can_be_overridden_by_surface
@@ -83,7 +99,7 @@ class ApplicationControllerSecurityTest < Minitest::Test
     )
     controller = build_controller(path: "/stats/sections/page_views", script_name: "/stats")
 
-    assert_nil controller.current_root_recording
+    assert_nil controller.send(:current_root_recording)
   end
 
   def test_engine_layout_can_be_overridden_by_surface
@@ -269,6 +285,20 @@ class ApplicationControllerSecurityTest < Minitest::Test
   ensure
     Object.send(:remove_const, :Current) if Object.const_defined?(:Current)
     Object.const_set(:Current, original_current) if defined?(original_current)
+  end
+
+  def with_root_switchable_class_method(root)
+    recording_studio = ::RecordingStudio
+    had_constant = recording_studio.const_defined?(:RootSwitchable, false)
+    original = recording_studio.const_get(:RootSwitchable) if had_constant
+    switchable = Module.new
+    switchable.define_singleton_method(:current_root_recording) { root }
+    recording_studio.send(:remove_const, :RootSwitchable) if had_constant
+    recording_studio.const_set(:RootSwitchable, switchable)
+    yield
+  ensure
+    recording_studio.send(:remove_const, :RootSwitchable) if recording_studio.const_defined?(:RootSwitchable, false)
+    recording_studio.const_set(:RootSwitchable, original) if had_constant
   end
 
   def build_controller(path: "/admin", script_name: "", &)

@@ -67,6 +67,10 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes changelog, "## 2.5.2"
     assert_includes changelog, "docs/UPGRADING.md#upgrading-to-252"
     assert_includes changelog, "last_4_weeks"
+    assert_includes changelog, "from_duration(4.weeks)"
+    assert_includes changelog, "28 days back"
+    assert_includes upgrading, "from_duration(4.weeks)"
+    assert_includes upgrading, "28 days back"
     assert_includes changelog, "current_root_recording_resolver"
     assert_includes changelog, "engine_layout"
 
