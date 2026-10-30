@@ -18,6 +18,7 @@ class ApplicationControllerSecurityTest < Minitest::Test
     @original_authentication_method = RecordingStudioAdmin.configuration.authentication_method
     @original_current_actor_method = RecordingStudioAdmin.configuration.current_actor_method
     @original_engine_layout = RecordingStudioAdmin.configuration.engine_layout
+    @original_current_root_recording_resolver = RecordingStudioAdmin.configuration.current_root_recording_resolver
     @original_surfaces = RecordingStudioAdmin.configuration.surfaces.dup
   end
 
@@ -25,6 +26,7 @@ class ApplicationControllerSecurityTest < Minitest::Test
     RecordingStudioAdmin.configuration.authentication_method = @original_authentication_method
     RecordingStudioAdmin.configuration.current_actor_method = @original_current_actor_method
     RecordingStudioAdmin.configuration.engine_layout = @original_engine_layout
+    RecordingStudioAdmin.configuration.current_root_recording_resolver = @original_current_root_recording_resolver
     RecordingStudioAdmin.configuration.surfaces.clear
     @original_surfaces.each do |key, surface|
       RecordingStudioAdmin.configuration.surfaces[key] = surface
@@ -54,6 +56,34 @@ class ApplicationControllerSecurityTest < Minitest::Test
 
     assert_equal "recording_studio/default_layout", controller.send(:recording_studio_admin_layout)
     assert controller.send(:recording_studio_admin_default_layout?)
+  end
+
+  def test_current_root_recording_uses_configured_resolver_including_nil
+    staff_controller = build_controller
+    staff_root = Object.new
+    RecordingStudioAdmin.configuration.current_root_recording_resolver = lambda { |context|
+      staff_root if context.controller.equal?(staff_controller)
+    }
+
+    assert_same staff_root, staff_controller.current_root_recording
+
+    RecordingStudioAdmin.configuration.current_root_recording_resolver = ->(_context) {}
+    ignored_controller = build_controller
+
+    assert_nil ignored_controller.current_root_recording
+  end
+
+  def test_current_root_recording_resolver_can_be_overridden_by_surface
+    product_root = Object.new
+    RecordingStudioAdmin.configuration.current_root_recording_resolver = ->(_context) { product_root }
+    RecordingStudioAdmin.configuration.surface(
+      :stats,
+      path: "/stats",
+      current_root_recording_resolver: ->(_context) {}
+    )
+    controller = build_controller(path: "/stats/sections/page_views", script_name: "/stats")
+
+    assert_nil controller.current_root_recording
   end
 
   def test_engine_layout_can_be_overridden_by_surface

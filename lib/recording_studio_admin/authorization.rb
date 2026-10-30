@@ -41,9 +41,12 @@ module RecordingStudioAdmin
     end
 
     def resolve_current_root_recording(context)
-      controller = context.controller
-      return controller.send(:current_root_recording) if controller.respond_to?(:current_root_recording,
-                                                                                true)
+      surface = context.respond_to?(:surface) ? context.surface : nil
+      resolver = RecordingStudioAdmin.configuration.current_root_recording_resolver_for(surface)
+      return resolver.call(context) unless resolver.nil?
+
+      controller = context.respond_to?(:controller) ? context.controller : nil
+      return controller.send(:current_root_recording) if controller.respond_to?(:current_root_recording, true)
 
       return ::RecordingStudio::RootSwitchable.current_root_recording if defined?(::RecordingStudio::RootSwitchable)
 
