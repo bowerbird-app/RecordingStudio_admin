@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioAdminTest < Minitest::Test
   def test_version_matches_the_current_release
-    assert_equal "2.5.1", ::RecordingStudioAdmin::VERSION
+    assert_equal "2.5.2", ::RecordingStudioAdmin::VERSION
   end
 
   def test_lockfiles_match_the_current_release

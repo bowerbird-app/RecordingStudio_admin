@@ -36,6 +36,7 @@ end
 | `current_actor_method` | `:current_user` | Controller method used to resolve the current actor |
 | `access_recording_method` | `:recording_studio_admin_access_recording` | Optional controller method fallback when no resolver is configured |
 | `access_recording_resolver` | `nil` | Preferred callable for resolving the current `RecordingStudio::Recording` |
+| `current_root_recording_resolver` | `nil` | Callable invoked as `call(context)` for the root recording compared with the access recording. A configured callable is used even when it returns `nil`, which skips the product-root check. Unset keeps the controller's `current_root_recording`, then RootSwitchable. |
 | `site_admin_recording_resolver` | `nil` | Optional callable that nominates the one access recording allowed to resolve `blast_radius :site` definitions |
 | `admin_sections_resolver` | `nil` | Optional callable that returns enabled admin section keys for a recording, replacing recordable declarations |
 | `admin_action_auditor` | `nil` | Optional callable that receives one `RecordingStudioAdmin::AdminActionAuditEvent` for each audited admin action outcome |
@@ -72,6 +73,7 @@ Per-surface overrides live under `config.surface(:name)` and support these reque
 | `current_actor_method` | global configuration | Per-surface actor lookup |
 | `access_recording_method` | global configuration | Per-surface controller fallback for access recording lookup |
 | `access_recording_resolver` | global configuration | Per-surface callable for access recording lookup |
+| `current_root_recording_resolver` | global configuration | Per-surface callable for the root recording used in the admin root check |
 | `engine_layout` | global configuration | Per-surface layout override |
 
 ## Admin surfaces
@@ -102,7 +104,17 @@ end
 When neither global nor per-surface `engine_layout` is set, RecordingStudioAdmin sections and screens use
 RecordingStudio core's shared `recording_studio/default_layout`. That layout provides the standard PageNav shell,
 flash rendering, head slots, and SEO metadata helpers. Host apps can still choose their own layout by setting
-`config.engine_layout` globally or `surface.engine_layout` for a named surface.
+`config.engine_layout` globally or `surface.engine_layout` for a named surface. Do not include
+`RecordingStudio::UsesDefaultLayout` on `RecordingStudioAdmin::ApplicationController`; the engine controller
+already selects that layout.
+
+Ignore a switched product root from admin screens by setting the root resolver. Return `nil` to skip the check:
+
+```ruby
+RecordingStudioAdmin.configure do |config|
+  config.current_root_recording_resolver = ->(_context) { nil }
+end
+```
 
 Surfaces do not own section definitions. Sections remain globally registered, and recordable classes opt into section keys with `recording_studio_admin_sections`.
 

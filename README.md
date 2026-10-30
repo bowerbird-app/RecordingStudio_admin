@@ -30,6 +30,10 @@ Admin `2.5.1` keeps the Admin activity overview widget on the Admin activity
 logs section (not the screen) and shows Date range / Group by inline on that
 screen. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-251).
 
+Admin `2.5.2` makes `last_4_weeks` a 27-day window and adds
+`config.current_root_recording_resolver`. Layout stays `config.engine_layout`.
+See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-252).
+
 ## Quick start
 
 1. Add the gem to the host app and run the install generator:
@@ -290,7 +294,12 @@ end
 
 By default, mounted admin sections and screens use RecordingStudio core's shared `recording_studio/default_layout`.
 Set `config.engine_layout` globally or `surface.engine_layout` per surface when the host app should supply its own
-layout instead.
+layout instead. Do not include `RecordingStudio::UsesDefaultLayout` on `RecordingStudioAdmin::ApplicationController`.
+
+Set `config.current_root_recording_resolver` when admin screens should not follow the host's switched product root.
+The callable is invoked as `call(context)`. A resolver that returns `nil` skips that root check. Leave it unset to
+keep the controller's `current_root_recording`, then RootSwitchable. A surface can set
+`current_root_recording_resolver` the same way.
 
 For legacy or minimal setup, mounting the engine directly still works:
 

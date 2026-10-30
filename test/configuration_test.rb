@@ -13,6 +13,7 @@ class ConfigurationTest < Minitest::Test
     assert_equal :recording_studio_admin_access_recording, config.access_recording_method
     assert_nil config.access_recording_resolver
     assert_nil config.site_admin_recording_resolver
+    assert_nil config.current_root_recording_resolver
     assert_equal :view, config.required_access_role
     assert_equal 1_000, config.max_page
     assert_equal true, config.async_widgets.enabled
@@ -86,5 +87,20 @@ class ConfigurationTest < Minitest::Test
     assert_equal "/backoffice", surface.path
     assert_equal "root", surface.root_section
     assert_equal "admin", surface.engine_layout
+  end
+
+  def test_current_root_recording_resolver_prefers_surface_then_global
+    config = RecordingStudioAdmin::Configuration.new
+    global_resolver = ->(_context) { :global_root }
+    surface_resolver = ->(_context) {}
+    config.current_root_recording_resolver = global_resolver
+
+    assert_same global_resolver, config.current_root_recording_resolver_for(nil)
+    assert_same global_resolver, config.default_surface.current_root_recording_resolver
+
+    surface = config.surface(:stats, path: "/stats", current_root_recording_resolver: surface_resolver)
+
+    assert_same surface_resolver, config.current_root_recording_resolver_for(surface)
+    assert_same global_resolver, config.current_root_recording_resolver_for(config.surface(:other, path: "/other"))
   end
 end
