@@ -3,6 +3,8 @@
 module RecordingStudioAdmin
   class Period
     PRESET_PATTERN = /\Alast_(\d+)_(hours|days|weeks|months|years)\z/
+    # Flatpack labels "Last 4 weeks" for the inclusive window that starts 27 days back.
+    LAST_4_WEEKS_LOOKBACK_DAYS = 27
     QUICK_PRESET_LABELS = {
       today: "Today",
       yesterday: "Yesterday",
@@ -72,7 +74,7 @@ module RecordingStudioAdmin
         return unless amount && unit
 
         end_date = reference_date
-        start_date = calculate_start_date(end_date, amount, unit)
+        start_date = start_date_for_preset(end_date, amount, unit, normalized_key)
         new(amount: amount, unit: unit, start_date: start_date, end_date: end_date, preset_key: normalized_key)
       end
 
@@ -231,6 +233,12 @@ module RecordingStudioAdmin
         when :month then :months
         else :years
         end
+      end
+
+      def start_date_for_preset(end_date, amount, unit, key)
+        return end_date - LAST_4_WEEKS_LOOKBACK_DAYS if key == "last_4_weeks"
+
+        calculate_start_date(end_date, amount, unit)
       end
 
       def calculate_start_date(end_date, amount, unit)

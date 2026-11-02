@@ -12,6 +12,7 @@ class ConfigurationTest < Minitest::Test
     assert_equal :current_user, config.current_actor_method
     assert_equal :recording_studio_admin_access_recording, config.access_recording_method
     assert_nil config.access_recording_resolver
+    assert_nil config.current_root_recording_resolver
     assert_nil config.site_admin_recording_resolver
     assert_equal :view, config.required_access_role
     assert_equal 1_000, config.max_page
@@ -99,6 +100,21 @@ class ConfigurationTest < Minitest::Test
     assert_equal "root", surface.root_section
     assert_equal "admin", surface.layout
     assert_equal "admin", config.layout_for(surface)
+  end
+
+  def test_current_root_recording_resolver_prefers_surface_then_global
+    config = RecordingStudioAdmin::Configuration.new
+    global_resolver = ->(_context) { :global_root }
+    surface_resolver = ->(_context) {}
+    config.current_root_recording_resolver = global_resolver
+
+    assert_same global_resolver, config.current_root_recording_resolver_for(nil)
+    assert_same global_resolver, config.default_surface.current_root_recording_resolver
+
+    surface = config.surface(:stats, path: "/stats", current_root_recording_resolver: surface_resolver)
+
+    assert_same surface_resolver, config.current_root_recording_resolver_for(surface)
+    assert_same global_resolver, config.current_root_recording_resolver_for(config.surface(:other, path: "/other"))
   end
 
   def test_layout_accepts_nil_false_string_and_keyword_callable

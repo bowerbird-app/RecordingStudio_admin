@@ -41,6 +41,10 @@ module RecordingStudioAdmin
     end
 
     def resolve_current_root_recording(context)
+      surface = context.respond_to?(:surface) ? context.surface : nil
+      resolver = RecordingStudioAdmin.configuration.current_root_recording_resolver_for(surface)
+      return resolver.call(context) unless resolver.nil?
+
       controller = context.controller
       return controller.send(:current_root_recording) if controller.respond_to?(:current_root_recording,
                                                                                 true)
