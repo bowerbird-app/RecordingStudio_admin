@@ -160,7 +160,7 @@ class UpgradeNotesTest < Minitest::Test
     refute_includes gemspec, 'recording_studio", "~> 6.3'
     assert_includes gemfile, 'tag: "v6.3.0"'
     assert_includes gemfile, 'tag: "v0.1.331"'
-    assert_includes gemfile, 'tag: "v0.23.1"'
+    assert_includes gemfile, 'tag: "v0.24.0"'
     assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.7.1"'
     assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.7.0"'
     assert_includes gemfile, 'view_component", "4.20.0"'
@@ -454,7 +454,7 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "## Upgrading"
     assert_includes readme, "docs/UPGRADING.md"
     assert_includes readme, "RecordingStudio `v6.3.0`"
-    assert_includes readme, "Accessible `v0.23.1`"
+    assert_includes readme, "Accessible `v0.24.0`"
     assert_includes readme, "bootstrap_owner_access!"
   end
 

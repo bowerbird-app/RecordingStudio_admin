@@ -1,5 +1,19 @@
 # Upgrading RecordingStudioAdmin
 
+## RecordingStudio exportable 0.5.11
+
+Hosts using `recording_studio_exportable` `>= 0.5.11` must set `config.current_actor`. The export engine resolves the actor through that setting (`resolve_actor` calls it as `call(controller: controller)`). It does not inherit the host's `Current.actor` before_action. The gem default reads only `Current.actor` and no longer falls back to `controller.current_user`.
+
+Without `config.current_actor`, the export POST returns 403 `Export is not available`.
+
+Call `current_user` in the lambda when that method is public. Do not use `send`.
+
+```ruby
+RecordingStudioExportable.configure do |config|
+  config.current_actor = ->(controller: nil) { Current.actor || controller&.current_user }
+end
+```
+
 ## Upgrading to 2.8.1
 
 ### What Changed

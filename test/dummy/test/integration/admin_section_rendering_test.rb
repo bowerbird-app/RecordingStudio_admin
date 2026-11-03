@@ -1038,8 +1038,6 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
   end
 
   test "admin screen export includes all filtered rows instead of the paginated table page" do
-    skip "recording_studio_exportable is not on the RS 4.1 stack yet" unless defined?(RecordingStudioExportable::Engine)
-
     sign_in_admin_user
     ApiRequest.delete_all
 
@@ -1054,14 +1052,19 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
       )
     end
 
+    get "/admin/screens/api_requests/table", params: {
+      search: "export-all",
+      columns: [ "path" ],
+      columns_present: "1"
+    }
+
+    assert_response :success
+    token_field = css_select('input[name="export_token"]').first
+    assert token_field, "expected export token field"
+
     post "/recording_studio_exportable/exports", params: {
-      context_recording_id: admin_root_recording_for_test.id,
-      export_key: "admin.api_requests",
+      export_token: token_field["value"],
       format: "csv",
-      attributes: {
-        screen_key: "api_requests",
-        columns: [ "path" ]
-      },
       filters: {
         search: "export-all"
       }
@@ -1102,8 +1105,6 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
   end
 
   test "admin screen trusted export token includes selected columns and all filtered rows" do
-    skip "recording_studio_exportable is not on the RS 4.1 stack yet" unless defined?(RecordingStudioExportable::Engine)
-
     sign_in_admin_user
     ApiRequest.delete_all
 

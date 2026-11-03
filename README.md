@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Hosts using RecordingStudio_exportable `>= 0.5.11` must set `config.current_actor`. Otherwise the export POST returns 403. See [docs/UPGRADING.md](docs/UPGRADING.md#recordingstudio-exportable-0511).
+
 Admin `2.8.1` makes `:last_4_weeks` a 27-day window. `Period.from_duration(4.weeks)` is still 28 days back. Hosts can set `config.current_root_recording_resolver` (or the same attribute on a surface) to a `call(context)` callable. Unset keeps the public `current_root_recording` method, then RootSwitchable. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-281).
 
 Admin `2.8.0` adds FlatPack's last-30-days date-range preset on Admin filters and whole-number ticks on count charts. Gemspec FlatPack is `>= 0.1.331`. Development and dummy pins use tag `v0.1.331`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-280).
@@ -236,7 +238,7 @@ Runtime (gemspec):
 Development and dummy Gemfile pins:
 
 - RecordingStudio `v6.3.0`
-- Accessible `v0.23.1`
+- Accessible `v0.24.0`
 - Logs `v0.7.1`
 - Trashable `v0.12.0` (`require: false` in the root Gemfile)
 - Metrics `v0.7.0` (`require: false` in the root Gemfile)
@@ -762,7 +764,7 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
-The dummy pins RecordingStudio `v6.3.0`, Flatpack `v0.1.331`, Accessible `v0.23.1`, Logs `v0.7.1`, Metrics `v0.7.0`, and Trashable `v0.12.0`. Root switchable is `v0.11.0` with Cache `v0.6.0`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+The dummy pins RecordingStudio `v6.3.0`, Flatpack `v0.1.331`, Accessible `v0.24.0`, Logs `v0.7.1`, Metrics `v0.7.0`, and Trashable `v0.12.0`. Root switchable is `v0.11.0` with Cache `v0.6.0`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
 
 ## Cloud Agent boot
 

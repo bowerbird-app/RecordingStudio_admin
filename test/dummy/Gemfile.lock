@@ -9,10 +9,10 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_accessible.git
-  revision: 1915e664f36b8f48f1bbc80886ecf5f2aed6d116
-  tag: v0.23.1
+  revision: 9e9bf29234ae14586dd28dd76abeb08363dd4c33
+  tag: v0.24.0
   specs:
-    recording_studio_accessible (0.23.1)
+    recording_studio_accessible (0.24.0)
       rails (~> 8.1.0)
       recording_studio (~> 6.1, >= 6.1.0)
       recording_studio_trashable (~> 0.10)
@@ -25,6 +25,18 @@ GIT
     recording_studio_cache (0.6.0)
       rails (~> 8.1.0)
       recording_studio (>= 6.1.0)
+
+GIT
+  remote: https://github.com/bowerbird-app/RecordingStudio_exportable.git
+  revision: 69c77a936a5baf2f6c8eccb21315e158cad0dd87
+  tag: v0.5.11
+  specs:
+    recording_studio_exportable (0.5.11)
+      csv (< 4)
+      flat_pack (>= 0.1.315, < 0.2)
+      rails (~> 8.1.0)
+      recording_studio (>= 6.1.0, < 7)
+      recording_studio_accessible (~> 0.24)
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_logs.git
@@ -189,6 +201,7 @@ GEM
     concurrent-ruby (1.3.8)
     connection_pool (3.0.2)
     crass (1.0.7)
+    csv (3.3.7)
     date (3.5.1)
     debug (1.11.1)
       irb (~> 1.10)
@@ -518,6 +531,7 @@ DEPENDENCIES
   recording_studio_accessible!
   recording_studio_admin!
   recording_studio_cache!
+  recording_studio_exportable!
   recording_studio_logs!
   recording_studio_metrics!
   recording_studio_root_switchable!

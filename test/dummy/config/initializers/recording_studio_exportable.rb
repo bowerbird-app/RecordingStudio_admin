@@ -2,7 +2,7 @@
 
 if defined?(RecordingStudioExportable)
   RecordingStudioExportable.configure do |config|
-    config.current_actor = ->(controller: nil) { controller&.send(:current_user) || Current.actor }
+    config.current_actor = ->(controller: nil) { Current.actor || controller&.current_user }
 
     RecordingStudioExportable.auto_register_exports!(config)
 

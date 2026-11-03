@@ -20,6 +20,7 @@ DUMMY_APP_TEST_FILES = %w[
   test/integration/admin_audit_logs_registration_test.rb
   test/integration/admin_section_rendering_test.rb
   test/integration/dummy_access_enforcement_test.rb
+  test/integration/exportable_current_actor_test.rb
   test/integration/recording_studio_v3_template_test.rb
   test/integration/root_switch_dropdown_test.rb
   test/integration/stats_root_test.rb
