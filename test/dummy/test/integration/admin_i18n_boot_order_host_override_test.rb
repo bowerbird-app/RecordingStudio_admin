@@ -4,10 +4,9 @@ require "test_helper"
 require "devise/test/integration_helpers"
 
 # Proves a host nested `recording_studio.admin.*` override in
-# config/locales wins over gem English on a real page. Uses
-# screens.filters.date_presets.last_year (JSON blob on filter screens)
-# so other screen assertions keep default English. Does not touch
-# I18n.load_path.
+# config/locales still loads. Date picker labels now come from
+# FlatPack, so last_year no longer appears in an Admin JSON blob.
+# Does not touch I18n.load_path.
 class AdminI18nBootOrderHostOverrideTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include DummyAccessTestHelpers
@@ -49,11 +48,9 @@ class AdminI18nBootOrderHostOverrideTest < ActionDispatch::IntegrationTest
     get "/admin/screens/api_requests", params: { anchor_url: root_url }
 
     assert_response :success
-    assert_includes response.body, "data-recording-studio-admin--screen-filters-date-preset-labels-value"
+    refute_includes response.body, "data-recording-studio-admin--screen-filters-date-preset-labels-value"
+    refute_includes response.body, 'last_year&quot;:&quot;HOST Last year&quot;'
     assert_includes response.body, "Today"
-    # FlatPack's own date-picker also ships English "Last year"; assert the gem
-    # Stimulus JSON blob specifically carries the host override.
-    assert_includes response.body, 'last_year&quot;:&quot;HOST Last year&quot;'
     assert_equal HOST_LAST_YEAR, I18n.t(LAST_YEAR_KEY, raise: true)
     assert_equal @original_load_path, I18n.load_path,
                  "boot-order test must not mutate I18n.load_path"

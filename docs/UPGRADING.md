@@ -1,5 +1,36 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.8.2
+
+Admin date range filters pass FlatPack `DateRangeInput` `preset_name:` (the filter `preset_param`, usually `date_range_preset`). Apply writes that hidden field. FlatPack 0.1.337 then dispatches a bubbling `change` on each hidden field it writes, then `flat-pack--flatpack-date-picker:apply` on the picker root with `{start, end, preset}`. Screen filter forms already auto-submit on `change`, so that is the only submit path.
+
+Admin no longer renders a sibling `hidden_field_tag` for the preset, and no longer listens for Apply clicks. Leaving a host click hook next to FlatPack Apply double-submits the form.
+
+Picker trigger labels come from FlatPack. Admin no longer injects `recording_studio.admin.screens.filters.date_presets` JSON onto the filter controller.
+
+Gemspec FlatPack is `>= 0.1.341`. Development and dummy Gemfiles pin tag `v0.1.341`. Dummy exportable is `v0.5.11` (Accessible `v0.24.0`). Hosts using exportable `>= 0.5.11` still need `config.current_actor`. See [RecordingStudio exportable 0.5.11](#recordingstudio-exportable-0511).
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.8.2`.
+2. Pin Flatpack to tag `v0.1.341` (or another `>= 0.1.341` source).
+3. Reload kit JavaScript. Do not rebuild Tailwind for this change.
+4. Remove any host click handler on `[data-flat-pack-date-picker-command='apply']` that submits the filter form.
+
+### Verify the upgrade
+
+```ruby
+test "date range apply uses one auto-submit path and FlatPack preset_name" do
+  get "/admin/screens/admin_activity_logs", params: { anchor_url: root_url }
+
+  assert_select "#screen-inline-filters-form input[name='date_range_preset'][data-flat-pack--flatpack-date-picker-target='presetKeyField']",
+                count: 1
+  assert_select "#screen-inline-filters-form input[name='date_range_preset']", count: 1
+  assert_includes response.body, "change-&gt;flat-pack--auto-submit#queueSubmit"
+  refute_includes response.body, "queueDateRangeSubmit"
+end
+```
+
 ## RecordingStudio exportable 0.5.11
 
 Hosts using `recording_studio_exportable` `>= 0.5.11` must set `config.current_actor`. The export engine resolves the actor through that setting (`resolve_actor` calls it as `call(controller: controller)`). It does not inherit the host's `Current.actor` before_action. The gem default reads only `Current.actor` and no longer falls back to `controller.current_user`.
