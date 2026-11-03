@@ -120,7 +120,7 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes gemfile, 'tag: "v0.1.341"'
     assert_includes dummy_gemfile, 'tag: "v0.1.341"'
     assert_includes filter_fields, "preset_name: filter.preset_param.to_s"
-    assert_includes filter_fields, 't("recording_studio.admin.screens.filters.date_presets.#{key}"'
+    assert_includes filter_fields, "recording_studio.admin.screens.filters.date_presets.\#{key}"
     refute_includes filter_fields, "hidden_field_tag filter.preset_param"
     refute_includes filters, "queueDateRangeSubmit"
     refute_includes filters, "date-preset-labels-value"
