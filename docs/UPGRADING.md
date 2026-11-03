@@ -2,11 +2,11 @@
 
 ## Upgrading to 2.8.2
 
-Admin date range filters pass FlatPack `DateRangeInput` `preset_name:` (the filter `preset_param`, usually `date_range_preset`). Apply writes that hidden field. FlatPack 0.1.337 then dispatches a bubbling `change` on each hidden field it writes, then `flat-pack--flatpack-date-picker:apply` on the picker root with `{start, end, preset}`. Screen filter forms already auto-submit on `change`, so that is the only submit path.
+Admin date range filters pass FlatPack `DateRangeInput` `preset_name:` (the filter `preset_param`, usually `date_range_preset`). Apply writes that hidden field. FlatPack 0.1.341 then dispatches a bubbling `change` on each hidden field it writes, then `flat-pack--flatpack-date-picker:apply` on the picker root with `{start, end, preset}`. Screen filter forms already auto-submit on `change`, so that is the only submit path.
 
 Admin no longer renders a sibling `hidden_field_tag` for the preset, and no longer listens for Apply clicks. Leaving a host click hook next to FlatPack Apply double-submits the form.
 
-Picker trigger labels come from FlatPack. Admin no longer injects `recording_studio.admin.screens.filters.date_presets` JSON onto the filter controller.
+Preset labels still use `recording_studio.admin.screens.filters.date_presets`. Each `presets:` entry passes a translated `label:`. A host override of those keys still shows on the picker.
 
 Gemspec FlatPack is `>= 0.1.341`. Development and dummy Gemfiles pin tag `v0.1.341`. Dummy exportable is `v0.5.11` (Accessible `v0.24.0`). Hosts using exportable `>= 0.5.11` still need `config.current_actor`. See [RecordingStudio exportable 0.5.11](#recordingstudio-exportable-0511).
 

@@ -120,6 +120,7 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes gemfile, 'tag: "v0.1.341"'
     assert_includes dummy_gemfile, 'tag: "v0.1.341"'
     assert_includes filter_fields, "preset_name: filter.preset_param.to_s"
+    assert_includes filter_fields, 't("recording_studio.admin.screens.filters.date_presets.#{key}"'
     refute_includes filter_fields, "hidden_field_tag filter.preset_param"
     refute_includes filters, "queueDateRangeSubmit"
     refute_includes filters, "date-preset-labels-value"
@@ -128,6 +129,8 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes upgrading, "## Upgrading to 2.8.2"
     assert_includes upgrading, "preset_name:"
     assert_includes upgrading, "v0.1.341"
+    assert_includes upgrading, "date_presets"
+    refute_includes upgrading.split("## Upgrading to 2.8.1").first, "0.1.337"
     assert_includes upgrading, "queueDateRangeSubmit"
     assert_includes upgrading, "### Verify the upgrade"
 

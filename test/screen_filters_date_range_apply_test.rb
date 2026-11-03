@@ -13,6 +13,7 @@ class ScreenFiltersDateRangeApplyTest < Minitest::Test
     )
 
     assert_includes filter_fields, "preset_name: filter.preset_param.to_s"
+    assert_includes filter_fields, 't("recording_studio.admin.screens.filters.date_presets.#{key}"'
     refute_includes filter_fields, "hidden_field_tag filter.preset_param"
     assert_equal 1, filters.scan("change->flat-pack--auto-submit#queueSubmit").size
     refute_includes filters, "queueDateRangeSubmit"
