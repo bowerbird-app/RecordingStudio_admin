@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Dummy app bundles `recording_studio_exportable` at commit `e3354dedb09181ee88d22c3a63c787a6371751ff` until tag `v0.5.11`. That release requires Accessible `~> 0.24`, so the development and dummy Accessible pins move from `v0.23.1` to `v0.24.0`. `view_component` stays `4.20.0`.
+- Dummy app bundles `recording_studio_exportable` at tag `v0.5.11`. That release requires Accessible `~> 0.24`, so the development and dummy Accessible pins move from `v0.23.1` to `v0.24.0`. `view_component` stays `4.20.0`.
 - Hosts on RecordingStudio_exportable `>= 0.5.11` must set `config.current_actor`. The export engine does not inherit the host `Current.actor` before_action. Without the setting, the export POST returns 403. See [docs/UPGRADING.md](docs/UPGRADING.md#recordingstudio-exportable-0511).
 
 ## 2.8.1 - 2026-11-02

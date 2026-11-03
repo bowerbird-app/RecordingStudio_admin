@@ -28,8 +28,8 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_exportable.git
-  revision: e3354dedb09181ee88d22c3a63c787a6371751ff
-  ref: e3354dedb09181ee88d22c3a63c787a6371751ff
+  revision: 69c77a936a5baf2f6c8eccb21315e158cad0dd87
+  tag: v0.5.11
   specs:
     recording_studio_exportable (0.5.11)
       csv (< 4)
