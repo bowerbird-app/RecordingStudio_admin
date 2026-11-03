@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Hosts using RecordingStudio_exportable `>= 0.5.11` must set `config.current_actor`. Otherwise the export POST returns 403. See [docs/UPGRADING.md](docs/UPGRADING.md#recordingstudio-exportable-0511).
+
 Admin `2.8.1` makes `:last_4_weeks` a 27-day window. `Period.from_duration(4.weeks)` is still 28 days back. Hosts can set `config.current_root_recording_resolver` (or the same attribute on a surface) to a `call(context)` callable. Unset keeps the public `current_root_recording` method, then RootSwitchable. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-281).
 
 Admin `2.8.0` adds FlatPack's last-30-days date-range preset on Admin filters and whole-number ticks on count charts. Gemspec FlatPack is `>= 0.1.331`. Development and dummy pins use tag `v0.1.331`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-280).
