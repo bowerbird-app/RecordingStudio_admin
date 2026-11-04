@@ -9,6 +9,7 @@
 - Development and dummy pins: Logs `v0.7.3`, Metrics `v0.7.2`, Trashable `v0.12.2`. Dummy-only Root Switchable `v0.11.4` and Cache `v0.6.2`. `view_component` stays `4.20.0`.
 - The install generator leaves `config.layout` unset so Recording Studio core's Default Layout applies. The admin root generator still generates `app/views/layouts/admin.html.erb`, but generated `Admin::BaseController` no longer uses it (`recording_studio_layout { RecordingStudioAdmin.configuration.layout }`). Unset `config.layout` falls through to core's Default Layout. The generator itself is unchanged in this release.
 - Admin issues export tokens with `source: "recording_studio_admin"` and no longer writes that source into `RecordingStudioExportable.configuration.trusted_export_sources`. Hosts must list `recording_studio_admin` in that allowlist or Admin exports return no token.
+- GitHub Actions Security workflow: Bundler Audit, Brakeman, and Importmap Audit on the dummy app.
 ### Upgrade notes
 
 - Bump the host gem to `2.9.0`. Add `recording_studio_admin` to Exportable `config.trusted_export_sources`. Match the development pins if you use those GitHub tags. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-290).
