@@ -177,7 +177,7 @@ class UpgradeNotesTest < Minitest::Test
     refute_includes initializer, 'config.layout = "application"'
     assert_includes base_controller, "recording_studio_layout { RecordingStudioAdmin.configuration.layout }"
     refute_includes base_controller, 'layout "admin"'
-    assert_includes sections_index, "collapse: :menu"
+    refute_includes sections_index, "collapse: :menu"
 
     assert_includes upgrading, "## Upgrading to 2.9.0"
     assert_includes upgrading, "trusted_export_sources"
@@ -187,7 +187,7 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes changelog, "## 2.9.0"
     assert_includes changelog, "docs/UPGRADING.md#upgrading-to-290"
     assert_includes changelog, "app/views/layouts/admin.html.erb"
-    assert_includes changelog, "collapse: :menu"
+    refute_includes changelog, "collapse: :menu"
     assert_includes readme, "2.9.0"
     assert_includes readme, "docs/UPGRADING.md#upgrading-to-290"
   end

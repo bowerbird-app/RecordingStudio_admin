@@ -8,8 +8,6 @@ The install generator no longer sets `config.layout = "application"`. Leave it u
 
 Admin no longer appends `"recording_studio_admin"` to Exportable `trusted_export_sources` at request time. It still passes `source: "recording_studio_admin"` to `issue_trusted_token`. Exportable only issues a token when that source is already on the host allowlist. If the host omits that source, Admin exports return no token.
 
-The sections index filter group uses FlatPack `collapse: :menu`.
-
 The admin root generator still writes `app/views/layouts/admin.html.erb`. Generated `Admin::BaseController` no longer uses that layout: with `config.layout` unset it falls through to Recording Studio core's Default Layout.
 
 ### Upgrade Steps

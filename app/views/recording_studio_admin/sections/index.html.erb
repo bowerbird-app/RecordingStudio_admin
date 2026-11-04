@@ -43,7 +43,7 @@
       ) %>
     </form>
 
-    <%= render FlatPack::ButtonGroup::Component.new(collapse: :menu) do |group| %>
+    <%= render FlatPack::ButtonGroup::Component.new do |group| %>
       <% group.button(render(FlatPack::Button::Component.new(text: t("recording_studio.admin.sections.index.filter_all", default: "All"), href: search_type_url.call("all"), style: (@search_type == "all" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
       <% group.button(render(FlatPack::Button::Component.new(text: t("recording_studio.admin.sections.index.filter_sections", default: "Sections"), href: search_type_url.call("sections"), style: (@search_type == "sections" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
       <% group.button(render(FlatPack::Button::Component.new(text: t("recording_studio.admin.sections.index.filter_screens", default: "Screens"), href: search_type_url.call("screens"), style: (@search_type == "screens" ? :primary : :secondary), data: { turbo_frame: "admin-sections-discovery" }))) %>
