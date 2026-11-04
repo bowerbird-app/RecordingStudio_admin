@@ -49,7 +49,7 @@ class AdminI18nBootOrderHostOverrideTest < ActionDispatch::IntegrationTest
     get "/admin/screens/api_requests", params: { anchor_url: root_url }
 
     assert_response :success
-    assert_includes response.body, "data-recording-studio-admin--screen-filters-date-preset-labels-value"
+    assert_includes response.body, "flat-pack--flatpack-date-picker-preset-labels-value"
     assert_includes response.body, "Today"
     # FlatPack's own date-picker also ships English "Last year"; assert the gem
     # Stimulus JSON blob specifically carries the host override.

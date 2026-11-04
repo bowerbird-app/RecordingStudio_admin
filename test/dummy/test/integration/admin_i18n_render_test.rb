@@ -45,7 +45,7 @@ class AdminI18nRenderTest < ActionDispatch::IntegrationTest
     get "/admin/screens/api_requests", params: { anchor_url: root_url }
 
     assert_response :success
-    assert_includes response.body, "data-recording-studio-admin--screen-filters-date-preset-labels-value"
+    assert_includes response.body, "flat-pack--flatpack-date-picker-preset-labels-value"
     assert_includes response.body, 'today&quot;:&quot;Today&quot;'
     assert_includes response.body, 'yesterday&quot;:&quot;Yesterday&quot;'
     assert_includes response.body, 'last_3_days&quot;:&quot;Last 3 days&quot;'

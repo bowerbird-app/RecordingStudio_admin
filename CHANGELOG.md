@@ -2,10 +2,18 @@
 
 ## Unreleased
 
+## 2.8.2 - 2026-11-03
+
 ### Changed
 
+- Date range filters pass FlatPack `preset_name:` so Apply writes the preset key. Admin no longer owns a sibling hidden preset field or a click handler on Apply. FlatPack 0.1.341 Apply dispatches bubbling `change` on each hidden field it writes, then `flat-pack--flatpack-date-picker:apply`. The existing `change->flat-pack--auto-submit#queueSubmit` path is the only submit. Preset `label:` values still go through `recording_studio.admin.screens.filters.date_presets`.
+- Gemspec FlatPack is `>= 0.1.341`. Development and dummy Gemfiles pin tag `v0.1.341`.
 - Dummy app bundles `recording_studio_exportable` at tag `v0.5.11`. That release requires Accessible `~> 0.24`, so the development and dummy Accessible pins move from `v0.23.1` to `v0.24.0`. `view_component` stays `4.20.0`.
 - Hosts on RecordingStudio_exportable `>= 0.5.11` must set `config.current_actor`. The export engine does not inherit the host `Current.actor` before_action. Without the setting, the export POST returns 403. See [docs/UPGRADING.md](docs/UPGRADING.md#recordingstudio-exportable-0511).
+
+### Upgrade notes
+
+- Bump the host gem to `2.8.2`. Pin FlatPack `>= 0.1.341` (development tag `v0.1.341`). Reload kit JavaScript. Do not keep a host click hook on `[data-flat-pack-date-picker-command='apply']`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-282).
 
 ## 2.8.1 - 2026-11-02
 
@@ -453,7 +461,8 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.2...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.8.2...HEAD
+[2.8.2]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.8.1...v2.8.2
 [2.6.2]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.1...v2.6.2
 [2.6.1]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.0...v2.6.1
 [2.6.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.5.1...v2.6.0

@@ -1,15 +1,29 @@
 <% filters.each do |filter| %>
   <div class="<%= wrapper_class %>">
     <% if filter.type == :date_range %>
+      <% date_range_presets = [
+           {
+             key: :last_30_days,
+             label: t("recording_studio.admin.screens.filters.date_presets.last_30_days", default: "Last 30 days"),
+             days: 31
+           },
+           *FlatPack::DateRangeInput::Component::DEFAULT_PRESET_KEYS.map do |key|
+             english = RecordingStudioAdmin::Period::QUICK_PRESET_LABELS.fetch(key) { key.to_s.humanize }
+             {
+               key: key,
+               label: t("recording_studio.admin.screens.filters.date_presets.#{key}", default: english)
+             }
+           end
+         ] %>
       <%= render FlatPack::DateRangeInput::Component.new(
         start_name: filter.start_param,
         end_name: filter.end_param,
         start_value: filter.value&.start_date,
         end_value: filter.value&.end_date,
         label: filter.key.to_s.humanize,
-        presets: [{ key: :last_30_days, label: "Last 30 days", days: 31 }, *FlatPack::DateRangeInput::Component::DEFAULT_PRESET_KEYS]
+        presets: date_range_presets,
+        preset_name: filter.preset_param.to_s
       ) %>
-      <%= hidden_field_tag filter.preset_param, filter.value&.preset_key %>
     <% else %>
       <% select_options = Array(filter.options[:values] || filter.options[:options]).map { |value| { label: value.to_s.humanize, value: value } } %>
       <% select_search_options = filter.options.slice(:searchable, :search_mode, :search_param, :search_endpoint).compact %>

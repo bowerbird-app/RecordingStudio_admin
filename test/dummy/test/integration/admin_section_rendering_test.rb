@@ -341,6 +341,24 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     RecordingStudioAdmin.configuration.async_widgets.enabled = original_async_enabled
   end
 
+  test "date range apply uses one auto-submit path and FlatPack preset_name" do
+    sign_in_admin_user
+
+    get "/admin/screens/admin_activity_logs", params: { anchor_url: root_url }
+
+    assert_response :ok
+    assert_select "#screen-inline-filters-form input[name='date_range_preset'][data-flat-pack--flatpack-date-picker-target='presetKeyField']",
+                  count: 1
+    assert_select "#screen-inline-filters-form input[name='date_range_preset']", count: 1
+    assert_select "#screen-inline-filters-form[data-action]" do |forms|
+      action = forms.first["data-action"].to_s
+      assert_equal 1, action.scan("change->flat-pack--auto-submit#queueSubmit").size
+      refute_includes action, "queueDateRangeSubmit"
+    end
+    refute_includes response.body, "queueDateRangeSubmit"
+    refute_includes response.body, "data-recording-studio-admin--screen-filters-date-preset-labels-value"
+  end
+
   test "last 30 days date range input shows the preset label and submits Admin's window" do
     travel_to Time.zone.local(2026, 6, 12, 12, 0, 0) do
       sign_in_admin_user
@@ -355,6 +373,8 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
       end
       assert_select "#screen-inline-filters-form input[name='start_date'][value=?]", period.start_date.iso8601
       assert_select "#screen-inline-filters-form input[name='end_date'][value=?]", period.end_date.iso8601
+      assert_select "#screen-inline-filters-form input[name='date_range_preset'][data-flat-pack--flatpack-date-picker-target='presetKeyField'][value=?]",
+                    "last_30_days"
 
       picker = css_select("#screen-inline-filters-form [data-flat-pack--flatpack-date-picker-preset-ranges-value]").first
       assert picker
@@ -883,7 +903,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'data-turbo-frame="screen-filters"'
     assert_includes response.body, "change-&gt;recording-studio-admin--screen-filters#showTableSkeletons"
     assert_includes response.body, "submit-&gt;recording-studio-admin--screen-filters#showTableSkeletons"
-    assert_includes response.body, "click->recording-studio-admin--screen-filters#queueDateRangeSubmit"
+    refute_includes response.body, "queueDateRangeSubmit"
     assert_includes response.body, 'id="screen-chart" src="/admin/screens/api_requests/chart?anchor_url='
     assert_includes response.body, 'id="screen-filters-mobile-form"'
     assert_includes response.body, 'name="search"'
