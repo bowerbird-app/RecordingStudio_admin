@@ -4,7 +4,16 @@ require "test_helper"
 
 class RecordingStudioAdminTest < Minitest::Test
   def test_version_matches_the_current_release
-    assert_equal "2.9.0", ::RecordingStudioAdmin::VERSION
+    assert_equal "2.9.1", ::RecordingStudioAdmin::VERSION
+  end
+
+  def test_gemspec_requires_recording_studio_six
+    root = File.expand_path("..", __dir__)
+    gemspec = File.read(File.join(root, "recording_studio_admin.gemspec"))
+
+    assert_includes gemspec, '"recording_studio", ">= 6.3.0", "< 7"'
+    assert_includes gemspec, '"flat_pack", ">= 0.1.341"'
+    assert_includes gemspec, '"view_component", ">= 4.14", "< 5"'
   end
 
   def test_gemspec_pins_recording_studio_logs

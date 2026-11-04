@@ -1,5 +1,29 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.9.1
+
+Gemspec RecordingStudio is `>= 6.3.0, < 7`. FlatPack stays `>= 0.1.341`. `view_component` stays `>= 4.14, < 5` (development `4.20.0`). Development and dummy pin Accessible `v0.24.1`. Dummy Exportable is `v0.5.12`.
+
+Engine screens still use core's Default Layout when `config.layout` is unset. Controllers use `recording_studio_layout`. Back and close stay on `flat_pack_page_nav`. Page actions stay on `register_page_nav`. Core 6 removed `recording_studio_page_nav`.
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.9.1`.
+2. Keep RecordingStudio on 6.x (`>= 6.3.0` and below 7). Pin FlatPack `v0.1.341` or newer `>= 0.1.341`. Keep `view_component` at `>= 4.14, < 5`.
+3. Pin Accessible `v0.24.1` if you follow the development GitHub tags. Dummy apps that use Exportable pin `v0.5.12`.
+
+### Verify the upgrade
+
+```ruby
+test "admin gemspec requires recording studio 6" do
+  gemspec = File.read("recording_studio_admin.gemspec")
+
+  assert_includes gemspec, '"recording_studio", ">= 6.3.0", "< 7"'
+  assert_includes gemspec, '"flat_pack", ">= 0.1.341"'
+  assert_includes gemspec, '"view_component", ">= 4.14", "< 5"'
+end
+```
+
 ## Upgrading to 2.9.0
 
 Development and dummy pins: Logs `v0.7.3`, Metrics `v0.7.2`, Trashable `v0.12.2`. Dummy Root Switchable `v0.11.4` and Cache `v0.6.2`. `view_component` stays `4.20.0`. Gemspec floors are unchanged.
