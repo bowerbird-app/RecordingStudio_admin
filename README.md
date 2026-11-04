@@ -11,7 +11,7 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
-Admin `2.8.3` pins Logs `v0.7.3`, Metrics `v0.7.2`, and Trashable `v0.12.2` (dummy Root Switchable `v0.11.4`, Cache `v0.6.2`). The install generator leaves `config.layout` unset. Export tokens pass `source: "recording_studio_admin"` without mutating Exportable `trusted_export_sources`. Hosts must allowlist that source. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-283).
+Admin `2.9.0` pins Logs `v0.7.3`, Metrics `v0.7.2`, and Trashable `v0.12.2` (dummy Root Switchable `v0.11.4`, Cache `v0.6.2`). The install generator leaves `config.layout` unset. Export tokens pass `source: "recording_studio_admin"` without mutating Exportable `trusted_export_sources`. Hosts must allowlist that source or Admin exports return no token. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-290).
 
 Hosts using RecordingStudio_exportable `>= 0.5.11` must set `config.current_actor`. Otherwise the export POST returns 403. See [docs/UPGRADING.md](docs/UPGRADING.md#recordingstudio-exportable-0511).
 

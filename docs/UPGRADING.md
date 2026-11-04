@@ -1,20 +1,22 @@
 # Upgrading RecordingStudioAdmin
 
-## Upgrading to 2.8.3
+## Upgrading to 2.9.0
 
 Development and dummy pins: Logs `v0.7.3`, Metrics `v0.7.2`, Trashable `v0.12.2`. Dummy Root Switchable `v0.11.4` and Cache `v0.6.2`. `view_component` stays `4.20.0`. Gemspec floors are unchanged.
 
 The install generator no longer sets `config.layout = "application"`. Leave it unset for core's Default Layout. The admin root generator includes `RecordingStudio::ControllerLayout` and `recording_studio_layout { RecordingStudioAdmin.configuration.layout }`.
 
-Admin no longer appends `"recording_studio_admin"` to Exportable `trusted_export_sources` at request time. It still passes `source: "recording_studio_admin"` to `issue_trusted_token`. Exportable only issues a token when that source is already on the host allowlist.
+Admin no longer appends `"recording_studio_admin"` to Exportable `trusted_export_sources` at request time. It still passes `source: "recording_studio_admin"` to `issue_trusted_token`. Exportable only issues a token when that source is already on the host allowlist. If the host omits that source, Admin exports return no token.
 
 The sections index filter group uses FlatPack `collapse: :menu`.
 
+The admin root generator still writes `app/views/layouts/admin.html.erb`. Generated `Admin::BaseController` no longer uses that layout: with `config.layout` unset it falls through to Recording Studio core's Default Layout.
+
 ### Upgrade Steps
 
-1. Bump the host gem to `2.8.3`.
+1. Bump the host gem to `2.9.0`.
 2. Pin Logs `v0.7.3`, Metrics `v0.7.2`, and Trashable `v0.12.2` if you follow the development GitHub tags. Dummy apps that use Root Switchable pin `v0.11.4` and Cache `v0.6.2`.
-3. Add `recording_studio_admin` to `RecordingStudioExportable` `config.trusted_export_sources`.
+3. Add `recording_studio_admin` to `RecordingStudioExportable` `config.trusted_export_sources`. Without it, Admin exports return no token.
 4. If a generated `Admin::BaseController` still has `layout "admin"`, switch it to `recording_studio_layout`. If a generated initializer sets `config.layout = "application"` only as a leftover default, remove that line so core's Default Layout applies.
 
 ### Verify the upgrade
