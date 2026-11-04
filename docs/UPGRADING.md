@@ -1,5 +1,36 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.9.1
+
+Gemspec Recording Studio is `>= 6.3.0, < 7`. Development and dummy pins: core `v6.3.0`, FlatPack `v0.1.341`, Accessible `v0.24.1`. Dummy Exportable `v0.5.12`. `view_component` stays `4.20.0`.
+
+Engine controllers still resolve layout through `recording_studio_layout`. Unset `config.layout` (and unset `surface.layout`) falls through to Recording Studio core's Default Layout. Dummy host views stay as they are.
+
+Engine views already use `flat_pack_page_nav` and `register_page_nav`. Do not pass `back_icon:` or `anchor_label:` — FlatPack `v0.1.341` removed `anchor_label` (`back_icon` is still accepted on the spec, and Admin does not pass it). Card `style:` is removed; Admin cards use `border: :strong`. Button and Badge still take `style:` on this tag.
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.9.1`.
+2. Pin Recording Studio `>= 6.3.0, < 7` (development tag `v6.3.0`) and FlatPack `>= 0.1.341` (development tag `v0.1.341`).
+3. Pin Accessible `v0.24.1` if you follow the development GitHub tags. Dummy apps that use Exportable pin `v0.5.12`.
+4. Keep `view_component` at `>= 4.14` (development `4.20.0`).
+
+### Verify the upgrade
+
+```ruby
+test "admin engine uses core default layout and the flatpack 0.1.341 page nav api" do
+  source = File.read("app/controllers/recording_studio_admin/application_controller.rb")
+  helper = File.read("app/helpers/recording_studio_admin/page_nav_helper.rb")
+
+  assert_includes source, "recording_studio_layout"
+  refute_includes helper, "back_icon:"
+  refute_includes helper, "anchor_label:"
+  refute_includes helper, "recording_studio_page_nav("
+  assert_includes helper, "flat_pack_page_nav"
+  assert_includes helper, "register_page_nav"
+end
+```
+
 ## Upgrading to 2.9.0
 
 Development and dummy pins: Logs `v0.7.3`, Metrics `v0.7.2`, Trashable `v0.12.2`. Dummy Root Switchable `v0.11.4` and Cache `v0.6.2`. `view_component` stays `4.20.0`. Gemspec floors are unchanged.

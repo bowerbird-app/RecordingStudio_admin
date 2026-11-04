@@ -6,9 +6,9 @@ require_relative "../support/widen_recording_studio_requirement"
 gem "recording_studio_admin", path: "../.."
 
 gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v6.3.0"
-# Exportable 0.5.11 requires Accessible ~> 0.24.
-gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.24.0"
-gem "recording_studio_exportable", github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.5.11"
+# Exportable 0.5.12 requires Accessible ~> 0.24.
+gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.24.1"
+gem "recording_studio_exportable", github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.5.12"
 gem "recording_studio_logs", github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.3"
 gem "recording_studio_trashable", github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.12.2",
                                  require: false

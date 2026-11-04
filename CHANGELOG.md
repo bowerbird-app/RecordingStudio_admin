@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 2.9.1 - 2026-11-04
+
+### Changed
+
+- Gemspec Recording Studio is `>= 6.3.0, < 7`. Development and dummy pins stay core `v6.3.0` and FlatPack `v0.1.341`. Accessible is `v0.24.1`. Dummy Exportable is `v0.5.12`. `view_component` stays `4.20.0` (`>= 4.14`, `< 5`) so GHSA-8qw7-6phv-7q6p stays closed.
+- Engine screens still use `recording_studio_layout { configuration.layout_for(surface) }`. Nil falls through to core's Default Layout. Generated `Admin::BaseController` still uses `recording_studio_layout { RecordingStudioAdmin.configuration.layout }`. Dummy views are unchanged.
+- Engine views and helpers keep the FlatPack `v0.1.341` Page Nav API: `flat_pack_page_nav` plus `register_page_nav`. They do not pass removed kwargs `back_icon` or `anchor_label`. Cards use `border:` / `variant:`, not `style:`. Button and Badge still take `style:` on that FlatPack tag.
+
+### Upgrade notes
+
+- Bump the host gem to `2.9.1`. Match the development pins if you use those GitHub tags. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-291).
+
 ## 2.9.0 - 2026-11-04
 
 ### Changed
@@ -475,7 +487,8 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.0...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.1...HEAD
+[2.9.1]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.0...v2.9.1
 [2.9.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.8.2...v2.9.0
 [2.8.2]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.8.1...v2.8.2
 [2.6.2]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.1...v2.6.2
