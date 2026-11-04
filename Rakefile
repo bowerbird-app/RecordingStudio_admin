@@ -12,6 +12,7 @@ DUMMY_APP_ROOT = File.expand_path("test/dummy", __dir__)
 DUMMY_APP_TEST_FILES = %w[
   test/credentials_test.rb
   test/cursor_boot_files_test.rb
+  test/admin_screens_base_distinct_date_series_test.rb
   test/integration/admin_i18n_boot_order_host_override_test.rb
   test/integration/admin_i18n_host_override_test.rb
   test/integration/admin_i18n_render_test.rb

@@ -44,6 +44,8 @@ class InstallGeneratorTest < Minitest::Test
 
       initializer = File.read(File.join(dir, "config/initializers/recording_studio_admin.rb"))
       assert_includes initializer, 'config.default_mount_path = "/backoffice"'
+      refute_includes initializer, 'config.layout = "application"'
+      assert_includes initializer, "# Leave layout unset so Recording Studio core's Default Layout applies."
       assert_includes initializer, "config.access_recording_resolver = lambda do |context|"
       assert_includes initializer, "config.async_widgets.enabled = false"
       assert_includes initializer, "config.logs_retention = :indefinite"

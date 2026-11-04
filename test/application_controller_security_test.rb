@@ -49,6 +49,9 @@ class ApplicationControllerSecurityTest < Minitest::Test
     assert_includes source, "head :unauthorized"
     assert_includes source, "head :forbidden"
     assert_includes source, "set_recording_studio_admin_current_actor"
+    assert_includes source, 'source: "recording_studio_admin"'
+    refute_includes source, "trusted_export_sources"
+    refute_includes source, "ensure_recording_studio_admin_trusted_export_source!"
   end
 
   def test_layout_uses_configuration

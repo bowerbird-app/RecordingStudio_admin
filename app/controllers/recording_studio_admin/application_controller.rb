@@ -192,8 +192,6 @@ module RecordingStudioAdmin
       required_role = export_config[:required_role] || :view
       return nil unless authorized_for_export_token?(context, required_role)
 
-      ensure_recording_studio_admin_trusted_export_source!
-
       export_context = context
       relation = export_context.query_result&.relation
       export_params = export_context.params.to_h.deep_stringify_keys.merge(
@@ -238,12 +236,6 @@ module RecordingStudioAdmin
       )
     rescue StandardError
       false
-    end
-
-    def ensure_recording_studio_admin_trusted_export_source!
-      configuration = ::RecordingStudioExportable.configuration
-      sources = Array(configuration.trusted_export_sources).map(&:to_s)
-      configuration.trusted_export_sources = sources | ["recording_studio_admin"]
     end
 
     def trusted_export_columns_for(screen, column_keys, export_context)

@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 2.9.0 - 2026-11-04
+
+### Changed
+
+- Development and dummy pins: Logs `v0.7.3`, Metrics `v0.7.2`, Trashable `v0.12.2`. Dummy-only Root Switchable `v0.11.4` and Cache `v0.6.2`. `view_component` stays `4.20.0`.
+- The install generator leaves `config.layout` unset so Recording Studio core's Default Layout applies. The admin root generator still generates `app/views/layouts/admin.html.erb`, but generated `Admin::BaseController` no longer uses it (`recording_studio_layout { RecordingStudioAdmin.configuration.layout }`). Unset `config.layout` falls through to core's Default Layout. The generator itself is unchanged in this release.
+- Admin issues export tokens with `source: "recording_studio_admin"` and no longer writes that source into `RecordingStudioExportable.configuration.trusted_export_sources`. Hosts must list `recording_studio_admin` in that allowlist or Admin exports return no token.
+- GitHub Actions Security workflow: Bundler Audit, Brakeman, and Importmap Audit on the dummy app.
+- Dummy lockfile `net-ssh` is `7.3.8` (was `7.3.3`) so Bundler Audit is clean for the net-ssh GHSAs. Dummy `brakeman` is `8.1.0` so `bin/brakeman --ensure-latest` matches the current release.
+- Dummy `AdminScreens::Base.distinct_date_series` counts distinct columns with Arel instead of interpolating the column name into `Arel.sql`.
+### Upgrade notes
+
+- Bump the host gem to `2.9.0`. Add `recording_studio_admin` to Exportable `config.trusted_export_sources`. Match the development pins if you use those GitHub tags. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-290).
+
 ## 2.8.2 - 2026-11-03
 
 ### Changed
@@ -461,7 +475,8 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.8.2...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.0...HEAD
+[2.9.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.8.2...v2.9.0
 [2.8.2]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.8.1...v2.8.2
 [2.6.2]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.1...v2.6.2
 [2.6.1]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.6.0...v2.6.1

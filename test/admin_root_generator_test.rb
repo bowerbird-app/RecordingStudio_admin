@@ -10,7 +10,9 @@ class AdminRootGeneratorTest < Minitest::Test
     template = File.read(generator_template_path("app/controllers/admin/base_controller.rb"))
 
     assert_includes template, "class Admin::BaseController < ApplicationController"
-    assert_includes template, 'layout "admin"'
+    assert_includes template, "include RecordingStudio::ControllerLayout"
+    assert_includes template, "recording_studio_layout { RecordingStudioAdmin.configuration.layout }"
+    refute_includes template, 'layout "admin"'
     assert_includes template, "before_action :authenticate_admin_user!"
     assert_includes template, "before_action :authorize_admin_user!"
     expected_helper_method =

@@ -2,7 +2,7 @@
 
 RecordingStudioAdmin.configure do |config|
   config.default_mount_path = "__MOUNT_PATH__"
-  config.layout = "application"
+  # Leave layout unset so Recording Studio core's Default Layout applies.
   config.authentication_method = :authenticate_user!
   config.current_actor_method = :current_user
 

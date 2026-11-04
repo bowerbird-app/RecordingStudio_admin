@@ -7,6 +7,44 @@ class ExportableCurrentActorTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include DummyAccessTestHelpers
 
+  test "issuing an admin export token does not mutate trusted_export_sources" do
+    sign_in_export_user
+    create_export_request!
+    configuration = RecordingStudioExportable.configuration
+    sources_before = Array(configuration.trusted_export_sources).map(&:to_s)
+
+    token = export_token_for("actor-export")
+
+    assert token.present?
+    assert_equal sources_before, Array(configuration.trusted_export_sources).map(&:to_s)
+  end
+
+  test "issuing an admin export token returns none when the source is not allowlisted" do
+    sign_in_export_user
+    create_export_request!
+    configuration = RecordingStudioExportable.configuration
+    original_sources = Array(configuration.trusted_export_sources).dup
+    configuration.trusted_export_sources = original_sources.reject { |source| source.to_s == "recording_studio_admin" }
+    sources_before = Array(configuration.trusted_export_sources).map(&:to_s)
+
+    refute_includes sources_before, "recording_studio_admin"
+
+    get "/admin/screens/api_requests/table", params: {
+      search: "actor-export",
+      columns: [ "path" ],
+      columns_present: "1"
+    }
+
+    assert_response :success
+    token_field = css_select('input[name="export_token"]').first
+    token = token_field && token_field["value"]
+    assert token.blank?
+    assert_equal sources_before, Array(configuration.trusted_export_sources).map(&:to_s)
+    refute_includes Array(configuration.trusted_export_sources).map(&:to_s), "recording_studio_admin"
+  ensure
+    configuration.trusted_export_sources = original_sources if defined?(configuration) && configuration
+  end
+
   test "signed-in export POST returns csv when current_actor is configured" do
     sign_in_export_user
     create_export_request!

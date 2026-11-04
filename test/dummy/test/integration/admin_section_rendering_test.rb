@@ -413,6 +413,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'id="admin-sections-discovery"'
     assert_includes response.body, 'data-controller="flat-pack--auto-submit"'
     assert_includes response.body, 'data-turbo-frame="admin-sections-discovery"'
+    refute_includes response.body, "fp-button-group-menu"
     assert_includes response.body, "flat-pack--auto-submit#queueSubmit"
     assert_includes response.body, "Search screens and sections"
     assert_includes response.body, 'type="search"'
