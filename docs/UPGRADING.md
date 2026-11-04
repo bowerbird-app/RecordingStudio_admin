@@ -1,5 +1,35 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.8.3
+
+Development and dummy pins: Logs `v0.7.3`, Metrics `v0.7.2`, Trashable `v0.12.2`. Dummy Root Switchable `v0.11.4` and Cache `v0.6.2`. `view_component` stays `4.20.0`. Gemspec floors are unchanged.
+
+The install generator no longer sets `config.layout = "application"`. Leave it unset for core's Default Layout. The admin root generator includes `RecordingStudio::ControllerLayout` and `recording_studio_layout { RecordingStudioAdmin.configuration.layout }`.
+
+Admin no longer appends `"recording_studio_admin"` to Exportable `trusted_export_sources` at request time. It still passes `source: "recording_studio_admin"` to `issue_trusted_token`. Exportable only issues a token when that source is already on the host allowlist.
+
+The sections index filter group uses FlatPack `collapse: :menu`.
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.8.3`.
+2. Pin Logs `v0.7.3`, Metrics `v0.7.2`, and Trashable `v0.12.2` if you follow the development GitHub tags. Dummy apps that use Root Switchable pin `v0.11.4` and Cache `v0.6.2`.
+3. Add `recording_studio_admin` to `RecordingStudioExportable` `config.trusted_export_sources`.
+4. If a generated `Admin::BaseController` still has `layout "admin"`, switch it to `recording_studio_layout`. If a generated initializer sets `config.layout = "application"` only as a leftover default, remove that line so core's Default Layout applies.
+
+### Verify the upgrade
+
+```ruby
+test "issuing an admin export token does not mutate trusted_export_sources" do
+  sources_before = Array(RecordingStudioExportable.configuration.trusted_export_sources).dup
+
+  get "/admin/screens/api_requests/table", params: { columns: ["path"], columns_present: "1" }
+
+  assert_response :success
+  assert_equal sources_before, Array(RecordingStudioExportable.configuration.trusted_export_sources)
+end
+```
+
 ## Upgrading to 2.8.2
 
 Admin date range filters pass FlatPack `DateRangeInput` `preset_name:` (the filter `preset_param`, usually `date_range_preset`). Apply writes that hidden field. FlatPack 0.1.341 then dispatches a bubbling `change` on each hidden field it writes, then `flat-pack--flatpack-date-picker:apply` on the picker root with `{start, end, preset}`. Screen filter forms already auto-submit on `change`, so that is the only submit path.

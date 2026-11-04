@@ -3,6 +3,7 @@
 if defined?(RecordingStudioExportable)
   RecordingStudioExportable.configure do |config|
     config.current_actor = ->(controller: nil) { Current.actor || controller&.current_user }
+    config.trusted_export_sources = %w[recording_studio_admin]
 
     RecordingStudioExportable.auto_register_exports!(config)
 

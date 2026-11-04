@@ -2,8 +2,9 @@
 
 class Admin::BaseController < ApplicationController
   include RecordingStudioAdmin::AdminActionAuditing
+  include RecordingStudio::ControllerLayout
 
-  layout "admin"
+  recording_studio_layout { RecordingStudioAdmin.configuration.layout }
 
   before_action :authenticate_admin_user!
   before_action :authorize_admin_user!

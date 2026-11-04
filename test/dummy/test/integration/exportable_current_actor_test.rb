@@ -7,6 +7,18 @@ class ExportableCurrentActorTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include DummyAccessTestHelpers
 
+  test "issuing an admin export token does not mutate trusted_export_sources" do
+    sign_in_export_user
+    create_export_request!
+    configuration = RecordingStudioExportable.configuration
+    sources_before = Array(configuration.trusted_export_sources).map(&:to_s)
+
+    token = export_token_for("actor-export")
+
+    assert token.present?
+    assert_equal sources_before, Array(configuration.trusted_export_sources).map(&:to_s)
+  end
+
   test "signed-in export POST returns csv when current_actor is configured" do
     sign_in_export_user
     create_export_request!
