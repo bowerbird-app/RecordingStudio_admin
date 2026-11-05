@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 2.9.2 - 2026-11-05
+
+### Changed
+
+- Section child writes and admin action audit `record!` calls pass an explicit `actor:` from the admin context. They no longer rely on `Current.actor` through `config.actor`.
+- Dummy `RecordingStudio.configure` sets a real `config.authorize_write` (Accessible `:edit` on the root, not `actor.present?`). Hosts must set an authorizer before Recording Studio core `6.5.0`, where missing `authorize_write` raises `AuthorizationError` and a missing actor raises `ActorRequired`.
+
+### Upgrade notes
+
+- Bump the host gem to `2.9.2`. Set `RecordingStudio` `config.authorize_write` and pass `actor:` on writes (or keep `config.actor` populated). Do not use `allow_unauthorized_writes` unless you are deliberately keeping open writes. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-292).
+
 ## 2.9.1 - 2026-11-04
 
 ### Changed
@@ -487,7 +498,8 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.1...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.2...HEAD
+[2.9.2]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.1...v2.9.2
 [2.9.1]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.0...v2.9.1
 [2.9.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.8.2...v2.9.0
 [2.8.2]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.8.1...v2.8.2

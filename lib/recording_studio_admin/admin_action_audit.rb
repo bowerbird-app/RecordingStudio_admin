@@ -95,6 +95,7 @@ module RecordingStudioAdmin
         parent_recording = default_parent_recording
         attributes[:root_recording] ||= root_recording if root_recording
         attributes[:parent_recording] ||= parent_recording if parent_recording
+        attributes[:actor] = @context.current_actor unless attributes.key?(:actor)
         attributes[:metadata] = event_metadata if event_metadata.any?
         @recording_studio_event = ::RecordingStudio.record!(action: action, recordable: recordable, **attributes)
       end

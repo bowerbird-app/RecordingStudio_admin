@@ -24,6 +24,7 @@ DUMMY_APP_TEST_FILES = %w[
   test/integration/exportable_current_actor_test.rb
   test/integration/recording_studio_v3_template_test.rb
   test/integration/root_switch_dropdown_test.rb
+  test/integration/authorize_write_test.rb
   test/integration/stats_root_test.rb
   test/integration/trashable_active_scope_parity_test.rb
   test/integration/trashable_query_surface_test.rb

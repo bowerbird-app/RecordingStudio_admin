@@ -1635,6 +1635,7 @@ class ResolverTest < Minitest::Test
           assert_equal 1, recorded_events.size
           assert_equal root_recording, recorded_events.first.fetch(:root_recording)
           assert_equal root_recording, recorded_events.first.fetch(:parent_recording)
+          assert_equal :actor, recorded_events.first.fetch(:actor)
         end
       end
     end

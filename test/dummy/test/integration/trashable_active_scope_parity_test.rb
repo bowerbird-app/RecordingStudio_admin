@@ -3,6 +3,8 @@
 require "test_helper"
 
 class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
+  include DummyAccessTestHelpers
+
   test "admin-root kept_sql matches main trashed_at nil filter" do
     assert RecordingStudio::Recording.respond_to?(:recording_studio_trashable_kept_sql)
 
@@ -61,12 +63,14 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
 
     workspace = Workspace.create!(name: "Stats parity #{SecureRandom.hex(4)}")
     root_recording = RecordingStudio.root_recording_for(workspace)
+    grant_admin_access_for_test!(recording: root_recording, actor: actor)
     folder = Folder.create!(name: "Stats folder #{SecureRandom.hex(4)}")
     RecordingStudio.record!(
       action: "created",
       recordable: folder,
       root_recording: root_recording,
-      parent_recording: root_recording
+      parent_recording: root_recording,
+      actor: actor
     )
 
     context = Struct.new(:root_recording).new(root_recording)
@@ -110,13 +114,15 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
 
     workspace = Workspace.create!(name: "Trashable parity workspace #{SecureRandom.hex(4)}")
     root_recording = RecordingStudio.root_recording_for(workspace)
+    grant_admin_access_for_test!(recording: root_recording, actor: actor)
     folder = Folder.create!(name: "Parity folder #{SecureRandom.hex(4)}")
 
     kept = RecordingStudio.record!(
       action: "created",
       recordable: folder,
       root_recording: root_recording,
-      parent_recording: root_recording
+      parent_recording: root_recording,
+      actor: actor
     ).recording
 
     trashed_folder = Folder.create!(name: "Trashed parity folder #{SecureRandom.hex(4)}")
@@ -124,7 +130,8 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
       action: "created",
       recordable: trashed_folder,
       root_recording: root_recording,
-      parent_recording: root_recording
+      parent_recording: root_recording,
+      actor: actor
     ).recording
     trashed.update_columns(trashed_at: Time.current, updated_at: Time.current)
 
@@ -187,12 +194,14 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
 
     workspace = Workspace.create!(name: "Stats filter #{SecureRandom.hex(4)}")
     root_recording = RecordingStudio.root_recording_for(workspace)
+    grant_admin_access_for_test!(recording: root_recording, actor: actor)
     folder = Folder.create!(name: "Trashed stats folder #{SecureRandom.hex(4)}")
     folder_recording = RecordingStudio.record!(
       action: "created",
       recordable: folder,
       root_recording: root_recording,
-      parent_recording: root_recording
+      parent_recording: root_recording,
+      actor: actor
     ).recording
     folder_recording.update_columns(trashed_at: Time.current, updated_at: Time.current)
 
@@ -219,6 +228,8 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
     assert_includes seeds, "recording_studio_trashable_kept_sql"
     refute_includes seeds, "recording_studio_trashable_active",
                     "seeds must not use _active (it unscopes host trashed_at default scopes)"
+    assert_includes seeds, "actor: actor"
+    refute_includes seeds, "allow_unauthorized_writes"
 
     actor = User.find_or_create_by!(email: "trashable-seeds-parity@example.com") do |record|
       record.password = "Password123!"
@@ -229,12 +240,14 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
 
     workspace = Workspace.create!(name: "Seeds parity #{SecureRandom.hex(4)}")
     root_recording = RecordingStudio.root_recording_for(workspace)
+    grant_admin_access_for_test!(recording: root_recording, actor: actor)
     folder = Folder.create!(name: "Seeds folder #{SecureRandom.hex(4)}")
     RecordingStudio.record!(
       action: "created",
       recordable: folder,
       root_recording: root_recording,
-      parent_recording: root_recording
+      parent_recording: root_recording,
+      actor: actor
     )
 
     recording_class = RecordingStudio::Recording

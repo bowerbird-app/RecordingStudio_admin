@@ -42,7 +42,8 @@ class StatsRootTest < ActionDispatch::IntegrationTest
       action: "created",
       recordable: recordable,
       root_recording: root_recording,
-      parent_recording: parent_recording
+      parent_recording: parent_recording,
+      actor: actor
     ).recording
 
     recordable.class.where(id: recordable.id).update_all(created_at: created_at, updated_at: created_at)

@@ -2,7 +2,7 @@
 # development, test). The code here should be idempotent so that it can be executed at any point in every environment.
 # The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
 
-find_or_record_child = lambda do |recordable, root_recording, parent_recording|
+find_or_record_child = lambda do |recordable, root_recording, parent_recording, actor:|
   RecordingStudio::Recording.where(
     RecordingStudio::Recording.recording_studio_trashable_kept_sql
   ).find_by(
@@ -13,7 +13,8 @@ find_or_record_child = lambda do |recordable, root_recording, parent_recording|
     action: "created",
     recordable: recordable,
     root_recording: root_recording,
-    parent_recording: parent_recording
+    parent_recording: parent_recording,
+    actor: actor
   ).recording
 end
 
@@ -35,8 +36,8 @@ set_timestamps = lambda do |record, timestamp|
   record.class.where(id: record.id).update_all(created_at: timestamp, updated_at: timestamp)
 end
 
-record_seed_child = lambda do |recordable, root_recording, parent_recording, created_at:|
-  recording = find_or_record_child.call(recordable, root_recording, parent_recording)
+record_seed_child = lambda do |recordable, root_recording, parent_recording, actor:, created_at:|
+  recording = find_or_record_child.call(recordable, root_recording, parent_recording, actor: actor)
   set_timestamps.call(recordable, created_at)
   set_timestamps.call(recording, created_at)
   recording
@@ -64,8 +65,12 @@ begin
   accessible_root_recording = RecordingStudio.root_recording_for(accessible_workspace)
   private_root_recording = RecordingStudio.root_recording_for(private_workspace)
 
-  folder_recording = record_seed_child.call(folder, root_recording, root_recording, created_at: 6.weeks.ago.change(hour: 9))
-  record_seed_child.call(page, root_recording, folder_recording, created_at: 6.weeks.ago.change(hour: 11))
+  [ root_recording, accessible_root_recording, private_root_recording ].each do |recording|
+    bootstrap_owner_access.call(recording, user)
+  end
+
+  folder_recording = record_seed_child.call(folder, root_recording, root_recording, actor: user, created_at: 6.weeks.ago.change(hour: 9))
+  record_seed_child.call(page, root_recording, folder_recording, actor: user, created_at: 6.weeks.ago.change(hour: 11))
 
   {
     root_recording => {
@@ -85,6 +90,7 @@ begin
         content_folder,
         current_root_recording,
         current_root_recording,
+        actor: user,
         created_at: folder_created_at
       )
 
@@ -94,6 +100,7 @@ begin
           content_page,
           current_root_recording,
           content_folder_recording,
+          actor: user,
           created_at: folder_created_at + (page_index + 1).days
         )
       end
@@ -105,6 +112,7 @@ begin
     nested_folder,
     root_recording,
     Folder.find_by!(name: "Analytics").then { |record| RecordingStudio::Recording.find_by!(recordable: record, root_recording: root_recording) },
+    actor: user,
     created_at: 10.days.ago.change(hour: 13)
   )
   nested_page = Page.find_or_create_by!(title: "Experiment Backlog")
@@ -112,12 +120,9 @@ begin
     nested_page,
     root_recording,
     nested_folder_recording,
+    actor: user,
     created_at: 9.days.ago.change(hour: 15)
   )
-
-  [ root_recording, accessible_root_recording, private_root_recording ].each do |recording|
-    bootstrap_owner_access.call(recording, user)
-  end
 ensure
   Current.actor = previous_actor
 end
@@ -138,7 +143,7 @@ begin
   admin_section = AdminSection.find_or_create_by!(key: "root") do |record|
     record.name = "Admin section"
   end
-  find_or_record_child.call(admin_section, admin_root_recording, admin_root_recording)
+  find_or_record_child.call(admin_section, admin_root_recording, admin_root_recording, actor: user)
 ensure
   Current.actor = previous_actor
 end
