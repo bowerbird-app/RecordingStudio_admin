@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.9.2` is ready for Recording Studio core `6.5.0` fail-closed writes. Section and audit `record!` calls pass `actor:` from the admin context. Hosts must set `config.authorize_write` before that core release (`AuthorizationError` without it, `ActorRequired` without an actor). Dummy uses Accessible `:edit` on the root, not `actor.present?`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-292).
+
 Admin `2.9.1` caps Recording Studio at `>= 6.3.0, < 7` and re-pins Accessible `v0.24.1` (dummy Exportable `v0.5.12`). Core stays `v6.3.0`, FlatPack `v0.1.341`, `view_component` `4.20.0`. Engine screens keep core's Default Layout when `config.layout` is unset. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-291).
 
 Admin `2.9.0` pins Logs `v0.7.3`, Metrics `v0.7.2`, and Trashable `v0.12.2` (dummy Root Switchable `v0.11.4`, Cache `v0.6.2`). The install generator leaves `config.layout` unset. Export tokens pass `source: "recording_studio_admin"` without mutating Exportable `trusted_export_sources`. Hosts must allowlist that source or Admin exports return no token. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-290).

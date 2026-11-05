@@ -1,5 +1,36 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.9.2
+
+Recording Studio core `6.5.0` makes writes fail closed. A missing `config.authorize_write` raises `RecordingStudio::AuthorizationError`. A missing actor raises `RecordingStudio::ActorRequired`. `config.allow_unauthorized_writes` defaults to `false`.
+
+Admin `2.9.2` passes `actor:` on section child writes and admin action audit `record!` calls from the admin context. The dummy host sets a real `authorize_write` that checks Accessible `:edit` on the root recording. `actor.present?` is not a write policy.
+
+Gemspec Recording Studio stays `>= 6.3.0, < 7`. Development and dummy pins stay on core `v6.3.0` until `6.5.0` ships.
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.9.2`.
+2. Set `RecordingStudio.configure` `config.authorize_write` before upgrading core to `6.5.0`. Check Accessible (or your host write policy), not only whether an actor is present.
+3. Pass `actor:` on jobs, seeds, and other writes that have no `Current.actor`. Admin screens already pass the current actor on section and audit writes.
+4. Do not set `config.allow_unauthorized_writes = true` unless you are deliberately keeping the old open writes during a host migration.
+
+### Verify the upgrade
+
+```ruby
+test "admin writes pass actor and dummy authorize_write is a real policy" do
+  resolver = File.read("lib/recording_studio_admin/section_recording_resolver.rb")
+  audit = File.read("lib/recording_studio_admin/admin_action_audit.rb")
+  initializer = File.read("test/dummy/config/initializers/recording_studio.rb")
+
+  assert_includes resolver, "actor: @context.current_actor"
+  assert_includes audit, "attributes[:actor] = @context.current_actor unless attributes.key?(:actor)"
+  assert_includes initializer, "config.authorize_write"
+  assert_includes initializer, "RecordingStudioAccessible.authorized?"
+  refute_match(/authorize_write\s*=\s*->\(actor:, \*\*\) \{ actor\.present\? \}/, initializer)
+end
+```
+
 ## Upgrading to 2.9.1
 
 Gemspec Recording Studio is `>= 6.3.0, < 7`. Development and dummy pins: core `v6.3.0`, FlatPack `v0.1.341`, Accessible `v0.24.1`. Dummy Exportable `v0.5.12`. `view_component` stays `4.20.0`.

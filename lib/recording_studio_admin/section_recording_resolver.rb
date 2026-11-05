@@ -77,7 +77,8 @@ module RecordingStudioAdmin
         action: @definition.action,
         recordable: recordable,
         root_recording: root_recording,
-        parent_recording: parent_recording
+        parent_recording: parent_recording,
+        actor: @context.current_actor
       ).recording
     end
 

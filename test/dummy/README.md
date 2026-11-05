@@ -6,6 +6,7 @@ This Rails app exists to validate the Recording Studio addon template in a real 
 
 - Devise authentication with a seeded admin user
 - `Current.actor` wiring for Recording Studio events
+- `config.authorize_write` that checks Accessible write access (required before Recording Studio core 6.5.0)
 - Root workspace plus seeded folder and page recordables
 - FlatPack layout integration and Tailwind source scanning
 - Mounted `RecordingStudio::Engine` route behavior inside a host app

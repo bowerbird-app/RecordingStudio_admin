@@ -142,6 +142,7 @@ class AdminActionAuditTest < Minitest::Test
     assert_equal :recording_event, @events.first.recording_studio_event
     assert_equal "admin.flagged", recorded_attributes.first.fetch(:action)
     assert_equal record, recorded_attributes.first.fetch(:recordable)
+    assert_equal :actor, recorded_attributes.first.fetch(:actor)
     assert_equal "review", recorded_attributes.first.fetch(:metadata).fetch(:reason)
     assert_equal @events.first.id, recorded_attributes.first.fetch(:metadata).fetch(:admin_audit_event_id)
   end
