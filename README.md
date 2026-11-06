@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.9.3` uses the FlatPack `v0.1.341` Page Nav spec block (`with_back` / `with_close`) in `recording_studio_admin_page_heading`. Hosts should drop prepends and copied views that kept Close. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-293).
+
 Admin `2.9.2` is ready for Recording Studio core `6.5.0` fail-closed writes. Section and audit `record!` calls pass `actor:` from the admin context. Hosts must set `config.authorize_write` before that core release (`AuthorizationError` without it, `ActorRequired` without an actor). Dummy uses Accessible `:edit` on the root, not `actor.present?`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-292).
 
 Admin `2.9.1` caps Recording Studio at `>= 6.3.0, < 7` and re-pins Accessible `v0.24.1` (dummy Exportable `v0.5.12`). Core stays `v6.3.0`, FlatPack `v0.1.341`, `view_component` `4.20.0`. Engine screens keep core's Default Layout when `config.layout` is unset. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-291).
@@ -681,7 +683,7 @@ context.available_admin_widgets(placement: :root, include: :section_widgets)
 not resolve widget values, list items, rows, or chart series, so it can answer which widgets are available without
 running dashboard queries.
 
-Engine screens set the page heading with `content_for :title` and `content_for :subtitle`. The default layout renders that heading once. Back and close go through `flat_pack_page_nav(round: true, style: :default, ...)`. Section links and screen buttons register with `register_page_nav`. Custom markup, such as access avatars, uses `recording_studio_page_nav_right`.
+Engine screens set the page heading with `content_for :title` and `content_for :subtitle`. The default layout renders that heading once. Back and close go through `recording_studio_admin_page_heading`, which calls `flat_pack_page_nav` with `with_back` and `with_close`. Section links and screen buttons register with `register_page_nav`. Custom markup, such as access avatars, uses `recording_studio_page_nav_right`.
 
 Mounted controllers also expose helper methods for safe navigation back to host-app pages:
 

@@ -5,13 +5,14 @@ module RecordingStudioAdmin
     def recording_studio_admin_page_heading(title:, anchor:, subtitle: nil)
       content_for(:title, title) if title.present?
       content_for(:subtitle, subtitle) if subtitle.present?
-      flat_pack_page_nav(
-        round: true,
-        style: :default,
-        anchor_href: anchor,
-        anchor_tooltip: t("recording_studio.admin.navigation.close", default: "Close"),
-        back_tooltip: t("recording_studio.admin.navigation.go_back", default: "Go back")
-      )
+      close_tooltip = t("recording_studio.admin.navigation.close", default: "Close")
+      back_tooltip = t("recording_studio.admin.navigation.go_back", default: "Go back")
+      flat_pack_page_nav(round: true, style: :default) do |nav|
+        back = { tooltip: back_tooltip }
+        back[:fallback_url] = anchor if anchor.present?
+        nav.with_back(**back)
+        nav.with_close(href: anchor, tooltip: close_tooltip) if anchor.present?
+      end
       nil
     end
 
