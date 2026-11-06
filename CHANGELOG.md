@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 2.9.3 - 2026-11-06
+
+### Changed
+
+- `recording_studio_admin_page_heading` uses the FlatPack `v0.1.341` Page Nav spec block: `with_back(tooltip:)` for history back (with `fallback_url:` when an anchor is present) and `with_close(href:, tooltip:)` when that anchor is present. It no longer passes `anchor_href:`, `anchor_tooltip:`, or `back_tooltip:` as arrangement kwargs. Generated admin root and resource form views call that helper instead of those kwargs.
+- Engine and generated cards stay on `border:` / `hover:` / `background:`, not Card `style:`. Button and Alert still take `style:`.
+
+### Upgrade notes
+
+- Bump the host gem to `2.9.3`. Drop host helper prepends and copied engine views that existed to keep Close. Call `recording_studio_admin_page_heading` or `flat_pack_page_nav` with `with_back` / `with_close`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-293).
+
 ## 2.9.2 - 2026-11-05
 
 ### Changed
@@ -498,7 +509,8 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.2...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.3...HEAD
+[2.9.3]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.2...v2.9.3
 [2.9.2]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.1...v2.9.2
 [2.9.1]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.0...v2.9.1
 [2.9.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.8.2...v2.9.0

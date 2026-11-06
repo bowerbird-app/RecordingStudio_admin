@@ -1,5 +1,39 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.9.3
+
+Admin `2.9.3` uses the FlatPack `v0.1.341` Page Nav spec block. `recording_studio_admin_page_heading` calls `with_back(tooltip:)` for history back and `with_close(href:, tooltip:)` when an anchor is present. It does not pass `anchor_href:`, `anchor_tooltip:`, `back_tooltip:`, or `anchor_label:`. Close still returns to the caller’s `page_nav_anchor_url`. History back still uses `fallback_url` when that anchor is present.
+
+Generated admin root and resource form views call `recording_studio_admin_page_heading`. They do not copy Page Nav arrangement kwargs into host templates. Hosts that prepended the helper or forked views to keep Close can delete those workarounds.
+
+Cards stay on `border:` / `hover:` / `background:`. Card `style:` is gone. Button and Alert still take `style:`.
+
+FlatPack stays `>= 0.1.341` (development tag `v0.1.341`).
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.9.3`.
+2. Pin FlatPack `>= 0.1.341` (development tag `v0.1.341`) if you have not already.
+3. Replace host `flat_pack_page_nav(..., anchor_href:, anchor_tooltip:, back_tooltip:)` shims with `recording_studio_admin_page_heading`, or with a spec block that calls `with_back` and `with_close`.
+4. Delete helper prepends and copied engine views that existed only to keep Close.
+5. Move remaining Card `style:` call sites to `background:`, `border:`, and `hover:`.
+
+### Verify the upgrade
+
+```ruby
+test "admin page heading uses the flatpack 0.1.341 spec block" do
+  helper = File.read("app/helpers/recording_studio_admin/page_nav_helper.rb")
+
+  assert_includes helper, "flat_pack_page_nav"
+  assert_includes helper, "with_back"
+  assert_includes helper, "with_close"
+  refute_includes helper, "anchor_href:"
+  refute_includes helper, "anchor_tooltip:"
+  refute_includes helper, "back_tooltip:"
+  refute_includes helper, "anchor_label:"
+end
+```
+
 ## Upgrading to 2.9.2
 
 Recording Studio core `6.5.0` makes writes fail closed. A missing `config.authorize_write` raises `RecordingStudio::AuthorizationError`. A missing actor raises `RecordingStudio::ActorRequired`. `config.allow_unauthorized_writes` defaults to `false`.

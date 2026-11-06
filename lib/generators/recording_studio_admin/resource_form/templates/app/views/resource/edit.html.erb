@@ -1,15 +1,13 @@
-<%% content_for :title, "Edit <%= singular_name.humanize.downcase %>" %>
-<%% content_for :subtitle, <%= instance_name %>.<%= display_field.name %>.to_s %>
-<%% flat_pack_page_nav(
-     round: true,
-     style: :default,
-     anchor_href: page_nav_anchor_url(default: recording_studio_admin_context.admin_screen_path("<%= screen_key %>")),
-     anchor_tooltip: "Close",
-     back_tooltip: "Go back"
+<%% recording_studio_admin_page_heading(
+     title: "Edit <%= singular_name.humanize.downcase %>",
+     anchor: page_nav_anchor_url(default: recording_studio_admin_context.admin_screen_path("<%= screen_key %>")),
+     subtitle: <%= instance_name %>.<%= display_field.name %>.to_s
    ) %>
 <%%= render layout: "recording_studio_admin/shared/page_shell" do %>
-  <%%= flat_pack_page_nav_tag %>
-  <%%= render FlatPack::PageTitle::Component.new(title: "Edit <%= singular_name.humanize.downcase %>", subtitle: <%= instance_name %>.<%= display_field.name %>.to_s) %>
+  <%% unless recording_studio_admin_default_layout? %>
+    <%%= render "recording_studio_admin/shared/page_nav" %>
+    <%%= render FlatPack::PageTitle::Component.new(title: "Edit <%= singular_name.humanize.downcase %>", subtitle: <%= instance_name %>.<%= display_field.name %>.to_s) %>
+  <%% end %>
 
   <%%= form_with model: [:<%= namespace_name %>, <%= instance_name %>], class: "space-y-4" do |form| %>
 <% fields.each do |field| -%>

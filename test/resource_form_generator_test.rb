@@ -55,10 +55,22 @@ class ResourceFormGeneratorTest < Minitest::Test
       assert_includes controller, 'redirect_to recording_studio_admin_context.admin_screen_path("users")'
 
       assert_includes show_view, "recording_studio_admin/shared/page_shell"
+      assert_includes show_view, "recording_studio_admin_page_heading"
+      assert_includes show_view, "unless recording_studio_admin_default_layout?"
+      refute_includes show_view, "register_page_nav \"Edit\""
+      assert_includes show_view, "FlatPack::Button::Component.new("
+      assert_includes show_view, "text: \"Edit\""
       assert_includes show_view, "FlatPack::PageTitle::Component"
       assert_includes show_view, "FlatPack::Table::Component"
       assert_includes show_view, "preserve_anchor_url(@edit_user_action.url)"
+      refute_includes show_view, "anchor_href:"
+      refute_includes show_view, "anchor_tooltip:"
+      refute_includes show_view, "back_tooltip:"
 
+      assert_includes edit_view, "recording_studio_admin_page_heading"
+      refute_includes edit_view, "anchor_href:"
+      refute_includes edit_view, "anchor_tooltip:"
+      refute_includes edit_view, "back_tooltip:"
       assert_includes edit_view, "FlatPack::EmailInput::Component"
       assert_includes edit_view, "FlatPack::Select::Component"
       assert_includes edit_view, "FlatPack::Checkbox::Component"
