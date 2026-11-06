@@ -12,11 +12,11 @@ class PageNavHelperTest < Minitest::Test
     end
 
     def with_back(**options)
-      @items << [ :back, options ]
+      @items << [:back, options]
     end
 
     def with_close(**options)
-      @items << [ :close, options ]
+      @items << [:close, options]
     end
   end
 
@@ -58,13 +58,13 @@ class PageNavHelperTest < Minitest::Test
       anchor: "https://example.test/app"
     )
 
-    assert_equal [ "Admin" ], helper.titles
-    assert_equal [ "Staff home" ], helper.subtitles
+    assert_equal ["Admin"], helper.titles
+    assert_equal ["Staff home"], helper.subtitles
     assert_equal({ round: true, style: :default }, helper.page_nav_kwargs)
     assert_equal(
       [
-        [ :back, { tooltip: "Go back", fallback_url: "https://example.test/app" } ],
-        [ :close, { href: "https://example.test/app", tooltip: "Close" } ]
+        [:back, { tooltip: "Go back", fallback_url: "https://example.test/app" }],
+        [:close, { href: "https://example.test/app", tooltip: "Close" }]
       ],
       helper.page_nav_items
     )
@@ -77,7 +77,7 @@ class PageNavHelperTest < Minitest::Test
 
     assert_equal({ round: true, style: :default }, helper.page_nav_kwargs)
     assert_equal(
-      [ [ :back, { tooltip: "Go back" } ] ],
+      [[:back, { tooltip: "Go back" }]],
       helper.page_nav_items
     )
   end
