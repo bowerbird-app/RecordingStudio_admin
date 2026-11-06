@@ -3,11 +3,6 @@
      anchor: page_nav_anchor_url(default: recording_studio_admin_context.admin_screen_path("<%= screen_key %>")),
      subtitle: <%= instance_name %>.<%= display_field.name %>.to_s
    ) %>
-<% if route_actions.include?("edit") -%>
-<%% if @edit_<%= singular_name %>_action %>
-  <%% register_page_nav "Edit", preserve_anchor_url(@edit_<%= singular_name %>_action.url), role: :primary %>
-<%% end %>
-<% end -%>
 <%%= render layout: "recording_studio_admin/shared/page_shell" do %>
   <%% unless recording_studio_admin_default_layout? %>
     <%%= render "recording_studio_admin/shared/page_nav" %>
@@ -33,6 +28,18 @@
      end %>
 
   <div class="space-y-4">
+<% if route_actions.include?("edit") -%>
+    <%% if @edit_<%= singular_name %>_action %>
+      <div class="flex items-center gap-2 pt-2">
+        <%%= render FlatPack::Button::Component.new(
+          text: "Edit",
+          href: preserve_anchor_url(@edit_<%= singular_name %>_action.url),
+          style: :primary
+        ) %>
+      </div>
+    <%% end %>
+
+<% end -%>
     <%%= render FlatPack::Table::Component.new(data: attribute_rows, class: "text-sm") do |table| %>
       <%% table.column(title: "Attribute") { |attribute_row| attribute_row.fetch(:attribute) } %>
       <%% table.column(title: "Value") { |attribute_row| attribute_row.fetch(:value) } %>
