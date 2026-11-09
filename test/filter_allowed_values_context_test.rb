@@ -42,10 +42,13 @@ class FilterAllowedValuesContextTest < Minitest::Test
     end
 
     def self.scoped_rows(root)
-      [
-        Row.new("ok"),
-        Row.new("fail")
-      ].select { root.equal?(ROOT_A) }
+      if root.equal?(ROOT_A)
+        [Row.new("ok"), Row.new("fail")]
+      elsif root.equal?(ROOT_B)
+        [Row.new("other")]
+      else
+        []
+      end
     end
   end
 
@@ -82,6 +85,41 @@ class FilterAllowedValuesContextTest < Minitest::Test
     assert_same actor, received.current_actor
   end
 
+  def test_one_arg_allowed_values_without_context_skip_the_allow_list
+    definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(
+      :status,
+      :select,
+      values: lambda { |_context|
+        %w[ok]
+      }
+    )
+
+    assert_equal [], definition.allowed_values
+    assert_equal "gone", definition.normalize({ status: "gone" })
+  end
+
+  def test_resolver_keeps_an_allowed_select_value_from_request_params
+    context = allowed_context(current_root_recording: ROOT_A, params: { status: "ok" })
+
+    result = with_access_allowed do
+      RecordingStudioAdmin.resolve_screen(key: "scoped_filters", context: context)
+    end
+
+    assert_equal "ok", context.filter_value(:status)
+    assert_equal %w[ok], result.table.rows.map(&:status)
+  end
+
+  def test_resolver_rejects_a_select_value_allowed_only_on_another_root
+    context = allowed_context(current_root_recording: ROOT_A, params: { status: "other" })
+
+    result = with_access_allowed do
+      RecordingStudioAdmin.resolve_screen(key: "scoped_filters", context: context)
+    end
+
+    assert_nil context.filter_value(:status)
+    assert_equal %w[fail ok], result.table.rows.map(&:status).sort
+  end
+
   def test_zero_arg_allowed_values_still_work
     definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(
       :status,
@@ -105,8 +143,8 @@ class FilterAllowedValuesContextTest < Minitest::Test
   def test_other_root_does_not_leak_into_filter_options
     context = allowed_context(current_root_recording: ROOT_B)
 
-    assert_empty status_filter.allowed_values(context)
-    assert_empty ScopedFilterScreen.query_value.call(context).to_a
+    assert_equal %w[other], status_filter.allowed_values(context)
+    assert_equal %w[other], ScopedFilterScreen.query_value.call(context).to_a.map(&:status)
   end
 
   def test_two_arg_allowed_values_receive_context_and_controller
@@ -136,12 +174,16 @@ class FilterAllowedValuesContextTest < Minitest::Test
     end.new
   end
 
-  def allowed_context(current_root_recording:)
+  def allowed_context(current_root_recording:, params: {})
     RecordingStudioAdmin::Context.new(
-      params: {},
+      params: params,
       current_actor: :actor,
       controller: request_controller(current_root_recording: current_root_recording)
     )
+  end
+
+  def with_access_allowed(&)
+    with_singleton_stub(RecordingStudioAccessible, :authorized?, true, &)
   end
 
   def status_filter

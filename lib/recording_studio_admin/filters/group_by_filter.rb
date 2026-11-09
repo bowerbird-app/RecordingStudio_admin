@@ -9,7 +9,7 @@ module RecordingStudioAdmin
         @definition = definition
       end
 
-      def normalize(params, _context = nil)
+      def normalize(params)
         raw = params[@definition.param_key] || params[@definition.param_key.to_s]
         value = raw.to_s
         allowed.include?(value) ? value.to_sym : default_value

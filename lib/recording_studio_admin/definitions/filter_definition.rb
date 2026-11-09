@@ -20,6 +20,8 @@ module RecordingStudioAdmin
       def allowed_values(context = nil)
         raw = options[:values] || options[:options]
         if raw.respond_to?(:call)
+          return [] if context.nil? && !raw.arity.zero?
+
           raw = context ? Callable.resolve(raw, context) : raw.call
         end
         Array(raw).map(&:to_s)

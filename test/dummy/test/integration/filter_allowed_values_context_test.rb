@@ -22,12 +22,6 @@ class FilterAllowedValuesContextTest < ActionDispatch::IntegrationTest
     assert_equal expected_api_status_values, filter_option_values("status")
   end
 
-  module OneArgSelectFilterNormalize
-    def normalize(params)
-      super
-    end
-  end
-
   test "filter dropdown options match table distinct values for the current root" do
     user = sign_in_admin_user
     folder_root = workspace_with_only_folders!(actor: user)
@@ -40,14 +34,18 @@ class FilterAllowedValuesContextTest < ActionDispatch::IntegrationTest
     assert_item_types_match_table!(expected_types: [ "Page" ], expected_items: [ "Pages only" ])
   end
 
-  test "a one-arg SelectFilter normalize override still renders a screen" do
-    sign_in_admin_user
-    RecordingStudioAdmin::Filters::SelectFilter.prepend(OneArgSelectFilterNormalize)
+  test "item types type filter keeps an allowed value and ignores another root's type" do
+    user = sign_in_admin_user
+    folder_root = workspace_with_only_folders!(actor: user)
+    page_root = workspace_with_only_pages!(actor: user)
 
-    get "/admin/screens/api_requests", params: { anchor_url: root_url }
+    switch_to_root!(folder_root)
+    assert_item_types_type_filter!(type: "Folder", expected_items: [ "Folders only" ], unexpected_items: [ "Pages only" ])
+    assert_item_types_type_filter!(type: "Page", expected_items: [ "Folders only" ], unexpected_items: [ "Pages only" ])
 
-    assert_response :success
-    refute_includes response.body, "ArgumentError"
+    switch_to_root!(page_root)
+    assert_item_types_type_filter!(type: "Page", expected_items: [ "Pages only" ], unexpected_items: [ "Folders only" ])
+    assert_item_types_type_filter!(type: "Folder", expected_items: [ "Pages only" ], unexpected_items: [ "Folders only" ])
   end
 
   private
@@ -117,6 +115,23 @@ class FilterAllowedValuesContextTest < ActionDispatch::IntegrationTest
     ).recording
   ensure
     Current.actor = previous_actor
+  end
+
+  def assert_item_types_type_filter!(type:, expected_items:, unexpected_items:)
+    params = { type: type, anchor_url: root_url }
+
+    get "/stats/screens/item_types", params: params
+
+    assert_response :success
+    refute_includes response.body, "ArgumentError"
+
+    get "/stats/screens/item_types/table", params: params
+
+    assert_response :success
+    refute_includes response.body, "ArgumentError"
+    expected_items.each { |item| assert_includes response.body, item }
+    unexpected_items.each { |item| refute_includes response.body, item }
+    refute_empty css_select("#screen-table tbody tr")
   end
 
   def assert_item_types_match_table!(expected_types:, expected_items:)

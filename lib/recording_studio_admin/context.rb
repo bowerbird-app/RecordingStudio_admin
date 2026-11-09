@@ -273,11 +273,11 @@ module RecordingStudioAdmin
       RecordingStudio.root_recording_or_self(recording)
     end
 
+    private
+
     def resolve_callable(callable)
       Callable.resolve(callable, self)
     end
-
-    private
 
     def default_mount_path
       (surface.path || RecordingStudioAdmin.configuration.default_mount_path).to_s.chomp("/")

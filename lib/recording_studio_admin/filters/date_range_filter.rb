@@ -9,7 +9,7 @@ module RecordingStudioAdmin
         @definition = definition
       end
 
-      def normalize(params, _context = nil)
+      def normalize(params)
         start_key = (@definition.options[:start_param] || :start_date).to_sym
         end_key = (@definition.options[:end_param] || :end_date).to_sym
         preset_key_param = (@definition.options[:preset_param] || :date_range_preset).to_sym
