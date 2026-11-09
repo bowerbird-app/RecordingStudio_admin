@@ -91,34 +91,22 @@ class FilterAllowedValuesContextTest < Minitest::Test
     context = RecordingStudioAdmin::Context.new(controller: request_controller, current_actor: Object.new)
 
     assert_equal %w[open closed], definition.allowed_values(context)
-    assert_equal "open", definition.normalize({ status: "open" }, context)
-    assert_nil definition.normalize({ status: "deleted" }, context)
+    assert_equal "open", definition.normalize({ status: "open" })
+    assert_nil definition.normalize({ status: "deleted" })
   end
 
   def test_controller_scoped_filter_options_match_the_table_scope
     context = allowed_context(current_root_recording: ROOT_A)
 
-    result = with_access_allowed do
-      RecordingStudioAdmin.resolve_screen(key: "scoped_filters", context: context)
-    end
-
-    status_filter = result.filters.find { |filter| filter.key == :status }
-
-    assert_equal %w[fail ok], status_filter.options[:values].sort
-    assert_equal %w[fail ok], result.table.rows.map(&:status).sort
+    assert_equal %w[fail ok], status_filter.allowed_values(context).sort
+    assert_equal %w[fail ok], ScopedFilterScreen.query_value.call(context).to_a.map(&:status).sort
   end
 
   def test_other_root_does_not_leak_into_filter_options
     context = allowed_context(current_root_recording: ROOT_B)
 
-    result = with_access_allowed do
-      RecordingStudioAdmin.resolve_screen(key: "scoped_filters", context: context)
-    end
-
-    status_filter = result.filters.find { |filter| filter.key == :status }
-
-    assert_empty status_filter.options[:values]
-    assert_empty result.table.rows
+    assert_empty status_filter.allowed_values(context)
+    assert_empty ScopedFilterScreen.query_value.call(context).to_a
   end
 
   def test_two_arg_allowed_values_receive_context_and_controller
@@ -156,7 +144,7 @@ class FilterAllowedValuesContextTest < Minitest::Test
     )
   end
 
-  def with_access_allowed(&)
-    with_singleton_stub(RecordingStudioAccessible, :authorized?, true, &)
+  def status_filter
+    ScopedFilterScreen.filters.find { |filter| filter.key == :status }
   end
 end

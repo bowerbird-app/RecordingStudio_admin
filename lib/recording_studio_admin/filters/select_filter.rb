@@ -7,11 +7,11 @@ module RecordingStudioAdmin
         @definition = definition
       end
 
-      def normalize(params, context)
+      def normalize(params)
         value = params[@definition.param_key] || params[@definition.param_key.to_s]
         return if value.nil? || value.to_s.empty?
 
-        allowed = @definition.allowed_values(context)
+        allowed = @definition.allowed_values
         return value if allowed.empty?
 
         value if allowed.include?(value.to_s)

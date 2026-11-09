@@ -6,11 +6,11 @@
 
 ### Added
 
-- `FilterDefinition#allowed_values` passes the request `RecordingStudioAdmin::Context` into positional one-arg `values` / `options` callables, matching table, chart, and totals. Positional zero-arg callables stay unchanged. Hosts can scope dropdown options with `context.controller.current_root_recording` so they match the table.
+- `FilterDefinition#allowed_values` passes the request `RecordingStudioAdmin::Context` into positional one-arg `values` / `options` callables, matching table, chart, and totals. Positional zero-arg callables stay unchanged. Other arities unchanged. Hosts can scope dropdown options with `context.controller.current_root_recording` so they match the table.
 
 ### Upgrade notes
 
-- Bump the host gem to `2.10.0`. Existing positional `options: -> { ... }` filters keep working. Optional: change a callable to positional `->(context) { ... }` when options should follow the request actor or root. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2100).
+- Bump the host gem to `2.10.0`. Existing positional `options: -> { ... }` filters keep working. Optional: change a callable to positional `->(context) { ... }` when options should follow the request actor or root. Other arities unchanged. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2100).
 
 ## 2.9.3 - 2026-11-06
 

@@ -663,7 +663,7 @@ filter :status,
        search_endpoint: "/admin/filter-options/statuses"
 
 # Positional one-arg callables receive the request Context (controller, current_actor).
-# Positional zero-arg callables keep working unchanged.
+# Positional zero-arg callables keep working unchanged. Other arities unchanged.
 filter :workspace_status,
        options: lambda { |context|
          root = context.controller.current_root_recording

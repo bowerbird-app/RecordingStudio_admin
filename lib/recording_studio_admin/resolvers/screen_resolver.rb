@@ -139,7 +139,7 @@ module RecordingStudioAdmin
 
       def resolve_filters(definitions)
         definitions.map do |definition|
-          value = definition.normalize(@context.params, @context)
+          value = definition.normalize(@context.params)
           @context.set_filter_value(definition.key, value)
           { definition: definition, value: value }
         end

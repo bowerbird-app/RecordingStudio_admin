@@ -25,6 +25,9 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "options: lambda { |context|"
     assert_includes upgrading, "positional zero-arg"
     assert_includes upgrading, "positional one-arg"
+    assert_includes upgrading, "Other arities unchanged"
+    assert_includes changelog, "Other arities unchanged"
+    assert_includes readme, "Other arities unchanged"
     refute_includes upgrading.split("## Upgrading to 2.9.3").first, "keyword"
     refute_includes changelog.split("## 2.9.3").first, "keyword"
   end

@@ -22,6 +22,12 @@ class FilterAllowedValuesContextTest < ActionDispatch::IntegrationTest
     assert_equal expected_api_status_values, filter_option_values("status")
   end
 
+  module OneArgSelectFilterNormalize
+    def normalize(params)
+      super
+    end
+  end
+
   test "filter dropdown options match table distinct values for the current root" do
     user = sign_in_admin_user
     folder_root = workspace_with_only_folders!(actor: user)
@@ -32,6 +38,16 @@ class FilterAllowedValuesContextTest < ActionDispatch::IntegrationTest
 
     switch_to_root!(page_root)
     assert_item_types_match_table!(expected_types: [ "Page" ], expected_items: [ "Pages only" ])
+  end
+
+  test "a one-arg SelectFilter normalize override still renders a screen" do
+    sign_in_admin_user
+    RecordingStudioAdmin::Filters::SelectFilter.prepend(OneArgSelectFilterNormalize)
+
+    get "/admin/screens/api_requests", params: { anchor_url: root_url }
+
+    assert_response :success
+    refute_includes response.body, "ArgumentError"
   end
 
   private

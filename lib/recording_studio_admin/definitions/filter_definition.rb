@@ -7,8 +7,8 @@ module RecordingStudioAdmin
         (options[:param] || key).to_sym
       end
 
-      def normalize(params, context = nil)
-        filter.normalize(params, context)
+      def normalize(params)
+        filter.normalize(params)
       end
 
       def apply(relation, value, context)
@@ -19,7 +19,9 @@ module RecordingStudioAdmin
 
       def allowed_values(context = nil)
         raw = options[:values] || options[:options]
-        raw = Callable.resolve(raw, context) if raw.respond_to?(:call)
+        if raw.respond_to?(:call)
+          raw = context ? Callable.resolve(raw, context) : raw.call
+        end
         Array(raw).map(&:to_s)
       end
 
