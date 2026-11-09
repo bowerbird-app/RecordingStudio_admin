@@ -1,5 +1,44 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.10.0
+
+Admin `2.10.0` passes the request `RecordingStudioAdmin::Context` into select filter `values` and `options` callables. Table, chart, and totals already received that context. Write a positional zero-arg callable (`-> { ... }`) or a positional one-arg callable (`->(context) { ... }`). One-arg callables can read `context.controller`, `context.current_actor`, and `context.controller.current_root_recording`. Zero-argument callables still run as `call` with no args. Other arities unchanged.
+
+The context is the same object the controller builds for the request (`controller: self`). Admin does not build a context with a nil controller for filter options. Applying a select filter checks the chosen value against `allowed_values` with that Context, so a one-arg `options` callable is never invoked with zero arguments.
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.10.0`.
+2. Leave existing `options: -> { Model.distinct.pluck(:status) }` filters as they are.
+3. If filter options should match a table that scopes by the current root, take the context argument:
+
+```ruby
+filter :status,
+       options: lambda { |context|
+         root = context.controller.current_root_recording
+         ApiRequest.where(workspace_id: root.id).distinct.order(:status).pluck(:status)
+       }
+```
+
+### Verify the upgrade
+
+```ruby
+test "allowed_values pass request context to callables that accept it" do
+  received = nil
+  definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(
+    :status,
+    :select,
+    values: ->(context) { received = context; %w[open] }
+  )
+  controller = Object.new
+  context = RecordingStudioAdmin::Context.new(controller: controller, current_actor: :actor)
+
+  assert_equal %w[open], definition.allowed_values(context)
+  assert_same context, received
+  assert_same controller, received.controller
+end
+```
+
 ## Upgrading to 2.9.3
 
 Admin `2.9.3` uses the FlatPack `v0.1.341` Page Nav spec block. `recording_studio_admin_page_heading` calls `with_back(tooltip:)` for history back and `with_close(href:, tooltip:)` when an anchor is present. It does not pass `anchor_href:`, `anchor_tooltip:`, `back_tooltip:`, or `anchor_label:`. Close still returns to the caller’s `page_nav_anchor_url`. History back still uses `fallback_url` when that anchor is present.

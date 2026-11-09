@@ -275,6 +275,10 @@ module RecordingStudioAdmin
 
     private
 
+    def resolve_callable(callable)
+      Callable.resolve(callable, self)
+    end
+
     def default_mount_path
       (surface.path || RecordingStudioAdmin.configuration.default_mount_path).to_s.chomp("/")
     end
@@ -284,15 +288,6 @@ module RecordingStudioAdmin
         Time.zone.now
       else
         Time.now
-      end
-    end
-
-    def resolve_callable(callable)
-      arity = callable.arity
-      case arity
-      when 0 then callable.call
-      when 1, -1 then callable.call(self)
-      else callable.call(self, controller)
       end
     end
 

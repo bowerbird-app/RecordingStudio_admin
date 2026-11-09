@@ -22,6 +22,8 @@ DUMMY_APP_TEST_FILES = %w[
   test/integration/admin_section_rendering_test.rb
   test/integration/dummy_access_enforcement_test.rb
   test/integration/exportable_current_actor_test.rb
+  test/integration/filter_allowed_values_context_test.rb
+  test/integration/filter_allowed_values_normalize_compat_test.rb
   test/integration/recording_studio_v3_template_test.rb
   test/integration/root_switch_dropdown_test.rb
   test/integration/authorize_write_test.rb

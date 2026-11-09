@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.10.0` passes the request `RecordingStudioAdmin::Context` into select filter `values` / `options` callables that accept an argument. Zero-arg callables stay as they are. Use `context.controller.current_root_recording` when dropdown options should match the table's root. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2100).
+
 Admin `2.9.3` uses the FlatPack `v0.1.341` Page Nav spec block (`with_back` / `with_close`) in `recording_studio_admin_page_heading`. Hosts should drop prepends and copied views that kept Close. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-293).
 
 Admin `2.9.2` is ready for Recording Studio core `6.5.0` fail-closed writes. Section and audit `record!` calls pass `actor:` from the admin context. Hosts must set `config.authorize_write` before that core release (`AuthorizationError` without it, `ActorRequired` without an actor). Dummy uses Accessible `:edit` on the root, not `actor.present?`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-292).
@@ -659,6 +661,14 @@ filter :status,
        search_mode: :remote,
        search_param: :query,
        search_endpoint: "/admin/filter-options/statuses"
+
+# Positional one-arg callables receive the request Context (controller, current_actor).
+# Positional zero-arg callables keep working unchanged. Other arities unchanged.
+filter :workspace_status,
+       options: lambda { |context|
+         root = context.controller.current_root_recording
+         ApiRequest.where(workspace_id: root.id).distinct.order(:status).pluck(:status)
+       }
 ```
 
 Widget-oriented helper methods on `RecordingStudioAdmin::Context` let sections reference standalone widgets while preserving date semantics:

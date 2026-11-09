@@ -4,6 +4,7 @@ module AdminScreens
   module Stats
     def self.register!
       RecordingStudioAdmin.register_screen(AdminScreens::WorkspaceStats)
+      RecordingStudioAdmin.register_screen(AdminScreens::ItemTypes)
       RecordingStudioAdmin.register_widget(AdminScreens::WorkspaceStatsContentActivityWidget)
       RecordingStudioAdmin.register_widget(AdminScreens::WorkspaceStatsTotalFoldersWidget)
       RecordingStudioAdmin.register_widget(AdminScreens::WorkspaceStatsTotalItemsWidget)

@@ -17,9 +17,13 @@ module RecordingStudioAdmin
         filter.apply(relation, value, context)
       end
 
-      def allowed_values
+      def allowed_values(context = nil)
         raw = options[:values] || options[:options]
-        raw = raw.call if raw.respond_to?(:call)
+        if raw.respond_to?(:call)
+          return [] if context.nil? && !raw.arity.zero?
+
+          raw = context ? Callable.resolve(raw, context) : raw.call
+        end
         Array(raw).map(&:to_s)
       end
 

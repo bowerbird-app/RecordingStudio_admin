@@ -139,10 +139,19 @@ module RecordingStudioAdmin
 
       def resolve_filters(definitions)
         definitions.map do |definition|
-          value = definition.normalize(@context.params)
+          value = constrain_select_value(definition, definition.normalize(@context.params))
           @context.set_filter_value(definition.key, value)
           { definition: definition, value: value }
         end
+      end
+
+      def constrain_select_value(definition, value)
+        return value if value.nil? || definition.type.to_sym != :select
+
+        allowed = definition.allowed_values(@context)
+        return value if allowed.empty?
+
+        value if allowed.include?(value.to_s)
       end
 
       def resolved_filter(entry)
@@ -151,7 +160,7 @@ module RecordingStudioAdmin
           definition.key,
           definition.type,
           entry[:value],
-          definition.options.merge(values: definition.allowed_values),
+          definition.options.merge(values: definition.allowed_values(@context)),
           definition.param_key,
           definition.options.fetch(:start_param, :start_date).to_sym,
           definition.options.fetch(:end_param, :end_date).to_sym,
