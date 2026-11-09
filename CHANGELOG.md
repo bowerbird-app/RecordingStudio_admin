@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2.10.0 - 2026-11-09
+
+### Added
+
+- `FilterDefinition#allowed_values` passes the request `RecordingStudioAdmin::Context` into `values` / `options` callables that accept an argument, matching table, chart, and totals. Zero-arg callables stay unchanged. Hosts can scope dropdown options with `context.controller.current_root_recording` so they match the table.
+
+### Upgrade notes
+
+- Bump the host gem to `2.10.0`. Existing `options: -> { ... }` filters keep working. Optional: change a callable to `->(context) { ... }` when options should follow the request actor or root. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2100).
+
 ## 2.9.3 - 2026-11-06
 
 ### Changed
@@ -509,7 +519,8 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.3...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.10.0...HEAD
+[2.10.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.3...v2.10.0
 [2.9.3]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.2...v2.9.3
 [2.9.2]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.1...v2.9.2
 [2.9.1]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.0...v2.9.1

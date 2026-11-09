@@ -139,7 +139,7 @@ module RecordingStudioAdmin
 
       def resolve_filters(definitions)
         definitions.map do |definition|
-          value = definition.normalize(@context.params)
+          value = definition.normalize(@context.params, @context)
           @context.set_filter_value(definition.key, value)
           { definition: definition, value: value }
         end
@@ -151,7 +151,7 @@ module RecordingStudioAdmin
           definition.key,
           definition.type,
           entry[:value],
-          definition.options.merge(values: definition.allowed_values),
+          definition.options.merge(values: definition.allowed_values(@context)),
           definition.param_key,
           definition.options.fetch(:start_param, :start_date).to_sym,
           definition.options.fetch(:end_param, :end_date).to_sym,

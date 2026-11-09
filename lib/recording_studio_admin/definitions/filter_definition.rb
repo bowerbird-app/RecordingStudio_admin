@@ -7,8 +7,8 @@ module RecordingStudioAdmin
         (options[:param] || key).to_sym
       end
 
-      def normalize(params)
-        filter.normalize(params)
+      def normalize(params, context = nil)
+        filter.normalize(params, context)
       end
 
       def apply(relation, value, context)
@@ -17,9 +17,9 @@ module RecordingStudioAdmin
         filter.apply(relation, value, context)
       end
 
-      def allowed_values
+      def allowed_values(context = nil)
         raw = options[:values] || options[:options]
-        raw = raw.call if raw.respond_to?(:call)
+        raw = call_allowed_values(raw, context) if raw.respond_to?(:call)
         Array(raw).map(&:to_s)
       end
 
@@ -35,6 +35,15 @@ module RecordingStudioAdmin
 
       def applies_to_relation?(relation)
         relation.respond_to?(:where) || options[:apply].respond_to?(:call)
+      end
+
+      def call_allowed_values(raw, context)
+        return raw.call if context.nil?
+
+        case raw.arity
+        when 0 then raw.call
+        else raw.call(context)
+        end
       end
     end
   end
