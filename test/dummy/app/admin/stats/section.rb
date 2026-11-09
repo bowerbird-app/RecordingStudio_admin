@@ -12,6 +12,10 @@ module AdminScreens
          text: "View stats",
     url: ->(context) { context.admin_screen_path("workspace_stats") },
          style: :secondary
+    link :item_types,
+         text: "View item types",
+         url: ->(context) { context.admin_screen_path("item_types") },
+         style: :secondary
 
     widget "widgets.workspace_stats.total_items",
       view_variant: :compact,

@@ -273,6 +273,10 @@ module RecordingStudioAdmin
       RecordingStudio.root_recording_or_self(recording)
     end
 
+    def resolve_callable(callable)
+      Callable.resolve(callable, self)
+    end
+
     private
 
     def default_mount_path
@@ -284,15 +288,6 @@ module RecordingStudioAdmin
         Time.zone.now
       else
         Time.now
-      end
-    end
-
-    def resolve_callable(callable)
-      arity = callable.arity
-      case arity
-      when 0 then callable.call
-      when 1, -1 then callable.call(self)
-      else callable.call(self, controller)
       end
     end
 

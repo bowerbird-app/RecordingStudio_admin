@@ -19,7 +19,7 @@ module RecordingStudioAdmin
 
       def allowed_values(context = nil)
         raw = options[:values] || options[:options]
-        raw = call_allowed_values(raw, context) if raw.respond_to?(:call)
+        raw = Callable.resolve(raw, context) if raw.respond_to?(:call)
         Array(raw).map(&:to_s)
       end
 
@@ -35,15 +35,6 @@ module RecordingStudioAdmin
 
       def applies_to_relation?(relation)
         relation.respond_to?(:where) || options[:apply].respond_to?(:call)
-      end
-
-      def call_allowed_values(raw, context)
-        return raw.call if context.nil?
-
-        case raw.arity
-        when 0 then raw.call
-        else raw.call(context)
-        end
       end
     end
   end

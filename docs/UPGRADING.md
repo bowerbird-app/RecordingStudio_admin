@@ -2,7 +2,7 @@
 
 ## Upgrading to 2.10.0
 
-Admin `2.10.0` passes the request `RecordingStudioAdmin::Context` into select filter `values` and `options` callables that accept it. Table, chart, and totals already received that context. Filter dropdowns can now read `context.controller`, `context.current_actor`, and `context.controller.current_root_recording`. Zero-argument callables still run as `call` with no args.
+Admin `2.10.0` passes the request `RecordingStudioAdmin::Context` into select filter `values` and `options` callables. Table, chart, and totals already received that context. Write a positional zero-arg callable (`-> { ... }`) or a positional one-arg callable (`->(context) { ... }`). One-arg callables can read `context.controller`, `context.current_actor`, and `context.controller.current_root_recording`. Zero-argument callables still run as `call` with no args.
 
 The context is the same object the controller builds for the request (`controller: self`). Admin does not build a context with a nil controller for filter options.
 

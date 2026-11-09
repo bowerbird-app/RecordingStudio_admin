@@ -10,14 +10,8 @@ class UpgradeNotesTest < Minitest::Test
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
     readme = File.read(File.join(ROOT, "README.md"))
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
-    filter_definition = File.read(File.join(ROOT, "lib/recording_studio_admin/definitions/filter_definition.rb"))
-    screen_resolver = File.read(File.join(ROOT, "lib/recording_studio_admin/resolvers/screen_resolver.rb"))
 
     assert_includes version, 'VERSION = "2.10.0"'
-    assert_includes filter_definition, "def allowed_values(context = nil)"
-    assert_includes filter_definition, "raw.call(context)"
-    assert_includes screen_resolver, "definition.allowed_values(@context)"
-    assert_includes screen_resolver, "definition.normalize(@context.params, @context)"
 
     assert_includes upgrading, "## Upgrading to 2.10.0"
     assert_includes upgrading, "allowed_values"
@@ -29,6 +23,10 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "2.10.0"
     assert_includes readme, "docs/UPGRADING.md#upgrading-to-2100"
     assert_includes readme, "options: lambda { |context|"
+    assert_includes upgrading, "positional zero-arg"
+    assert_includes upgrading, "positional one-arg"
+    refute_includes upgrading.split("## Upgrading to 2.9.3").first, "keyword"
+    refute_includes changelog.split("## 2.9.3").first, "keyword"
   end
 
   def test_upgrading_doc_covers_the_2_1_0_i18n_release

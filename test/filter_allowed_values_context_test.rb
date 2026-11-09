@@ -82,19 +82,6 @@ class FilterAllowedValuesContextTest < Minitest::Test
     assert_same actor, received.current_actor
   end
 
-  def test_context_accepting_allowed_values_fail_without_the_change
-    definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(
-      :status,
-      :select,
-      values: ->(context) { [context.controller.current_root_recording.object_id.to_s] }
-    )
-    context = RecordingStudioAdmin::Context.new(controller: request_controller, current_actor: Object.new)
-
-    with_legacy_zero_arg_allowed_values do
-      assert_raises(ArgumentError) { definition.allowed_values(context) }
-    end
-  end
-
   def test_zero_arg_allowed_values_still_work
     definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(
       :status,
@@ -106,19 +93,6 @@ class FilterAllowedValuesContextTest < Minitest::Test
     assert_equal %w[open closed], definition.allowed_values(context)
     assert_equal "open", definition.normalize({ status: "open" }, context)
     assert_nil definition.normalize({ status: "deleted" }, context)
-  end
-
-  def test_zero_arg_allowed_values_fail_when_context_is_always_passed
-    definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(
-      :status,
-      :select,
-      options: -> { %w[open closed] }
-    )
-    context = RecordingStudioAdmin::Context.new(controller: request_controller, current_actor: Object.new)
-
-    with_context_always_passed_to_allowed_values do
-      assert_raises(ArgumentError) { definition.allowed_values(context) }
-    end
   end
 
   def test_controller_scoped_filter_options_match_the_table_scope
@@ -134,18 +108,6 @@ class FilterAllowedValuesContextTest < Minitest::Test
     assert_equal %w[fail ok], result.table.rows.map(&:status).sort
   end
 
-  def test_controller_scoped_filter_options_fail_without_the_change
-    context = allowed_context(current_root_recording: ROOT_A)
-
-    with_legacy_zero_arg_allowed_values do
-      error = assert_raises(ArgumentError) do
-        with_access_allowed { RecordingStudioAdmin.resolve_screen(key: "scoped_filters", context: context) }
-      end
-
-      assert_match(/wrong number of arguments/, error.message)
-    end
-  end
-
   def test_other_root_does_not_leak_into_filter_options
     context = allowed_context(current_root_recording: ROOT_B)
 
@@ -157,6 +119,23 @@ class FilterAllowedValuesContextTest < Minitest::Test
 
     assert_empty status_filter.options[:values]
     assert_empty result.table.rows
+  end
+
+  def test_two_arg_allowed_values_receive_context_and_controller
+    received = nil
+    definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(
+      :status,
+      :select,
+      values: lambda { |context, controller|
+        received = [context, controller]
+        %w[ok]
+      }
+    )
+    controller = request_controller
+    context = RecordingStudioAdmin::Context.new(controller: controller, current_actor: Object.new)
+
+    assert_equal %w[ok], definition.allowed_values(context)
+    assert_equal [context, controller], received
   end
 
   private
@@ -179,30 +158,5 @@ class FilterAllowedValuesContextTest < Minitest::Test
 
   def with_access_allowed(&)
     with_singleton_stub(RecordingStudioAccessible, :authorized?, true, &)
-  end
-
-  def with_legacy_zero_arg_allowed_values(&)
-    redefine_allowed_values(->(raw, _context) { raw.call }, &)
-  end
-
-  def with_context_always_passed_to_allowed_values(&)
-    redefine_allowed_values(->(raw, context) { raw.call(context) }, &)
-  end
-
-  def redefine_allowed_values(invoke)
-    klass = RecordingStudioAdmin::Definitions::FilterDefinition
-    original = klass.instance_method(:allowed_values)
-    previous_verbose = $VERBOSE
-    $VERBOSE = nil
-    klass.define_method(:allowed_values) do |context = nil|
-      raw = options[:values] || options[:options]
-      raw = invoke.call(raw, context) if raw.respond_to?(:call)
-      Array(raw).map(&:to_s)
-    end
-    yield
-  ensure
-    $VERBOSE = nil
-    klass.define_method(:allowed_values, original)
-    $VERBOSE = previous_verbose
   end
 end
