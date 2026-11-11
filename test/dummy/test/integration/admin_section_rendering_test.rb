@@ -1474,7 +1474,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_response :success
     body = CGI.unescapeHTML(response.body)
 
-    assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Requests","data":[{"x":"Jan","y":1},{"x":"Feb","y":1},{"x":"Mar","y":1}]}]"'
+    assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Requests","data":[{"x":"Jan 2024","y":1},{"x":"Feb","y":1},{"x":"Mar 2025","y":1}]}]"'
 
     get "/admin/screens/api_requests", params: {
       start_date: "2024-01-01",

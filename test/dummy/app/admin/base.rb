@@ -9,25 +9,22 @@ module AdminScreens
 
       def date_series(relation, field: :created_at, bucket: :day)
         bucket = bucket.to_sym
-        group_expression = bucket_group_expression(field, bucket)
+        sql_group_expression = Arel.sql(bucket_group_expression(field, bucket))
+        rows = chart_relation(relation).group(sql_group_expression).order(sql_group_expression).count.to_a
 
-        sql_group_expression = Arel.sql(group_expression)
-
-        chart_relation(relation).group(sql_group_expression).order(sql_group_expression).count.map do |date, count|
-          { x: bucket_label(date, bucket), y: count }
-        end
+        labeled_rows(rows, bucket)
       end
 
       def distinct_date_series(relation, distinct_field:, field: :created_at, bucket: :day)
         bucket = bucket.to_sym
-        group_expression = bucket_group_expression(field, bucket)
-
-        sql_group_expression = Arel.sql(group_expression)
+        sql_group_expression = Arel.sql(bucket_group_expression(field, bucket))
         distinct_count = relation.arel_table[distinct_field].count(true)
+        rows = chart_relation(relation).group(sql_group_expression).order(sql_group_expression).pluck(
+          sql_group_expression,
+          distinct_count
+        )
 
-        chart_relation(relation).group(sql_group_expression).order(sql_group_expression).pluck(sql_group_expression, distinct_count).map do |date, count|
-          { x: bucket_label(date, bucket), y: count }
-        end
+        labeled_rows(rows, bucket)
       end
 
       def safe_like(value)
@@ -67,27 +64,9 @@ module AdminScreens
 
       private
 
-      def bucket_label(value, bucket)
-        timestamp = normalize_bucket_value(value)
-
-        case bucket
-        when :hour
-          timestamp.strftime("%-l%P").strip
-        when :week
-          "Week of #{timestamp.strftime("%b %-d")}"
-        when :month
-          timestamp.strftime("%b")
-        when :year
-          timestamp.strftime("%Y")
-        else
-          timestamp.strftime("%b %-d")
-        end
-      end
-
-      def normalize_bucket_value(value)
-        return value.in_time_zone if value.respond_to?(:in_time_zone)
-
-        Time.zone.parse(value.to_s)
+      def labeled_rows(rows, bucket)
+        labels = RecordingStudioAdmin::DateAxisLabels.call(rows.map(&:first), bucket: bucket)
+        rows.each_with_index.map { |(_time, count), index| { x: labels.fetch(index), y: count } }
       end
 
       def bucket_group_expression(field, bucket)
