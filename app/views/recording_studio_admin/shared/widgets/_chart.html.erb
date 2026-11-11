@@ -1,12 +1,12 @@
 <% presenter ||= recording_studio_widget_presenter(widget) %>
 <% chart_type = presenter.chart_type %>
-<% chart_series = chart_type == :geochart ? recording_studio_flatpack_geochart_series(widget.series) : widget.series %>
+<% chart_series = chart_type == :geochart ? recording_studio_flatpack_geochart_series(widget.series) : RecordingStudioAdmin::Widgets::Presenter.plot_series(widget.series) %>
 <% chart_options = if chart_type == :geochart
                      recording_studio_flatpack_geochart_options(widget.chart_options || {})
                    else
-                     RecordingStudioAdmin::Widgets::Presenter.marker_options_for_sparse_line(chart_type, chart_series).deep_merge(
-                       { grid: { show: false } }.deep_merge(widget.chart_options || {})
-                     )
+                     RecordingStudioAdmin::Widgets::Presenter.marker_options_for_sparse_line(chart_type, chart_series)
+                       .deep_merge(RecordingStudioAdmin::Widgets::Presenter.readable_axis_options(chart_type, chart_series))
+                       .deep_merge({ grid: { show: false } }.deep_merge(widget.chart_options || {}))
                    end %>
 
 <%= render FlatPack::Chart::Component.new(

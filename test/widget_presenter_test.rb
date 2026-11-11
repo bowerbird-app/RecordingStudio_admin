@@ -193,6 +193,47 @@ class WidgetPresenterTest < Minitest::Test
     assert_nil options.dig(:chart, :sparkline, :enabled)
   end
 
+  def test_plot_series_gives_a_repeated_hour_label_its_own_category
+    series = [
+      { name: "Requests", data: [{ x: "Nov 10 9am", y: 1 }, { x: "3pm", y: 1 }, { x: "3pm", y: 2 }] },
+      { name: "Errors", data: [{ x: "Nov 10 9am", y: 0 }, { x: "3pm", y: 1 }, { x: "3pm", y: 1 }] }
+    ]
+
+    plotted = RecordingStudioAdmin::Widgets::Presenter.plot_series(series)
+    labels = plotted.map { |entry| entry[:data].map { |point| point[:x] } }
+
+    assert_equal [["Nov 10 9am", "3pm", "3pm\u200b"]], labels.uniq
+    counts = plotted[0][:data].map { |point| point[:y] }
+    assert_equal [1, 1, 2], counts
+    assert_equal "3pm", series[0][:data][2][:x]
+    assert_equal [{ name: "Counts", data: [1, 2, 3] }],
+                 RecordingStudioAdmin::Widgets::Presenter.plot_series([{ name: "Counts", data: [1, 2, 3] }])
+  end
+
+  def test_readable_axis_options_thin_category_labels_and_leave_room_above_a_flat_peak
+    series = [{ name: "Requests", data: [{ x: "Nov 7", y: 24 }, { x: "Nov 8", y: 24 }] }]
+
+    options = RecordingStudioAdmin::Widgets::Presenter.readable_axis_options(:line, series)
+
+    assert_equal "category", options.dig(:xaxis, :type)
+    assert_equal 6, options.dig(:xaxis, :tickAmount)
+    assert_equal true, options.dig(:xaxis, :labels, :hideOverlappingLabels)
+    assert_equal 0, options.dig(:xaxis, :labels, :rotate)
+    assert_equal 5, options.dig(:yaxis, :tickAmount)
+    assert_equal 0, options.dig(:yaxis, :min)
+    assert_operator options.dig(:yaxis, :max), :>, 24
+    assert_equal 6, options.dig(:yaxis, :stepSize)
+  end
+
+  def test_readable_axis_options_skip_compact_charts_and_numeric_series
+    category = [{ name: "Requests", data: [{ x: "3pm", y: 1 }] }]
+    numeric = [{ name: "Counts", data: [1, 2, 3] }]
+
+    assert_empty RecordingStudioAdmin::Widgets::Presenter.readable_axis_options(:line, category, compact: true)
+    assert_empty RecordingStudioAdmin::Widgets::Presenter.readable_axis_options(:line, numeric)
+    assert_empty RecordingStudioAdmin::Widgets::Presenter.readable_axis_options(:pie, category)
+  end
+
   def test_integer_ticks_for_integer_series_and_not_geo_or_gauge
     integer_series = [{ name: "Counts", data: [1, 2, 3] }]
     xy_series = [{ name: "Counts", data: [{ x: "Mon", y: 4 }, { x: "Tue", y: 5 }] }]

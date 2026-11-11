@@ -7,6 +7,9 @@ module RecordingStudioAdmin
       FULL_CARD_HEIGHT_CLASS = "h-[26rem]"
       FULL_CHART_HEIGHT = 200
       FULL_LIST_LIMIT = 5
+      X_TICK_AMOUNT = 6
+      Y_TICK_AMOUNT = 5
+      CATEGORY_REPEAT_MARK = "\u200b"
       CHART_TYPE_ALIASES = {
         geo: :geochart
       }.freeze
@@ -35,6 +38,111 @@ module RecordingStudioAdmin
 
         { markers: { size: 5 } }
       end
+
+      def self.plot_series(series)
+        case series
+        when Hash
+          plot_series_entry(series)
+        when Array
+          series.map { |entry| entry.is_a?(Hash) ? plot_series_entry(entry) : entry }
+        else
+          series
+        end
+      end
+
+      def self.readable_axis_options(type, series, compact: false)
+        return {} if compact
+        return {} unless category_chart?(type, series)
+
+        options = {
+          xaxis: {
+            type: "category",
+            tickAmount: X_TICK_AMOUNT,
+            labels: {
+              hideOverlappingLabels: true,
+              rotate: 0
+            }
+          }
+        }
+        return options unless integer_ticks?(type, series: series)
+
+        options.merge(yaxis: count_yaxis(series))
+      end
+
+      def self.plot_series_entry(entry)
+        data_key = if entry.key?(:data)
+                     :data
+                   elsif entry.key?("data")
+                     "data"
+                   end
+        return entry unless data_key
+
+        points = entry[data_key]
+        return entry unless points.is_a?(Array)
+
+        entry.merge(data_key => distinct_category_points(points))
+      end
+      private_class_method :plot_series_entry
+
+      def self.distinct_category_points(points)
+        seen = Hash.new(0)
+
+        points.map do |point|
+          key = category_key(point)
+          label = key && point[key]
+          next point unless label.is_a?(String)
+
+          occurrence = seen[label]
+          seen[label] += 1
+          next point if occurrence.zero?
+
+          point.merge(key => "#{label}#{CATEGORY_REPEAT_MARK * occurrence}")
+        end
+      end
+      private_class_method :distinct_category_points
+
+      def self.category_key(point)
+        return unless point.is_a?(Hash)
+        return :x if point.key?(:x)
+        return "x" if point.key?("x")
+
+        nil
+      end
+      private_class_method :category_key
+
+      def self.category_chart?(type, series)
+        return false unless %i[line column bar area].include?(renderable_chart_type(type, default: :line))
+
+        series_entries(series).any? { |entry| string_category_entry?(entry) }
+      end
+      private_class_method :category_chart?
+
+      def self.string_category_entry?(entry)
+        return false unless entry.is_a?(Hash)
+
+        Array(entry[:data] || entry["data"]).any? { |point| string_category_point?(point) }
+      end
+      private_class_method :string_category_entry?
+
+      def self.string_category_point?(point)
+        point.is_a?(Hash) && (point[:x] || point["x"]).is_a?(String)
+      end
+      private_class_method :string_category_point?
+
+      def self.count_yaxis(series)
+        peak = plotted_y_values(series).grep(Integer).max || 0
+        peak = 0 if peak.negative?
+        step = [(peak / 4.0).ceil, 1].max
+
+        {
+          min: 0,
+          max: step * Y_TICK_AMOUNT,
+          tickAmount: Y_TICK_AMOUNT,
+          stepSize: step,
+          decimalsInFloat: 0
+        }
+      end
+      private_class_method :count_yaxis
 
       def self.sparse_line_series?(series)
         entries = Array(series)
