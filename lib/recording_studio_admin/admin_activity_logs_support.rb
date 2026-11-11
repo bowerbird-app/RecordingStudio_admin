@@ -56,9 +56,10 @@ module RecordingStudioAdmin
       return mapped_bucket_counts(counts, bucket) if over_bucket_cap?(start_at, end_at, bucket)
 
       counts_by_key = index_bucket_counts(counts, bucket)
-      each_series_bucket(start_at, end_at, bucket).map do |time|
-        { x: bucket_label(time, bucket), y: counts_by_key[bucket_key(time, bucket)] || 0 }
+      rows = each_series_bucket(start_at, end_at, bucket).map do |time|
+        [time, counts_by_key[bucket_key(time, bucket)] || 0]
       end
+      labeled_counts(rows, bucket)
     end
     private_class_method :fill_date_series
 
@@ -69,9 +70,15 @@ module RecordingStudioAdmin
     private_class_method :grouped_bucket_counts
 
     def mapped_bucket_counts(counts, bucket)
-      counts.map { |date, count| { x: bucket_label(date, bucket), y: count } }
+      labeled_counts(counts.to_a, bucket)
     end
     private_class_method :mapped_bucket_counts
+
+    def labeled_counts(rows, bucket)
+      labels = DateAxisLabels.call(rows.map(&:first), bucket: bucket)
+      rows.each_with_index.map { |(_time, count), index| { x: labels.fetch(index), y: count } }
+    end
+    private_class_method :labeled_counts
 
     def index_bucket_counts(counts, bucket)
       counts.each_with_object({}) do |(value, count), indexed|
@@ -331,24 +338,6 @@ module RecordingStudioAdmin
       end
     end
     private_class_method :bucket_group_expression
-
-    def bucket_label(value, bucket)
-      timestamp = normalize_bucket_value(value)
-
-      case bucket
-      when :hour
-        timestamp.strftime("%-l%P").strip
-      when :week
-        "Week of #{timestamp.strftime('%b %-d')}"
-      when :month
-        timestamp.strftime("%b")
-      when :year
-        timestamp.strftime("%Y")
-      else
-        timestamp.strftime("%b %-d")
-      end
-    end
-    private_class_method :bucket_label
 
     def normalize_bucket_value(value)
       return value.in_time_zone if value.respond_to?(:in_time_zone)

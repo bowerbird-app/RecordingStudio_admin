@@ -1474,7 +1474,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_response :success
     body = CGI.unescapeHTML(response.body)
 
-    assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Requests","data":[{"x":"Jan","y":1},{"x":"Feb","y":1},{"x":"Mar","y":1}]}]"'
+    assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Requests","data":[{"x":"Jan 2024","y":1},{"x":"Feb","y":1},{"x":"Mar 2025","y":1}]}]"'
 
     get "/admin/screens/api_requests", params: {
       start_date: "2024-01-01",
@@ -1488,7 +1488,41 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes body, 'data-flat-pack--chart-series-value="[{"name":"Requests","data":[{"x":"2024","y":2},{"x":"2025","y":1}]}]"'
   end
 
+  test "api request chart counts seeded rows and keeps the series inside the plot" do
+    sign_in_admin_user
+    ApiRequest.delete_all
+    ApiRequest.create!(path: "/v1/alpha", method: "GET", status: 200, latency_ms: 12, created_at: Time.zone.local(2026, 11, 10, 9))
+    ApiRequest.create!(path: "/v1/beta", method: "POST", status: 201, latency_ms: 14, created_at: Time.zone.local(2026, 11, 10, 15))
+    ApiRequest.create!(path: "/v1/gamma", method: "GET", status: 200, latency_ms: 16, created_at: Time.zone.local(2026, 11, 11, 11))
+    ApiRequest.create!(path: "/v1/delta", method: "GET", status: 200, latency_ms: 18, created_at: Time.zone.local(2026, 11, 11, 15))
+
+    get "/admin/screens/api_requests", params: {
+      start_date: "2026-11-10",
+      end_date: "2026-11-11",
+      group_by: "hour"
+    }, headers: { "Turbo-Frame" => "screen-chart" }
+
+    assert_response :success
+    series = chart_attribute(response.body, "series")
+    points = series.fetch(0).fetch("data")
+
+    assert_equal 4, points.sum { |point| point.fetch("y") }
+    assert_equal ["Nov 10 9am", "3pm", "Nov 11 11am", "3pm\u200b"], points.map { |point| point.fetch("x") }
+    assert_equal points.size, points.map { |point| point.fetch("x") }.uniq.size
+
+    options = chart_attribute(response.body, "options")
+    assert_equal 0, options.dig("xaxis", "labels", "rotate")
+    assert_equal true, options.dig("xaxis", "labels", "hideOverlappingLabels")
+    assert_operator options.dig("yaxis", "max"), :>, points.map { |point| point.fetch("y") }.max
+    assert_equal 5, options.dig("yaxis", "tickAmount")
+  end
+
   private
+
+  def chart_attribute(html, name)
+    raw = html[/data-flat-pack--chart-#{name}-value="([^"]*)"/, 1]
+    JSON.parse(CGI.unescapeHTML(raw))
+  end
 
   def render_admin_chart_widget(series:)
     widget = RecordingStudioAdmin::Results::ResolvedWidget.new(

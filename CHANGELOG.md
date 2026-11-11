@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## 2.11.0 - 2026-11-11
+
+### Added
+
+- `RecordingStudioAdmin::DateAxisLabels.call` labels a whole chart date series. It returns one string per time, in the same order. Formats live under `recording_studio.admin.date_axis` in `config/locales/en.yml`.
+
+### Changed
+
+- Activity log date series, dummy admin `date_series`, and `distinct_date_series` use `DateAxisLabels`. Week axis labels read `Jun 1`. The first month in 2026 reads `Jan 2026`, and later months in that year stay `Feb`. A single hour at 2025-06-15 10:00 reads `Jun 15 10am`.
+- Full category charts use a category x axis and keep labels horizontal. Short axes hide overlapping ticks. Hour axes label round hours and repeat the day on the first visible tick of each day, as in `Nov 7 12am`, `12pm`, `Nov 8 12am`. The value axis uses about five ticks, and its max sits one step above the highest count so a flat series is drawn inside the plot. A repeated label such as a later `3pm` stays visible and is plotted as its own category.
+
+### Upgrade notes
+
+- Exact label strings in host and consumer tests may need updating. RecordingStudio_publications and Metrics screens are two consumers. Method signatures are unchanged. This release is an additive feat, not feat!. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2110).
+
 ## 2.10.0 - 2026-11-09
 
 ### Added

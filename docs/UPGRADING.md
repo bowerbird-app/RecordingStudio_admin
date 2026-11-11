@@ -1,5 +1,41 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.11.0
+
+Admin `2.11.0` adds `RecordingStudioAdmin::DateAxisLabels.call`. Built-in date series use it for chart axis labels. `AdminActivityLogsSupport.date_series`, dummy `AdminScreens::Base.date_series`, and `distinct_date_series` keep the same arguments. This is an additive feat, not feat!.
+
+A day series in the current year reads `Nov 12`, then `Nov 13`. The first label includes the year when that time is outside the current year. A later label includes the year when the year changes, as in `Jan 1 2027`. Week axis labels read `Jun 1`. Week tooltips still read `Week of Nov 12`. The first month includes the year, as in `Jan 2026`, and later months in that year stay `Feb`. A single hour includes the day, as in `Jun 15 10am`.
+
+Exact label strings in host and consumer tests may need updating. RecordingStudio_publications and Metrics screens are two consumers.
+
+Full category charts (line, column, bar, and area with string `x` values) set `xaxis.type` to `category` and `labels.rotate` to 0. Short axes also set `xaxis.tickAmount` and hide overlapping ticks. A multi-day hour axis instead labels round hours (every 6, 12, or 24 hours, whichever stays readable) and repeats the day on the first visible tick of each day. `Nov 7 12am` is followed by `12pm`, then `Nov 8 12am`. Count charts also set `yaxis.tickAmount` to 5 and a max one step above the highest count. A flat series used to sit on the top border when every count matched that max. A repeated label such as a later `3pm` keeps that visible text and is plotted as its own category, with a zero-width space on the later x value. `DateAxisLabels.call` still returns the plain label. Compact charts are unchanged. A host `chart_options` hash still overrides these.
+
+### Upgrade Steps
+
+1. Bump the host gem to `2.11.0`.
+2. Update tests that assert the previous axis strings.
+3. Call `RecordingStudioAdmin::DateAxisLabels.call` when another gem draws its own date axis. Pass `form: :tooltip` for week tooltips.
+
+### Verify the upgrade
+
+```ruby
+test "date axis labels show the year only where it changes" do
+  travel_to Time.zone.local(2026, 11, 11) do
+    labels = RecordingStudioAdmin::DateAxisLabels.call(
+      [
+        Time.zone.local(2026, 12, 30),
+        Time.zone.local(2026, 12, 31),
+        Time.zone.local(2027, 1, 1),
+        Time.zone.local(2027, 1, 2)
+      ],
+      bucket: :day
+    )
+
+    assert_equal ["Dec 30", "Dec 31", "Jan 1 2027", "Jan 2"], labels
+  end
+end
+```
+
 ## Upgrading to 2.10.0
 
 Admin `2.10.0` passes the request `RecordingStudioAdmin::Context` into select filter `values` and `options` callables. Table, chart, and totals already received that context. Write a positional zero-arg callable (`-> { ... }`) or a positional one-arg callable (`->(context) { ... }`). One-arg callables can read `context.controller`, `context.current_actor`, and `context.controller.current_root_recording`. Zero-argument callables still run as `call` with no args. Other arities unchanged.

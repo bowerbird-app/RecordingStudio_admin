@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.11.0` adds `RecordingStudioAdmin::DateAxisLabels` and uses it for built-in chart date series. Method signatures stay the same. This is an additive feat, not feat!. Exact label strings in host tests may need updating. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2110).
+
 Admin `2.10.0` passes the request `RecordingStudioAdmin::Context` into select filter `values` / `options` callables that accept an argument. Zero-arg callables stay as they are. Use `context.controller.current_root_recording` when dropdown options should match the table's root. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2100).
 
 Admin `2.9.3` uses the FlatPack `v0.1.341` Page Nav spec block (`with_back` / `with_close`) in `recording_studio_admin_page_heading`. Hosts should drop prepends and copied views that kept Close. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-293).
@@ -594,6 +596,20 @@ Widgets support four rendered types:
 - `list`: list cards with `items`
 - `chart`: embedded charts with `chart_type`, `series`, and optional `chart_options`
 - `progress`: progress bars with metadata-backed `progress_value`, optional `progress_max`, and optional `progress_label`
+
+Chart series label the horizontal axis with `RecordingStudioAdmin::DateAxisLabels.call`. Pass the bucket times in order. The helper returns one string per time, in that same order.
+
+```ruby
+RecordingStudioAdmin::DateAxisLabels.call(
+  [Time.zone.local(2026, 11, 12), Time.zone.local(2026, 11, 13)],
+  bucket: :day
+)
+# => ["Nov 12", "Nov 13"]
+```
+
+`bucket` also accepts `:hour`, `:week`, `:month`, and `:year`. For a week tooltip, pass `form: :tooltip`. That returns `Week of Nov 12` when the axis label is `Nov 12`. Hour, month, and year ignore `form` and return the axis label.
+
+A full hour chart keeps one label per hour on the point and shows round hours on the axis. The first visible tick of a day includes the day, as in `Nov 7 12am`, then `12pm`, then `Nov 8 12am`.
 
 `number` and `chart` widgets can set `change_good_when` to control trend semantics:
 

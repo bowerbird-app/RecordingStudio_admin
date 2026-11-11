@@ -2,9 +2,12 @@
 
 require "test_helper"
 require "active_support/time"
+require "active_support/testing/time_helpers"
 require "arel"
 
 class AdminActivityLogsSupportDateSeriesTest < Minitest::Test
+  include ActiveSupport::Testing::TimeHelpers
+
   class SeriesRelation
     def initialize(counts, where_ast: nil)
       @counts = counts
@@ -37,10 +40,16 @@ class AdminActivityLogsSupportDateSeriesTest < Minitest::Test
   def setup
     @previous_zone = Time.zone
     Time.zone = "UTC"
+    @original_load_path = I18n.load_path.dup
+    ensure_gem_locale_loaded!
+    travel_to Time.zone.local(2026, 11, 11)
   end
 
   def teardown
+    travel_back
     Time.zone = @previous_zone
+    I18n.load_path = @original_load_path
+    I18n.reload!
   end
 
   def test_fills_zero_day_buckets_across_an_inclusive_date_range
@@ -74,9 +83,9 @@ class AdminActivityLogsSupportDateSeriesTest < Minitest::Test
     )
 
     assert_equal [
-      { x: "Week of Jun 1", y: 4 },
-      { x: "Week of Jun 8", y: 0 },
-      { x: "Week of Jun 15", y: 1 }
+      { x: "Jun 1", y: 4 },
+      { x: "Jun 8", y: 0 },
+      { x: "Jun 15", y: 1 }
     ], series
   end
 
@@ -92,7 +101,7 @@ class AdminActivityLogsSupportDateSeriesTest < Minitest::Test
     series = RecordingStudioAdmin::AdminActivityLogsSupport.date_series(relation, bucket: :month)
 
     assert_equal [
-      { x: "Jan", y: 9 },
+      { x: "Jan 2026", y: 9 },
       { x: "Feb", y: 0 },
       { x: "Mar", y: 0 },
       { x: "Apr", y: 3 }
@@ -161,7 +170,7 @@ class AdminActivityLogsSupportDateSeriesTest < Minitest::Test
 
     series = RecordingStudioAdmin::AdminActivityLogsSupport.date_series(relation, bucket: :hour)
 
-    assert_equal [{ x: "10am", y: 7 }], series
+    assert_equal [{ x: "Jun 15 10am", y: 7 }], series
   end
 
   def test_reads_a_single_inclusive_between_range
@@ -214,6 +223,14 @@ class AdminActivityLogsSupportDateSeriesTest < Minitest::Test
   end
 
   private
+
+  def ensure_gem_locale_loaded!
+    locale_path = File.expand_path("../config/locales/en.yml", __dir__)
+    expanded = File.expand_path(locale_path)
+    loaded = I18n.load_path.map { |path| File.expand_path(path) }
+    I18n.load_path << locale_path unless loaded.include?(expanded)
+    I18n.reload!
+  end
 
   def range_ast(field, start_at, end_at)
     table = Arel::Table.new(:items)
