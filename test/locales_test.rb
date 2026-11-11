@@ -52,7 +52,15 @@ class LocalesTest < Minitest::Test
     "widgets.more" => "More",
     "widgets.more_info_about" => "More information about %{title}",
     "widgets.more_info_about_widget" => "More information about this widget",
-    "widgets.open" => "Open %{label}"
+    "widgets.open" => "Open %{label}",
+    "date_axis.hour" => "%-l%P",
+    "date_axis.hour_with_day" => "%b %-d %-l%P",
+    "date_axis.day" => "%b %-d",
+    "date_axis.day_with_year" => "%b %-d %Y",
+    "date_axis.month" => "%b",
+    "date_axis.month_with_year" => "%b %Y",
+    "date_axis.year" => "%Y",
+    "date_axis.week_of" => "Week of %{date}"
   }.freeze
   # rubocop:enable Style/FormatStringToken
 

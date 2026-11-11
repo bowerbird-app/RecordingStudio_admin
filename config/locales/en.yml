@@ -58,3 +58,12 @@ en:
         more_info_about: "More information about %{title}"
         more_info_about_widget: "More information about this widget"
         open: "Open %{label}"
+      date_axis:
+        hour: "%-l%P"
+        hour_with_day: "%b %-d %-l%P"
+        day: "%b %-d"
+        day_with_year: "%b %-d %Y"
+        month: "%b"
+        month_with_year: "%b %Y"
+        year: "%Y"
+        week_of: "Week of %{date}"
