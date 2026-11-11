@@ -609,6 +609,8 @@ RecordingStudioAdmin::DateAxisLabels.call(
 
 `bucket` also accepts `:hour`, `:week`, `:month`, and `:year`. For a week tooltip, pass `form: :tooltip`. That returns `Week of Nov 12` when the axis label is `Nov 12`. Hour, month, and year ignore `form` and return the axis label.
 
+A full hour chart keeps one label per hour on the point and shows round hours on the axis. The first visible tick of a day includes the day, as in `Nov 7 12am`, then `12pm`, then `Nov 8 12am`.
+
 `number` and `chart` widgets can set `change_good_when` to control trend semantics:
 
 - `:up` (default): positive change is styled as good

@@ -219,10 +219,47 @@ class WidgetPresenterTest < Minitest::Test
     assert_equal 6, options.dig(:xaxis, :tickAmount)
     assert_equal true, options.dig(:xaxis, :labels, :hideOverlappingLabels)
     assert_equal 0, options.dig(:xaxis, :labels, :rotate)
+    assert_nil options.dig(:xaxis, :overwriteCategories)
     assert_equal 5, options.dig(:yaxis, :tickAmount)
     assert_equal 0, options.dig(:yaxis, :min)
     assert_operator options.dig(:yaxis, :max), :>, 24
     assert_equal 6, options.dig(:yaxis, :stepSize)
+  end
+
+  def test_multi_day_hour_axis_shows_round_hours_and_repeats_the_day
+    labels = hour_axis_fixture(from: Time.utc(2026, 11, 7), count: 120)
+    series = [{ name: "Requests", data: labels.map { |label| { x: label, y: 1 } } }]
+
+    options = RecordingStudioAdmin::Widgets::Presenter.readable_axis_options(:line, series)
+    visible = options.dig(:xaxis, :overwriteCategories).reject(&:empty?)
+
+    assert_equal [
+      "Nov 7 12am", "12pm",
+      "Nov 8 12am", "12pm",
+      "Nov 9 12am", "12pm",
+      "Nov 10 12am", "12pm",
+      "Nov 11 12am", "12pm"
+    ], visible
+    assert_nil options.dig(:xaxis, :tickAmount)
+    assert_equal false, options.dig(:xaxis, :labels, :hideOverlappingLabels)
+    assert_equal 0, options.dig(:xaxis, :labels, :rotate)
+  end
+
+  def test_hour_axis_adds_the_day_when_the_first_visible_tick_is_not_midnight
+    times = (7..9).flat_map do |day|
+      (1..23).map { |hour| Time.utc(2026, 11, day, hour) }
+    end
+    labels = hour_axis_labels_for(times)
+    series = [{ name: "Requests", data: labels.map { |label| { x: label, y: 1 } } }]
+
+    options = RecordingStudioAdmin::Widgets::Presenter.readable_axis_options(:line, series)
+    visible = options.dig(:xaxis, :overwriteCategories).reject(&:empty?)
+
+    assert_equal [
+      "Nov 7 6am", "12pm", "6pm",
+      "Nov 8 6am", "12pm", "6pm",
+      "Nov 9 6am", "12pm", "6pm"
+    ], visible
   end
 
   def test_readable_axis_options_skip_compact_charts_and_numeric_series
@@ -389,6 +426,29 @@ class WidgetPresenterTest < Minitest::Test
     }
 
     RecordingStudioAdmin::Results::ResolvedWidget.new(**defaults, **overrides)
+  end
+
+  def hour_axis_fixture(from:, count:)
+    hour_axis_labels_for(Array.new(count) { |offset| from + (offset * 3600) })
+  end
+
+  def hour_axis_labels_for(times)
+    with_date_axis_locale do
+      Time.use_zone("UTC") { RecordingStudioAdmin::DateAxisLabels.call(times, bucket: :hour) }
+    end
+  end
+
+  def with_date_axis_locale
+    locale_path = File.expand_path("../config/locales/en.yml", __dir__)
+    load_path = I18n.load_path.dup
+    expanded = File.expand_path(locale_path)
+    already_loaded = I18n.load_path.any? { |path| File.expand_path(path) == expanded }
+    I18n.load_path << locale_path unless already_loaded
+    I18n.reload!
+    yield
+  ensure
+    I18n.load_path = load_path
+    I18n.reload!
   end
 
   class FakeWidgetView

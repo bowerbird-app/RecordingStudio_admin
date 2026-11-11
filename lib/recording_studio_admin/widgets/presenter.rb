@@ -9,7 +9,11 @@ module RecordingStudioAdmin
       FULL_LIST_LIMIT = 5
       X_TICK_AMOUNT = 6
       Y_TICK_AMOUNT = 5
+      MAX_HOUR_TICKS = 10
+      HOUR_STEPS = [6, 12, 24, 48, 72, 168].freeze
       CATEGORY_REPEAT_MARK = "\u200b"
+      HOUR_WITH_DAY = /\A(?<day>[A-Za-z]{3,} \d{1,2}) (?<clock>\d{1,2}(?:am|pm))\z/
+      HOUR_CLOCK = /\A(?<clock>\d{1,2}(?:am|pm))\z/
       CHART_TYPE_ALIASES = {
         geo: :geochart
       }.freeze
@@ -54,16 +58,7 @@ module RecordingStudioAdmin
         return {} if compact
         return {} unless category_chart?(type, series)
 
-        options = {
-          xaxis: {
-            type: "category",
-            tickAmount: X_TICK_AMOUNT,
-            labels: {
-              hideOverlappingLabels: true,
-              rotate: 0
-            }
-          }
-        }
+        options = { xaxis: category_xaxis(series) }
         return options unless integer_ticks?(type, series: series)
 
         options.merge(yaxis: count_yaxis(series))
@@ -109,6 +104,113 @@ module RecordingStudioAdmin
         nil
       end
       private_class_method :category_key
+
+      def self.category_xaxis(series)
+        hour_labels = hour_axis_labels(category_labels(series))
+        if hour_labels
+          return {
+            type: "category",
+            overwriteCategories: hour_labels,
+            labels: {
+              hideOverlappingLabels: false,
+              rotate: 0
+            }
+          }
+        end
+
+        {
+          type: "category",
+          tickAmount: X_TICK_AMOUNT,
+          labels: {
+            hideOverlappingLabels: true,
+            rotate: 0
+          }
+        }
+      end
+      private_class_method :category_xaxis
+
+      def self.category_labels(series)
+        entry = series_entries(series).find { |item| item.is_a?(Hash) }
+        return [] unless entry
+
+        Array(entry[:data] || entry["data"]).filter_map do |point|
+          next unless point.is_a?(Hash)
+
+          point[:x] || point["x"]
+        end
+      end
+      private_class_method :category_labels
+
+      def self.hour_axis_labels(labels)
+        parsed = parse_hour_series(labels)
+        return if parsed.nil? || parsed.size <= X_TICK_AMOUNT
+
+        indexes = visible_hour_indexes(parsed)
+        previous_day = nil
+        parsed.each_index.map do |index|
+          next "" unless indexes.include?(index)
+
+          item = parsed[index]
+          text = item[:day] == previous_day ? item[:clock] : item[:with_day]
+          previous_day = item[:day]
+          text
+        end
+      end
+      private_class_method :hour_axis_labels
+
+      def self.parse_hour_series(labels)
+        day = nil
+        labels.map do |label|
+          parsed = parse_hour_point(label, day)
+          break unless parsed
+
+          day = parsed[:day]
+          parsed
+        end
+      end
+      private_class_method :parse_hour_series
+
+      def self.parse_hour_point(label, day)
+        text = label.to_s.delete(CATEGORY_REPEAT_MARK)
+        match = text.match(HOUR_WITH_DAY) || text.match(HOUR_CLOCK)
+        return unless match
+
+        day = match[:day] if match.names.include?("day") && match[:day]
+        return unless day
+
+        clock = match[:clock]
+        { day: day, clock: clock, hour24: hour24(clock), with_day: "#{day} #{clock}" }
+      end
+      private_class_method :parse_hour_point
+
+      def self.hour24(clock)
+        number = clock.to_i
+        return 0 if number == 12 && clock.end_with?("am")
+        return 12 if number == 12 && clock.end_with?("pm")
+        return number + 12 if clock.end_with?("pm")
+
+        number
+      end
+      private_class_method :hour24
+
+      def self.visible_hour_indexes(parsed)
+        hours = parsed.map { |item| item[:hour24] }
+        step = hour_step(hours)
+        indexes = hours.each_index.select { |index| (hours[index] % step).zero? }
+        indexes.empty? ? [0] : indexes
+      end
+      private_class_method :visible_hour_indexes
+
+      def self.hour_step(hours)
+        match = HOUR_STEPS.find { |candidate| round_hour_count(hours, candidate).between?(1, MAX_HOUR_TICKS) }
+        match || HOUR_STEPS.last
+      end
+      private_class_method :hour_step
+
+      def self.round_hour_count(hours, step)
+        hours.count { |hour| (hour % step).zero? }
+      end
+      private_class_method :round_hour_count
 
       def self.category_chart?(type, series)
         return false unless %i[line column bar area].include?(renderable_chart_type(type, default: :line))

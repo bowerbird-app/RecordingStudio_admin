@@ -8,7 +8,7 @@ A day series in the current year reads `Nov 12`, then `Nov 13`. The first label 
 
 Exact label strings in host and consumer tests may need updating. RecordingStudio_publications and Metrics screens are two consumers.
 
-Full category charts (line, column, bar, and area with string `x` values) set `xaxis.type` to `category`, `xaxis.tickAmount`, `labels.hideOverlappingLabels`, and `labels.rotate` to 0. Count charts also set `yaxis.tickAmount` to 5 and a max one step above the highest count. A flat series used to sit on the top border when every count matched that max. A repeated label such as a later `3pm` keeps that visible text and is plotted as its own category, with a zero-width space on the later x value. `DateAxisLabels.call` still returns the plain label. Compact charts are unchanged. A host `chart_options` hash still overrides these.
+Full category charts (line, column, bar, and area with string `x` values) set `xaxis.type` to `category` and `labels.rotate` to 0. Short axes also set `xaxis.tickAmount` and hide overlapping ticks. A multi-day hour axis instead labels round hours (every 6, 12, or 24 hours, whichever stays readable) and repeats the day on the first visible tick of each day. `Nov 7 12am` is followed by `12pm`, then `Nov 8 12am`. Count charts also set `yaxis.tickAmount` to 5 and a max one step above the highest count. A flat series used to sit on the top border when every count matched that max. A repeated label such as a later `3pm` keeps that visible text and is plotted as its own category, with a zero-width space on the later x value. `DateAxisLabels.call` still returns the plain label. Compact charts are unchanged. A host `chart_options` hash still overrides these.
 
 ### Upgrade Steps
 
