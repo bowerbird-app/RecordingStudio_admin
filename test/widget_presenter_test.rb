@@ -283,6 +283,7 @@ class WidgetPresenterTest < Minitest::Test
     assert_equal "category", options.dig(:yaxis, :type)
     assert_nil options.dig(:yaxis, :max)
     assert_equal false, options.dig(:chart, :animations, :enabled)
+    assert_equal false, options.dig(:grid, :show)
 
     column = RecordingStudioAdmin::Widgets::Presenter.readable_axis_options(:column, series)
     column_axis = column.fetch(:yaxis)
@@ -292,6 +293,7 @@ class WidgetPresenterTest < Minitest::Test
 
     assert_equal ticks, column_ticks
     assert_equal "category", column.dig(:xaxis, :type)
+    assert_nil column[:grid]
   end
 
   def test_readable_axis_options_skip_compact_charts_and_numeric_series

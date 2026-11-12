@@ -67,7 +67,10 @@ module RecordingStudioAdmin
       end
 
       def self.horizontal_axis_options(type, series)
-        options = { yaxis: category_xaxis(series) }
+        options = {
+          yaxis: category_xaxis(series),
+          grid: { show: false }
+        }
         return options unless integer_ticks?(type, series: series)
 
         options.merge(
