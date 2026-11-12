@@ -17,6 +17,7 @@
 - `scope` stays the Root Switchable param. A `:within` param of `scope` or `reach` is rejected. Blank and unknown item ids are ignored. A `:recordable_type` filter accepts only types from the screen allowlist. Unknown values are ignored.
 - Subtree results leave out a kept recording when a trashed ancestor sits between it and the access recording.
 - Horizontal bar charts put the integer count scale on `xaxis`, with `forceNiceScale: false`, and draw the bars without a grow animation, so a count of N ends on N. Their background grid is hidden. Column, line, and area charts keep theirs.
+- A horizontal bar date chart with more than 12 rows groups those rows into weeks, then months, then years. `DateAxisLabels` labels the buckets. The count axis stays on `xaxis`. The category axis uses that same step size, because FlatPack integer ticks would otherwise clamp the scale. Column, line, and area charts keep one row per given point.
 
 ### Upgrade notes
 

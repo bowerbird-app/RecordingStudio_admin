@@ -44,14 +44,15 @@ module RecordingStudioAdmin
         { markers: { size: 5 } }
       end
 
-      def self.plot_series(series)
-        case series
+      def self.plot_series(series, type: nil)
+        prepared = bucketed_series(series, type)
+        case prepared
         when Hash
-          plot_series_entry(series)
+          plot_series_entry(prepared)
         when Array
-          series.map { |entry| entry.is_a?(Hash) ? plot_series_entry(entry) : entry }
+          prepared.map { |entry| entry.is_a?(Hash) ? plot_series_entry(entry) : entry }
         else
-          series
+          prepared
         end
       end
 
@@ -66,24 +67,57 @@ module RecordingStudioAdmin
         options.merge(yaxis: count_yaxis(series))
       end
 
+      def self.bucketed_series(series, type)
+        return series unless horizontal_value_axis?(type)
+
+        HorizontalBarBuckets.group(series)
+      end
+      private_class_method :bucketed_series
+
       def self.horizontal_axis_options(type, series)
+        counts = count_axis_for(type, series)
         options = {
-          yaxis: category_xaxis(series),
+          yaxis: horizontal_category_axis(series, step_size: counts&.fetch(:stepSize)),
           grid: { show: false }
         }
-        return options unless integer_ticks?(type, series: series)
+        return options unless counts
 
-        options.merge(
-          xaxis: count_yaxis(series),
-          chart: { animations: { enabled: false } }
-        )
+        options.merge(xaxis: counts, chart: { animations: { enabled: false } })
       end
       private_class_method :horizontal_axis_options
+
+      def self.count_axis_for(type, series)
+        return unless integer_ticks?(type, series: series)
+
+        count_yaxis(series)
+      end
+      private_class_method :count_axis_for
 
       def self.horizontal_value_axis?(type)
         HORIZONTAL_VALUE_CHARTS.include?(renderable_chart_type(type, default: :line))
       end
       private_class_method :horizontal_value_axis?
+
+      def self.horizontal_category_axis(series, step_size: nil)
+        axis = legible_category_axis(series)
+        return axis unless step_size
+
+        axis.merge(stepSize: step_size)
+      end
+      private_class_method :horizontal_category_axis
+
+      def self.legible_category_axis(series)
+        return category_xaxis(series) if category_labels(series).size > HorizontalBarBuckets::MAX_ROWS
+
+        {
+          type: "category",
+          labels: {
+            hideOverlappingLabels: false,
+            rotate: 0
+          }
+        }
+      end
+      private_class_method :legible_category_axis
 
       def self.plot_series_entry(entry)
         data_key = if entry.key?(:data)

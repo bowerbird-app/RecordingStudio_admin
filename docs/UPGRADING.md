@@ -33,7 +33,7 @@ Unknown or disallowed `recordable_type` values are ignored, and the allowlist is
 
 Hosts that copied `filter :scope` or a reach query from this unreleased version delete them. There is no deprecation shim.
 
-Horizontal bar charts (`:bar` and `:stacked_bar`) put the whole-number count scale on `xaxis`. `tickAmount`, `max`, `stepSize`, and `forceNiceScale: false` apply there, so a count of N ends on the tick labeled N. The grow animation is off, so the bar is that length on the first paint. Line, column, and area charts keep that scale on `yaxis`.
+Horizontal bar charts (`:bar` and `:stacked_bar`) put the whole-number count scale on `xaxis`. `tickAmount`, `max`, `stepSize`, and `forceNiceScale: false` apply there, so a count of N ends on the tick labeled N. The grow animation is off, so the bar is that length on the first paint. Line, column, and area charts keep that scale on `yaxis`. A horizontal bar date chart with more than 12 rows groups those rows into weeks, then months, then years, and labels the buckets with `DateAxisLabels`. Shorter series stay as given. Column, line, and area charts are not regrouped. The category axis uses the count axis step size so FlatPack integer ticks do not clamp the scale.
 
 `label:` may be a string, a symbol or dotted string passed to `I18n.t`, or a callable. Inline fields, modal fields, and the search placeholder use the same label. Select option hashes may still carry their own `label`.
 

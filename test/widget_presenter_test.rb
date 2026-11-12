@@ -284,6 +284,7 @@ class WidgetPresenterTest < Minitest::Test
     assert_nil options.dig(:yaxis, :max)
     assert_equal false, options.dig(:chart, :animations, :enabled)
     assert_equal false, options.dig(:grid, :show)
+    assert_equal axis.fetch(:stepSize), options.dig(:yaxis, :stepSize)
 
     column = RecordingStudioAdmin::Widgets::Presenter.readable_axis_options(:column, series)
     column_axis = column.fetch(:yaxis)
@@ -294,6 +295,74 @@ class WidgetPresenterTest < Minitest::Test
     assert_equal ticks, column_ticks
     assert_equal "category", column.dig(:xaxis, :type)
     assert_nil column[:grid]
+  end
+
+  def test_plot_series_groups_horizontal_bar_days_into_weeks_past_the_row_cap
+    with_bar_buckets do
+      monday = Date.new(2026, 6, 1)
+      series = date_bar_series((0..14).map { |offset| monday + offset })
+      original = series.first[:data].map(&:dup)
+
+      plotted = RecordingStudioAdmin::Widgets::Presenter.plot_series(series, type: :bar)
+      points = plotted.first.fetch(:data)
+      options = RecordingStudioAdmin::Widgets::Presenter.readable_axis_options(:bar, plotted)
+      axis = options.fetch(:xaxis)
+      ticks = (0..axis.fetch(:tickAmount)).map { |index| axis.fetch(:min) + (index * axis.fetch(:stepSize)) }
+
+      assert_equal(["Jun 1", "Jun 8", "Jun 15"], points.map { |point| point[:x] })
+      assert_equal([7, 7, 1], points.map { |point| point[:y] })
+      assert_operator points.size, :<=, RecordingStudioAdmin::HorizontalBarBuckets::MAX_ROWS
+      assert_equal original, series.first[:data]
+      assert_equal 0, axis.fetch(:min)
+      assert_equal 10, axis.fetch(:max)
+      assert_equal 2, axis.fetch(:stepSize)
+      assert_equal 2, options.dig(:yaxis, :stepSize)
+      assert ticks.all?(Integer)
+      assert_equal false, axis.fetch(:forceNiceScale)
+      assert_equal 0, axis.fetch(:decimalsInFloat)
+      assert_equal false, options.dig(:chart, :animations, :enabled)
+      assert_equal false, options.dig(:grid, :show)
+      assert_nil options.dig(:yaxis, :tickAmount)
+      assert_equal false, options.dig(:yaxis, :labels, :hideOverlappingLabels)
+
+      stacked = RecordingStudioAdmin::Widgets::Presenter.plot_series(series, type: :stacked_bar)
+      assert_equal(points.map { |point| point[:x] }, stacked.first.fetch(:data).map { |point| point[:x] })
+    end
+  end
+
+  def test_plot_series_groups_horizontal_bar_days_into_months_then_years
+    with_bar_buckets do
+      days = (0..99).map { |offset| Date.new(2026, 1, 1) + offset }
+      months = RecordingStudioAdmin::Widgets::Presenter.plot_series(date_bar_series(days), type: :bar)
+      month_points = months.first.fetch(:data)
+
+      assert_equal(["Jan 2026", "Feb", "Mar", "Apr"], month_points.map { |point| point[:x] })
+      assert_equal([31, 28, 31, 10], month_points.map { |point| point[:y] })
+
+      month_labels = RecordingStudioAdmin::DateAxisLabels.call(
+        (0..12).map { |offset| Time.utc(2026, 1, 1) + offset.months },
+        bucket: :month
+      )
+      yearly = RecordingStudioAdmin::Widgets::Presenter.plot_series(labeled_bar_series(month_labels), type: :bar)
+      year_points = yearly.first.fetch(:data)
+
+      assert_equal(%w[2026 2027], year_points.map { |point| point[:x] })
+      assert_equal([12, 1], year_points.map { |point| point[:y] })
+    end
+  end
+
+  def test_plot_series_keeps_short_non_date_and_vertical_series
+    with_bar_buckets do
+      short = date_bar_series((0..11).map { |offset| Date.new(2026, 6, 1) + offset })
+      names = [{ name: "Items", data: (1..13).map { |index| { x: "Folder #{index}", y: 1 } } }]
+      long = date_bar_series((0..14).map { |offset| Date.new(2026, 6, 1) + offset })
+
+      assert_equal 12, RecordingStudioAdmin::Widgets::Presenter.plot_series(short, type: :bar).first.fetch(:data).size
+      assert_equal 13, RecordingStudioAdmin::Widgets::Presenter.plot_series(names, type: :bar).first.fetch(:data).size
+      assert_equal 15,
+                   RecordingStudioAdmin::Widgets::Presenter.plot_series(long, type: :column).first.fetch(:data).size
+      assert_equal 15, RecordingStudioAdmin::Widgets::Presenter.plot_series(long).first.fetch(:data).size
+    end
   end
 
   def test_readable_axis_options_skip_compact_charts_and_numeric_series
@@ -460,6 +529,24 @@ class WidgetPresenterTest < Minitest::Test
     }
 
     RecordingStudioAdmin::Results::ResolvedWidget.new(**defaults, **overrides)
+  end
+
+  def with_bar_buckets(&block)
+    with_date_axis_locale do
+      Time.use_zone("UTC") do
+        Time.stub(:now, Time.utc(2026, 11, 12, 12), &block)
+      end
+    end
+  end
+
+  def date_bar_series(dates)
+    times = dates.map { |date| Time.zone.local(date.year, date.month, date.day) }
+    labels = RecordingStudioAdmin::DateAxisLabels.call(times, bucket: :day)
+    labeled_bar_series(labels)
+  end
+
+  def labeled_bar_series(labels)
+    [{ name: "Items", data: labels.map { |label| { x: label, y: 1 } } }]
   end
 
   def hour_axis_fixture(from:, count:)
