@@ -16,6 +16,10 @@ module AdminScreens
          text: "View item types",
          url: ->(context) { context.admin_screen_path("item_types") },
          style: :secondary
+    link :library,
+         text: "Browse the library",
+         url: ->(context) { context.scoped_screen_path("library", scope: :subtree) },
+         style: :secondary
 
     widget "widgets.workspace_stats.total_items",
       view_variant: :compact,

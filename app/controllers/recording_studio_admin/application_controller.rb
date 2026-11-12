@@ -25,6 +25,7 @@ module RecordingStudioAdmin
 
     rescue_from RecordingStudioAdmin::DefinitionNotFound, with: :render_not_found
     rescue_from RecordingStudioAdmin::AuthorizationFailed, with: :render_forbidden
+    rescue_from RecordingStudioAdmin::ScopeLimitExceeded, with: :render_scope_limit
 
     before_action :authenticate_recording_studio_admin!
     before_action :set_recording_studio_admin_current_actor
@@ -316,6 +317,10 @@ module RecordingStudioAdmin
 
     def render_forbidden
       head :forbidden
+    end
+
+    def render_scope_limit(error)
+      render plain: error.message, status: :unprocessable_entity
     end
     # rubocop:enable Metrics/ClassLength
   end

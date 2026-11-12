@@ -110,6 +110,7 @@ module RecordingStudioAdmin
       end
 
       def build_query_state(definition, resolve_query_count: true)
+        @context.screen_definition = definition
         base_relation = definition.query.call(@context)
         relation = base_relation
         filters = resolve_filters(combined_filters(definition))
@@ -160,7 +161,10 @@ module RecordingStudioAdmin
           definition.key,
           definition.type,
           entry[:value],
-          definition.options.merge(values: definition.allowed_values(@context)),
+          definition.options.merge(
+            values: definition.present_entries(@context),
+            display_label: definition.label_text(@context)
+          ),
           definition.param_key,
           definition.options.fetch(:start_param, :start_date).to_sym,
           definition.options.fetch(:end_param, :end_date).to_sym,

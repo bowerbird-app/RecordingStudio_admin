@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.12.0` adds scoped screens. `scopeable recordable_types:` names the types a screen may list under the access recording. `context.scoped_recordings` returns that set. Filter `label:` sets the field label. This is an additive feat, not feat!. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2120).
+
 Admin `2.11.0` adds `RecordingStudioAdmin::DateAxisLabels` and uses it for built-in chart date series. Method signatures stay the same. This is an additive feat, not feat!. Exact label strings in host tests may need updating. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2110).
 
 Admin `2.10.0` passes the request `RecordingStudioAdmin::Context` into select filter `values` / `options` callables that accept an argument. Zero-arg callables stay as they are. Use `context.controller.current_root_recording` when dropdown options should match the table's root. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2100).
@@ -666,6 +668,27 @@ To keep the leading filters visible while placing the remaining filters in the F
 ```ruby
 filter_presentation :modal, inline_count: 2
 ```
+
+Pass `label:` when the humanized key is the wrong field name. A string is used as written. A symbol or a dotted string is translated, and the humanized key is the fallback. A callable can read the context.
+
+```ruby
+filter :person, label: "Who"
+filter :owner, label: :owner_label
+filter :owner, label: ->(context) { context.params[:who].presence || "Who" }
+```
+
+A screen can list recordings under the current access recording. Name the allowed recordable types. The query reads `context.scoped_recordings`. The link helper writes `reach` and `recordable_type` on the existing screen path. `reach` is `self` or `subtree`. `scope` stays the Root Switchable param.
+
+```ruby
+scopeable recordable_types: %w[PressKit Image]
+filter :scope, label: "Reach"
+filter :recordable_type, label: "Kind"
+query { |context| context.scoped_recordings }
+
+url: ->(context) { context.scoped_screen_path(:downloads, scope: :subtree) }
+```
+
+Unknown types are ignored. The walk cannot leave the access recording. `config.max_scoped_recordings` defaults to `5_000`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2120).
 
 Select filters pass FlatPack select search options through to the component. Use `searchable`, `search_mode`,
 `search_param`, and `search_endpoint` with a declared `values` or `options` collection:

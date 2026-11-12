@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+## 2.12.0 - 2026-11-12
+
+### Added
+
+- `scopeable recordable_types:` declares the recordable types a screen may list under the current access recording.
+- `context.scoped_recordings` and `context.scoped_recording_ids` return that recording, or that recording plus its descendants. `context.scoped_screen_path` builds a link to an existing screen.
+- Filter `label:` accepts a string, an i18n key, or a callable. The field label and the search placeholder use it. Without a label, the filter key is still humanized.
+- `config.max_scoped_recordings` defaults to `5_000`. A larger descendant set raises `ScopeLimitExceeded`. The screen responds with 422.
+
+### Changed
+
+- A `:scope` filter reads the query param `reach` (`self` or `subtree`). `scope` stays the Root Switchable param. A `:recordable_type` filter accepts only types from the screen allowlist. Unknown values are ignored.
+
+### Upgrade notes
+
+- Screens that do not call `scopeable` or the context helpers behave as before. This release is an additive feat, not feat!. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2120).
+
 ## 2.11.0 - 2026-11-11
 
 ### Added
