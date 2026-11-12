@@ -19,7 +19,7 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes upgrading, "humanize_options: false"
     assert_includes filter_fields, "blank_label: filter.options[:blank_label]"
     assert_includes filter_fields, "humanize: filter.options[:humanize_options] != false"
-    assert_includes filter_fields, "filter.options[:blank_label].presence || filter.options[:placeholder].presence"
+    assert_includes filter_fields, "filter.options[:placeholder].presence || filter.options[:blank_label].presence"
     section = upgrading.split("## Upgrading to 2.13.0", 2).last.split("## Upgrading to 2.12.1", 2).first
     assert_includes section, "additive feat, not feat!"
     assert_includes readme, "docs/UPGRADING.md#upgrading-to-2130"

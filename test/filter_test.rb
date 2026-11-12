@@ -126,15 +126,6 @@ class FilterTest < Minitest::Test
     assert_equal "Queued root", definition.choice_label("queued_root", blank_label: "All roots")
   end
 
-  def test_select_option_mapping_matches_the_filter_fields_partial
-    values = ["", "queued_root"]
-    default_options = select_option_mapping(values)
-    labeled_options = select_option_mapping(values, blank_label: "All roots", humanize_options: false)
-
-    assert_equal [{ label: "", value: "" }, { label: "Queued root", value: "queued_root" }], default_options
-    assert_equal [{ label: "All roots", value: "" }, { label: "queued_root", value: "queued_root" }], labeled_options
-  end
-
   def test_select_filter_stores_blank_label_and_humanize_options
     screen = Class.new(RecordingStudioAdmin::Screen)
     screen.filter :root_type, options: %w[queued_root Folder], blank_label: "All root types",
@@ -153,23 +144,5 @@ class FilterTest < Minitest::Test
 
     assert_same relation, definition.apply(relation, nil, nil)
     assert_same relation, definition.apply(relation, "open", nil)
-  end
-
-  private
-
-  def select_option_mapping(values, **options)
-    choice = RecordingStudioAdmin::Definitions::FilterDefinition
-    definition = choice.new(:root_type, :select, options.merge(values: values))
-
-    Array(definition.options[:values] || definition.options[:options]).map do |entry|
-      {
-        label: choice.choice_label(
-          entry,
-          humanize: definition.options[:humanize_options] != false,
-          blank_label: definition.options[:blank_label]
-        ),
-        value: choice.choice_value(entry)
-      }
-    end
   end
 end

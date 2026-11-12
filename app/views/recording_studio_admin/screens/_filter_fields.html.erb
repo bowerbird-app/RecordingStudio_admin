@@ -44,7 +44,7 @@
           options: select_options,
           value: filter.value,
           label: field_label,
-          placeholder: filter.options[:blank_label].presence || filter.options[:placeholder].presence || t("recording_studio.admin.screens.filters.all_placeholder", default: "All"),
+          placeholder: filter.options[:placeholder].presence || filter.options[:blank_label].presence || t("recording_studio.admin.screens.filters.all_placeholder", default: "All"),
           **select_search_options
         ) %>
       <% else %>
