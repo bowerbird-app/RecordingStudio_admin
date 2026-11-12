@@ -29,7 +29,11 @@
       <% choice = RecordingStudioAdmin::Definitions::FilterDefinition %>
       <% select_options = Array(filter.options[:values] || filter.options[:options]).map { |entry|
            {
-             label: choice.choice_label(entry),
+             label: choice.choice_label(
+               entry,
+               humanize: filter.options[:humanize_options] != false,
+               blank_label: filter.options[:blank_label]
+             ),
              value: choice.choice_value(entry)
            }
          } %>
@@ -40,7 +44,7 @@
           options: select_options,
           value: filter.value,
           label: field_label,
-          placeholder: filter.options[:placeholder].presence || t("recording_studio.admin.screens.filters.all_placeholder", default: "All"),
+          placeholder: filter.options[:placeholder].presence || filter.options[:blank_label].presence || t("recording_studio.admin.screens.filters.all_placeholder", default: "All"),
           **select_search_options
         ) %>
       <% else %>

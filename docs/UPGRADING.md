@@ -1,5 +1,20 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.13.0
+
+Admin `2.13.0` lets a select filter name its blank option and keep option labels as written. This is an additive feat, not feat!. Screens that omit `blank_label:` and `humanize_options:` render as they did in `2.12.1`.
+
+```ruby
+filter :root_type,
+       options: -> { [""] + Root.distinct.order(:type).pluck(:type) },
+       blank_label: "All root types",
+       humanize_options: false
+```
+
+`blank_label:` is the empty option text. It is also the select placeholder when `placeholder:` is blank. `humanize_options:` defaults to true. Hash option labels are still used as written.
+
+Gems that copied `app/views/recording_studio_admin/screens/_filter_fields.html.erb` for these two keys can delete the override.
+
 ## Upgrading to 2.12.1
 
 Admin `2.12.1` hides the chart background grid. Line, area, column, bar, pie, donut, radar, and gauge charts set `grid.show` to false. That covers screen charts, full widget charts, and compact charts. Horizontal bar charts already hid the grid in `2.12.0`. Geo charts are unchanged. Method signatures are unchanged.

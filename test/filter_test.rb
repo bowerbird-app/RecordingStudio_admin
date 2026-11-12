@@ -102,6 +102,42 @@ class FilterTest < Minitest::Test
     assert_equal [{ state: "closed" }], relation.clauses
   end
 
+  def test_choice_label_defaults_match_humanized_plain_values
+    definition = RecordingStudioAdmin::Definitions::FilterDefinition
+
+    assert_equal "Queued root", definition.choice_label("queued_root")
+    assert_equal "Queued root", definition.choice_label("queued_root", humanize: true)
+    assert_equal "", definition.choice_label("")
+    assert_equal "Field notes", definition.choice_label({ value: "folder", label: "Field notes" })
+  end
+
+  def test_choice_label_keeps_raw_text_when_humanize_is_false
+    definition = RecordingStudioAdmin::Definitions::FilterDefinition
+
+    assert_equal "queued_root", definition.choice_label("queued_root", humanize: false)
+    assert_equal "Field notes", definition.choice_label({ value: "queued_root", label: "Field notes" }, humanize: false)
+  end
+
+  def test_choice_label_uses_blank_label_for_empty_entries
+    definition = RecordingStudioAdmin::Definitions::FilterDefinition
+
+    assert_equal "All roots", definition.choice_label("", blank_label: "All roots")
+    assert_equal "queued_root", definition.choice_label("queued_root", humanize: false, blank_label: "All roots")
+    assert_equal "Queued root", definition.choice_label("queued_root", blank_label: "All roots")
+  end
+
+  def test_select_filter_stores_blank_label_and_humanize_options
+    screen = Class.new(RecordingStudioAdmin::Screen)
+    screen.filter :root_type, options: %w[queued_root Folder], blank_label: "All root types",
+                              humanize_options: false
+
+    filter = screen.filters.first
+
+    assert_equal "All root types", filter.options[:blank_label]
+    assert_equal false, filter.options[:humanize_options]
+    assert_equal %w[queued_root Folder], filter.options[:options]
+  end
+
   def test_select_filter_apply_returns_relation_unchanged_without_value_or_where_support
     definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(:status, :select, {})
     relation = Object.new

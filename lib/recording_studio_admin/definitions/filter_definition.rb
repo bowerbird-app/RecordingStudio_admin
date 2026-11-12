@@ -44,11 +44,21 @@ module RecordingStudioAdmin
         entry
       end
 
-      def self.choice_label(entry)
+      def self.choice_label(entry, humanize: true, blank_label: nil)
+        labeled = labeled_plain_choice(entry, humanize: humanize, blank_label: blank_label)
+        return labeled unless labeled.nil?
         return entry.to_s.humanize unless entry.is_a?(Hash)
 
         (entry[:label] || entry["label"] || choice_value(entry)).to_s
       end
+
+      def self.labeled_plain_choice(entry, humanize:, blank_label:)
+        return if entry.is_a?(Hash)
+        return blank_label.to_s if blank_label.present? && entry.to_s.empty?
+
+        entry.to_s unless humanize
+      end
+      private_class_method :labeled_plain_choice
 
       def self.display_label(key, raw)
         return key.to_s.humanize if raw.nil? || raw.to_s.strip.empty?
