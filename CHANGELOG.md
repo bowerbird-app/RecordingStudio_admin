@@ -15,7 +15,7 @@
 
 - A `:scope` filter reads the query param `reach` (`self` or `subtree`). `scope` stays the Root Switchable param. A `:recordable_type` filter accepts only types from the screen allowlist. Unknown values are ignored.
 - Subtree results leave out a kept recording when a trashed ancestor sits between it and the access recording.
-- Horizontal bar charts put the integer count scale on `xaxis`, with `forceNiceScale: false`, so ticks stay unique and a count of N ends on N.
+- Horizontal bar charts put the integer count scale on `xaxis`, with `forceNiceScale: false`, and draw the bars without a grow animation, so a count of N ends on N.
 
 ### Upgrade notes
 

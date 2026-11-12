@@ -70,7 +70,10 @@ module RecordingStudioAdmin
         options = { yaxis: category_xaxis(series) }
         return options unless integer_ticks?(type, series: series)
 
-        options.merge(xaxis: count_yaxis(series))
+        options.merge(
+          xaxis: count_yaxis(series),
+          chart: { animations: { enabled: false } }
+        )
       end
       private_class_method :horizontal_axis_options
 

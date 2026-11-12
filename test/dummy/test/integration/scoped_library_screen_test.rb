@@ -86,6 +86,32 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "4 rows"
   end
 
+  test "rendered library bar series lands on the integer x axis" do
+    user = sign_in_user("library-chart-axis@example.com")
+    tree = build_tree(user)
+    switch_to_workspace_root!(tree.fetch(:root))
+    stamp_created_at(tree.fetch(:atlas_folder), Time.zone.local(2026, 10, 1, 9))
+    stamp_created_at(tree.fetch(:atlas_page), Time.zone.local(2026, 10, 1, 15))
+    stamp_created_at(tree.fetch(:zephyr_folder), Time.zone.local(2026, 10, 8, 9))
+    stamp_created_at(tree.fetch(:zephyr_page), Time.zone.local(2026, 10, 10, 9))
+
+    get "/stats/screens/library/chart", params: { reach: "subtree" }
+
+    assert_response :success
+    node = Nokogiri::HTML(response.body).at_css("[data-flat-pack--chart-series-value]")
+    series = JSON.parse(node["data-flat-pack--chart-series-value"])
+    options = JSON.parse(node["data-flat-pack--chart-options-value"])
+    points = series.fetch(0).fetch("data")
+    xaxis = options.fetch("xaxis")
+
+    assert_equal [ 2, 1, 1 ], points.map { |point| point.fetch("y") }
+    assert points.all? { |point| point.fetch("y").is_a?(Integer) }
+    assert_equal 0, xaxis.fetch("min")
+    assert_equal 5, xaxis.fetch("max")
+    assert_equal 5, xaxis.fetch("tickAmount")
+    assert_equal false, options.dig("chart", "animations", "enabled")
+  end
+
   test "a sibling kit does not leak and an undeclared screen ignores scope params" do
     user = sign_in_user("library-sibling@example.com")
     tree = build_tree(user)
@@ -220,6 +246,10 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
       root_recording_id: tree.fetch(:foreign_root).id,
       access_recording_id: tree.fetch(:foreign_page).id
     }
+  end
+
+  def stamp_created_at(recording, time)
+    recording.update_columns(created_at: time, updated_at: time)
   end
 
   def record_child!(recordable, root_recording, parent_recording, actor)

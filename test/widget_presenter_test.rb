@@ -273,11 +273,16 @@ class WidgetPresenterTest < Minitest::Test
     assert ticks.all?(Integer)
     assert_includes ticks, 1
     assert_includes ticks, 4
+    assert_equal 0, axis.fetch(:min)
+    assert_equal 5, axis.fetch(:max)
+    assert_equal 5, axis.fetch(:tickAmount)
+    assert_equal 1, axis.fetch(:stepSize)
     assert_equal false, axis.fetch(:forceNiceScale)
     assert_equal 0, axis.fetch(:decimalsInFloat)
     assert_nil options.dig(:xaxis, :type)
     assert_equal "category", options.dig(:yaxis, :type)
     assert_nil options.dig(:yaxis, :max)
+    assert_equal false, options.dig(:chart, :animations, :enabled)
 
     column = RecordingStudioAdmin::Widgets::Presenter.readable_axis_options(:column, series)
     column_axis = column.fetch(:yaxis)

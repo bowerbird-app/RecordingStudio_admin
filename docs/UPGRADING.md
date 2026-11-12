@@ -21,7 +21,7 @@ The `:scope` filter uses the query param `reach`. Root Switchable already reads 
 
 Unknown `reach` values fall back to `self`. Unknown or disallowed `recordable_type` values are ignored, and the allowlist is used. Values are bound with `where`. They are not interpolated into SQL. Trashed recordings are left out when `recording_studio_trashable_kept_sql` exists. A kept recording under a trashed ancestor is left out too.
 
-Horizontal bar charts (`:bar` and `:stacked_bar`) put the whole-number count scale on `xaxis`. `tickAmount`, `max`, `stepSize`, and `forceNiceScale: false` apply there, so a count of N ends on the tick labeled N. Line, column, and area charts keep that scale on `yaxis`.
+Horizontal bar charts (`:bar` and `:stacked_bar`) put the whole-number count scale on `xaxis`. `tickAmount`, `max`, `stepSize`, and `forceNiceScale: false` apply there, so a count of N ends on the tick labeled N. The grow animation is off, so the bar is that length on the first paint. Line, column, and area charts keep that scale on `yaxis`.
 
 `config.max_scoped_recordings` defaults to `5_000`. The cap counts descendants, not the access recording. Past the cap, the screen raises `ScopeLimitExceeded` and the controller renders that message with status 422.
 
