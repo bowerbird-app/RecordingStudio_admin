@@ -44,8 +44,13 @@ module RecordingStudioAdmin
         entry
       end
 
-      def self.choice_label(entry)
-        return entry.to_s.humanize unless entry.is_a?(Hash)
+      def self.choice_label(entry, humanize: true, blank_label: nil)
+        unless entry.is_a?(Hash)
+          return blank_label.to_s if blank_label.present? && entry.to_s.empty?
+          return entry.to_s unless humanize
+
+          return entry.to_s.humanize
+        end
 
         (entry[:label] || entry["label"] || choice_value(entry)).to_s
       end
