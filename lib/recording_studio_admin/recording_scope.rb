@@ -2,31 +2,13 @@
 
 module RecordingStudioAdmin
   module RecordingScope
-    MODES = %w[self subtree].freeze
-    MODE_CHOICES = [
-      { value: "self", label: "Just here" }.freeze,
-      { value: "subtree", label: "Everything under it" }.freeze
-    ].freeze
-
     module_function
-
-    def choice(params, allowed_types:, scope_key: :reach, type_key: :recordable_type)
-      {
-        mode: mode_from(read_param(params, scope_key)),
-        recordable_type: type_from(read_param(params, type_key), allowed_types)
-      }
-    end
 
     def param_key(definition, type)
       filter = Array(definition&.filters).find { |entry| entry.type.to_sym == type.to_sym }
       return filter.param_key if filter
 
-      type.to_sym == :scope ? :reach : type.to_sym
-    end
-
-    def mode_from(value)
-      text = scalar_string(value)
-      MODES.include?(text) ? text : "self"
+      type.to_sym
     end
 
     def type_from(value, allowed_types)

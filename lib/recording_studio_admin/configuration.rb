@@ -26,7 +26,7 @@ module RecordingStudioAdmin
     attr_accessor :authentication_method, :current_actor_method, :access_recording_method,
                   :access_recording_resolver, :site_admin_recording_resolver, :admin_sections_resolver,
                   :current_root_recording_resolver, :admin_action_auditor, :required_access_role,
-                  :default_mount_path, :max_page, :max_scoped_recordings,
+                  :default_mount_path, :max_page, :max_scoped_recordings, :within_search_threshold,
                   :logs_retention, :audit_log_model
     attr_reader :surfaces, :async_widgets, :layout
 
@@ -44,6 +44,7 @@ module RecordingStudioAdmin
       @required_access_role = :view
       @max_page = 1_000
       @max_scoped_recordings = 5_000
+      @within_search_threshold = 20
       @surfaces = {}
       @async_widgets = AsyncWidgetConfiguration.new
       assign_logs_defaults

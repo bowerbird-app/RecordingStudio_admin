@@ -10,7 +10,8 @@ module AdminScreens
     filter_presentation :inline
 
     scopeable recordable_types: %w[Folder Page]
-    filter :scope, label: "Reach"
+    filter :folder, type: :within, label: "Folder", recordable_type: "Folder",
+           name: ->(recording) { recording.recordable.name }
     filter :recordable_type, label: "Kind"
     filter :person, label: "Who", apply: lambda { |relation, value, _context|
       Library.narrow_by_name(relation, value)

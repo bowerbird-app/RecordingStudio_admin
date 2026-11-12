@@ -140,7 +140,7 @@ module RecordingStudioAdmin
 
       def resolve_filters(definitions)
         definitions.map do |definition|
-          value = constrain_select_value(definition, definition.normalize(@context.params))
+          value = constrain_select_value(definition, definition.normalize(@context.params, @context))
           @context.set_filter_value(definition.key, value)
           { definition: definition, value: value }
         end
@@ -157,19 +157,45 @@ module RecordingStudioAdmin
 
       def resolved_filter(entry)
         definition = entry[:definition]
+        entries = definition.present_entries(@context)
+        options = definition.options.merge(
+          values: entries,
+          display_label: definition.label_text(@context)
+        )
+        if definition.type.to_sym == :within
+          options[:placeholder] = entries.first[:label] if entries.first.is_a?(Hash)
+          options = options.merge(within_search_options(definition))
+        end
         Results::ResolvedFilter.new(
           definition.key,
           definition.type,
           entry[:value],
-          definition.options.merge(
-            values: definition.present_entries(@context),
-            display_label: definition.label_text(@context)
-          ),
+          options,
           definition.param_key,
           definition.options.fetch(:start_param, :start_date).to_sym,
           definition.options.fetch(:end_param, :end_date).to_sym,
           definition.options.fetch(:preset_param, :date_range_preset).to_sym
         )
+      end
+
+      def within_search_options(definition)
+        catalog = @context.within_catalog_for(definition)
+        threshold = Integer(RecordingStudioAdmin.configuration.within_search_threshold)
+        return {} unless catalog.choice_entries.size > threshold
+
+        {
+          searchable: true,
+          search_mode: :remote,
+          search_param: "q",
+          search_endpoint: within_search_endpoint(definition)
+        }.compact
+      end
+
+      def within_search_endpoint(definition)
+        routes = @context.routes
+        return unless routes.respond_to?(:screen_filter_options_path)
+
+        routes.screen_filter_options_path(@key, definition.key)
       end
 
       def resolve_filter_presentation(definition, filters)

@@ -9,37 +9,54 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
 
   setup do
     @previous_scope_limit = RecordingStudioAdmin.configuration.max_scoped_recordings
+    @previous_within_threshold = RecordingStudioAdmin.configuration.within_search_threshold
   end
 
   teardown do
     RecordingStudioAdmin.configuration.max_scoped_recordings = @previous_scope_limit
+    RecordingStudioAdmin.configuration.within_search_threshold = @previous_within_threshold
   end
 
   test "library screen requires a signed in viewer and access to the workspace" do
-    get "/stats/screens/library", params: { reach: "subtree" }, xhr: true
-
-    assert_response :unauthorized
+    [
+      "/stats/screens/library",
+      "/stats/screens/library/chart",
+      "/stats/screens/library/table",
+      "/stats/screens/library/table_count",
+      "/stats/screens/library/filters/folder/options"
+    ].each do |path|
+      get path, xhr: true
+      assert_response :unauthorized
+    end
 
     sign_in_user("library-no-access@example.com")
 
-    get "/stats/screens/library", params: { reach: "subtree" }
-
-    assert_response :forbidden
+    [
+      "/stats/screens/library",
+      "/stats/screens/library/chart",
+      "/stats/screens/library/table",
+      "/stats/screens/library/table_count",
+      "/stats/screens/library/filters/folder/options"
+    ].each do |path|
+      get path
+      assert_response :forbidden
+    end
   end
 
-  test "subtree lists kept items under the workspace and ignores widening params" do
+  test "all lists kept items under the workspace and ignores widening params" do
     user = sign_in_user("library-subtree@example.com")
     tree = build_tree(user)
     switch_to_workspace_root!(tree.fetch(:root))
 
-    get "/stats/screens/library", params: { reach: "subtree" }
+    get "/stats/screens/library"
 
     assert_response :success
     assert_includes response.body, "Who"
-    assert_includes response.body, "Reach"
+    assert_includes response.body, "Folder"
     assert_includes response.body, "Kind"
-    assert_includes response.body, "Everything under it"
+    assert_includes response.body, "All folders"
     assert_includes response.body, "stylesheet"
+    refute_includes response.body, "Reach"
 
     get "/stats/screens/library/table", params: widening_params(tree)
 
@@ -50,22 +67,42 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "Buried Note"
     refute_includes response.body, tree.fetch(:foreign_title)
 
-    get "/stats/screens/library/table_count", params: { reach: "subtree", recordable_type: "Page" }
+    get "/stats/screens/library/table_count", params: { recordable_type: "Page" }
 
     assert_response :success
     assert_includes response.body, "2 rows"
 
-    get "/stats/screens/library/table", params: { reach: "subtree", person: "Atlas" }
+    get "/stats/screens/library/table", params: { person: "Atlas" }
 
     assert_response :success
     assert_includes response.body, "Atlas Notes"
     assert_includes response.body, "Atlas Brief"
     refute_includes response.body, "Zephyr Brief"
+  end
 
-    get "/stats/screens/library/table_count", params: { reach: "self" }
+  test "choosing a folder narrows chart table and count to that folder" do
+    user = sign_in_user("library-folder@example.com")
+    tree = build_tree(user)
+    switch_to_workspace_root!(tree.fetch(:root))
+    folder_id = tree.fetch(:atlas_folder).id
 
+    get "/stats/screens/library/table", params: { folder: folder_id }
     assert_response :success
-    assert_includes response.body, "0 rows"
+    assert_includes response.body, "Atlas Notes"
+    assert_includes response.body, "Atlas Brief"
+    refute_includes response.body, "Zephyr Brief"
+    refute_includes response.body, "Zephyr Kit"
+
+    get "/stats/screens/library/table_count", params: { folder: folder_id }
+    assert_response :success
+    assert_includes response.body, "2 rows"
+
+    get "/stats/screens/library/chart", params: { folder: folder_id }
+    assert_response :success
+    node = Nokogiri::HTML(response.body).at_css("[data-flat-pack--chart-series-value]")
+    series = JSON.parse(node["data-flat-pack--chart-series-value"])
+    total = series.fetch(0).fetch("data").sum { |point| point.fetch("y") }
+    assert_equal 2, total
   end
 
   test "chart and table frames use the same subtree" do
@@ -73,15 +110,15 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
     tree = build_tree(user)
     switch_to_workspace_root!(tree.fetch(:root))
 
-    get "/stats/screens/library/table", params: { reach: "subtree" }
+    get "/stats/screens/library/table"
     assert_response :success
     assert_includes response.body, "Atlas Brief"
 
-    get "/stats/screens/library/chart", params: { reach: "subtree" }
+    get "/stats/screens/library/chart"
     assert_response :success
     assert_includes response.body, "Added over time"
 
-    get "/stats/screens/library/table_count", params: { reach: "subtree" }
+    get "/stats/screens/library/table_count"
     assert_response :success
     assert_includes response.body, "4 rows"
   end
@@ -95,7 +132,7 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
     stamp_created_at(tree.fetch(:zephyr_folder), Time.zone.local(2026, 10, 8, 9))
     stamp_created_at(tree.fetch(:zephyr_page), Time.zone.local(2026, 10, 10, 9))
 
-    get "/stats/screens/library/chart", params: { reach: "subtree" }
+    get "/stats/screens/library/chart"
 
     assert_response :success
     node = Nokogiri::HTML(response.body).at_css("[data-flat-pack--chart-series-value]")
@@ -112,13 +149,13 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
     assert_equal false, options.dig("chart", "animations", "enabled")
   end
 
-  test "a sibling kit does not leak and an undeclared screen ignores scope params" do
+  test "a sibling kit does not leak and an unknown id does not widen" do
     user = sign_in_user("library-sibling@example.com")
     tree = build_tree(user)
     switch_to_workspace_root!(tree.fetch(:root))
     context = RecordingStudioAdmin::Context.new(
       params: {
-        "reach" => "subtree",
+        "folder" => tree.fetch(:zephyr_folder).id,
         "recordable_type" => "Workspace",
         "recording_id" => tree.fetch(:zephyr_page).id,
         "root_recording_id" => tree.fetch(:foreign_root).id,
@@ -131,7 +168,15 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
     )
 
     ids = context.scoped_recording_ids
+    open_ids = context.class.new(
+      params: {},
+      controller: access_controller(tree.fetch(:atlas_folder)),
+      surface: RecordingStudioAdmin.configuration.surface_for(:stats),
+      screen_definition: AdminScreens::Library,
+      current_actor: user
+    ).scoped_recording_ids
 
+    assert_equal open_ids.sort, ids.sort
     assert_includes ids, tree.fetch(:atlas_folder).id
     assert_includes ids, tree.fetch(:atlas_page).id
     refute_includes ids, tree.fetch(:zephyr_folder).id
@@ -139,11 +184,29 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
     refute_includes ids, tree.fetch(:trashed_folder).id
     refute_includes ids, tree.fetch(:buried_page).id
     refute_includes ids, tree.fetch(:foreign_page).id
+    refute_includes ids, tree.fetch(:foreign_folder).id
 
-    get "/stats/screens/workspace_stats/table_count", params: { reach: "subtree" }
+    folder_filter = AdminScreens::Library.filters.find { |entry| entry.key == :folder }
+    labels = context.within_catalog_for(folder_filter).choice_entries.map { |entry| entry[:label] }
+    assert labels.any? { |label| label.include?("Atlas Notes") }
+    refute labels.any? { |label| label.include?("Zephyr") }
+    refute labels.any? { |label| label.include?("Foreign") }
+
+    get "/stats/screens/library/table_count"
+    open_count = response.body
+    [tree.fetch(:foreign_folder).id, tree.fetch(:trashed_folder).id].each do |folder_id|
+      get "/stats/screens/library/table_count", params: { folder: folder_id }
+      assert_response :success
+      assert_equal open_count, response.body
+    end
+
+    get "/stats/screens/library/table", params: { folder: tree.fetch(:foreign_folder).id }
+    assert_response :success
+    refute_includes response.body, tree.fetch(:foreign_title)
+
+    get "/stats/screens/workspace_stats/table_count"
     scoped_count = response.body
     get "/stats/screens/workspace_stats/table_count", params: {
-      reach: "subtree",
       recordable_type: "NotAType",
       recording_id: tree.fetch(:foreign_page).id
     }
@@ -162,7 +225,8 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Browse the library"
-    assert_includes response.body, "/stats/screens/library?reach=subtree"
+    assert_includes response.body, "/stats/screens/library"
+    refute_includes response.body, "reach="
 
     get "/stats/screens/workspace_stats"
 
@@ -176,11 +240,55 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
     switch_to_workspace_root!(tree.fetch(:root))
     RecordingStudioAdmin.configuration.max_scoped_recordings = 1
 
-    get "/stats/screens/library/table", params: { reach: "subtree" }
+    get "/stats/screens/library/table"
 
     assert_response :unprocessable_entity
     assert_includes response.body, "Too many items under this spot"
     assert_includes response.body, "The limit is 1"
+
+    get "/stats/screens/library/filters/folder/options"
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "Too many items under this spot"
+    assert_includes response.body, "The limit is 1"
+  end
+
+  test "folder options stay inside the catalog and switch to remote search past the threshold" do
+    user = sign_in_user("library-options@example.com")
+    tree = build_tree(user)
+    switch_to_workspace_root!(tree.fetch(:root))
+
+    get "/stats/screens/library/filters/folder/options", params: { q: "zephyr" }
+
+    assert_response :success
+    items = JSON.parse(response.body).fetch("items")
+    labels = items.map { |item| item.fetch("label") }
+    assert labels.any? { |label| label.include?("Zephyr Kit") }
+    refute labels.any? { |label| label.include?("Atlas") }
+    refute labels.any? { |label| label.include?("Trash") }
+    refute labels.any? { |label| label.include?("Foreign") }
+    refute labels.any? { |label| label.include?("Brief") }
+    refute labels.any? { |label| label.include?("Buried") }
+    assert items.none? { |item| item.fetch("value").to_s.empty? }
+    refute_includes response.body, "All folders"
+
+    get "/stats/screens/library/filters/folder/options"
+    listed = JSON.parse(response.body).fetch("items").map { |item| item.fetch("label") }
+    assert listed.any? { |label| label.include?("Atlas Notes") }
+    assert listed.any? { |label| label.include?("Zephyr Kit") }
+
+    RecordingStudioAdmin.configuration.within_search_threshold = 1
+    get "/stats/screens/library"
+    assert_response :success
+    assert_includes response.body, 'data-flat-pack--select-search-mode-value="remote"'
+    assert_includes response.body, "/stats/screens/library/filters/folder/options"
+
+    RecordingStudioAdmin.configuration.within_search_threshold = 100
+    get "/stats/screens/library"
+    assert_response :success
+    assert_select "select[name='folder'] option", text: /Atlas Notes/
+    assert_select "select[name='folder'] option", text: /Zephyr Kit/
+    refute_includes response.body, "/stats/screens/library/filters/folder/options"
   end
 
   private
@@ -222,6 +330,7 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
     grant_admin_access_for_test!(recording: foreign_root, actor: user)
     foreign_title = "Foreign Page #{token}"
     foreign_page = record_child!(Page.create!(title: foreign_title), foreign_root, foreign_root, user)
+    foreign_folder = record_child!(Folder.create!(name: "Foreign Folder #{token}"), foreign_root, foreign_root, user)
 
     {
       root: root,
@@ -233,6 +342,7 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
       buried_page: buried_page,
       foreign_root: foreign_root,
       foreign_page: foreign_page,
+      foreign_folder: foreign_folder,
       foreign_title: foreign_title,
       token: token
     }
@@ -240,11 +350,11 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
 
   def widening_params(tree)
     {
-      reach: "subtree",
       recordable_type: "Folder' OR '1'='1",
       recording_id: tree.fetch(:foreign_page).id,
       root_recording_id: tree.fetch(:foreign_root).id,
-      access_recording_id: tree.fetch(:foreign_page).id
+      access_recording_id: tree.fetch(:foreign_page).id,
+      folder: tree.fetch(:foreign_folder).id
     }
   end
 

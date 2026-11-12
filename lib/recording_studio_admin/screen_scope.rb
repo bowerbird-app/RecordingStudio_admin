@@ -4,8 +4,8 @@ module RecordingStudioAdmin
   module ScreenScope
     def scopeable(recordable_types:)
       @scopeable_recordable_types = normalize_scopeable_types(recordable_types).freeze
-      ensure_scope_filter(:scope, :scope, values: RecordingScope::MODE_CHOICES)
       ensure_scope_filter(:recordable_type, :recordable_type, values: @scopeable_recordable_types)
+      recheck_within_filters!
       @scopeable_recordable_types
     end
 
@@ -29,6 +29,39 @@ module RecordingStudioAdmin
 
     def raise_scope_filter_conflict(existing, type)
       raise InvalidDefinition, "filter #{existing.key} is already #{existing.type}, not #{type}"
+    end
+
+    def recheck_within_filters!
+      filters.each do |entry|
+        next unless entry.type.to_sym == :within
+
+        type_name = entry.options[:recordable_type].to_s
+        next if scopeable_recordable_types.include?(type_name)
+
+        raise InvalidDefinition, "filter #{entry.key} recordable_type #{type_name.inspect} is not scopeable"
+      end
+    end
+
+    def validate_within_filter!(key, options)
+      options[:recordable_type] = validated_within_type(key, options[:recordable_type])
+      reject_reserved_within_param!(key, options)
+    end
+
+    def validated_within_type(key, raw)
+      type_name = scopeable_type_name(raw)
+      raise InvalidDefinition, "filter #{key} needs recordable_type" if type_name.nil?
+
+      validate_scopeable_type!(type_name)
+      return type_name if !scopeable? || scopeable_recordable_types.include?(type_name)
+
+      raise InvalidDefinition, "filter #{key} recordable_type #{type_name.inspect} is not scopeable"
+    end
+
+    def reject_reserved_within_param!(key, options)
+      param = (options[:param] || key).to_sym
+      return unless %i[scope reach].include?(param)
+
+      raise InvalidDefinition, "filter #{key} cannot use param #{param}"
     end
 
     def normalize_scopeable_types(recordable_types)

@@ -6,8 +6,16 @@ module RecordingStudioAdmin
       new(context).relation
     end
 
+    def self.kept_subtree_ids(recording)
+      new(nil).kept_subtree_ids(recording)
+    end
+
     def initialize(context)
       @context = context
+    end
+
+    def kept_subtree_ids(recording)
+      subtree_ids(recording)
     end
 
     def relation
@@ -21,26 +29,23 @@ module RecordingStudioAdmin
     private
 
     def scoped_relation(recording)
-      request = choice
-      ids = request[:mode] == "subtree" ? subtree_ids(recording) : [recording.id]
-      kept(recording_class, ids).where(recordable_type: types_for(request))
+      relation = kept(recording_class, subtree_ids(recording)).where(recordable_type: types_for(recordable_type_param))
+      WithinCatalog.narrow(relation, @context, screen)
     end
 
     def screen
       @context.screen_definition || RecordingStudioAdmin.screen_for(param(:key))
     end
 
-    def choice
-      RecordingScope.choice(
-        @context.params,
-        allowed_types: screen.scopeable_recordable_types,
-        scope_key: RecordingScope.param_key(screen, :scope),
-        type_key: RecordingScope.param_key(screen, :recordable_type)
+    def recordable_type_param
+      RecordingScope.type_from(
+        param(RecordingScope.param_key(screen, :recordable_type)),
+        screen.scopeable_recordable_types
       )
     end
 
-    def types_for(request)
-      return [request[:recordable_type]] if request[:recordable_type]
+    def types_for(recordable_type)
+      return [recordable_type] if recordable_type
 
       screen.scopeable_recordable_types
     end

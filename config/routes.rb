@@ -11,6 +11,7 @@ RecordingStudioAdmin::Engine.routes.draw do
   get "screens/:key/chart", to: "screens#chart", as: :screen_chart
   get "screens/:key/table", to: "screens#table", as: :screen_table
   get "screens/:key/table_count", to: "screens#table_count", as: :screen_table_count
+  get "screens/:key/filters/:filter_key/options", to: "screen_filter_options#index", as: :screen_filter_options
   get "screens/:screen_key/widgets/:widget_key", to: "screen_widgets#show", as: :screen_widget,
                                                  constraints: { widget_key: %r{[^/]+(?:\.[^/]+)*} }, format: false
 end

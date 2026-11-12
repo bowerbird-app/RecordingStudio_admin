@@ -7,8 +7,13 @@ module RecordingStudioAdmin
         (options[:param] || key).to_sym
       end
 
-      def normalize(params)
-        filter.normalize(params)
+      def normalize(params, context = nil)
+        implementation = filter
+        if implementation.method(:normalize).parameters.any? { |_kind, name| name == :context }
+          implementation.normalize(params, context)
+        else
+          implementation.normalize(params)
+        end
       end
 
       def apply(relation, value, context)
@@ -28,6 +33,8 @@ module RecordingStudioAdmin
       end
 
       def present_entries(context = nil)
+        return within_present_entries(context) if type.to_sym == :within
+
         Array(resolved_entries(context)).map { |entry| entry.is_a?(Hash) ? entry : entry.to_s }
       end
 
@@ -58,6 +65,33 @@ module RecordingStudioAdmin
 
       private
 
+      def within_present_entries(context)
+        all_entry = { value: "", label: all_option_label(context) }
+        return [all_entry] unless context
+
+        [all_entry, *context.within_catalog_for(self).visible_choices(context.filter_value(key))]
+      end
+
+      def all_option_label(context)
+        raw = options[:all_label]
+        return default_all_label(context) if raw.nil?
+        return all_label_from_callable(raw, context) if raw.respond_to?(:call)
+
+        self.class.display_label(key, raw)
+      end
+
+      def default_all_label(context)
+        label = label_text(context).to_s.downcase.pluralize
+        I18n.t("recording_studio.admin.screens.filters.all_labeled", label: label, default: "All #{label}")
+      end
+
+      def all_label_from_callable(raw, context)
+        return raw.call.to_s if raw.arity.zero?
+        return key.to_s.humanize if context.nil?
+
+        raw.call(context).to_s
+      end
+
       def resolved_entries(context)
         raw = options[:values] || options[:options]
         return raw unless raw.respond_to?(:call)
@@ -76,8 +110,8 @@ module RecordingStudioAdmin
         case type.to_sym
         when :date_range then Filters::DateRangeFilter.new(self)
         when :group_by then Filters::GroupByFilter.new(self)
-        when :scope then Filters::ScopeFilter.new(self)
         when :recordable_type then Filters::RecordableTypeFilter.new(self)
+        when :within then Filters::WithinFilter.new(self)
         else Filters::SelectFilter.new(self)
         end
       end

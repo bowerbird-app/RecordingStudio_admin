@@ -155,10 +155,16 @@ module RecordingStudioAdmin
       relation.pluck(:id)
     end
 
-    def scoped_screen_path(key, scope: nil, recordable_type: nil, **extra)
+    def within_catalog_for(definition)
+      @within_catalogs ||= {}.compare_by_identity
+      @within_catalogs[definition] ||= WithinCatalog.new(self, definition)
+    end
+
+    def scoped_screen_path(key, recordable_type: nil, **extra)
       definition = RecordingStudioAdmin.screen_for(key)
       query = extra.to_h.symbolize_keys
-      query[RecordingScope.param_key(definition, :scope)] = scope if scope
+      query.delete(:scope)
+      query.delete(:reach)
       query[RecordingScope.param_key(definition, :recordable_type)] = recordable_type if recordable_type
       query.compact!
       path = admin_screen_path(key)

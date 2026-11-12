@@ -7,19 +7,20 @@
 ### Added
 
 - `scopeable recordable_types:` declares the recordable types a screen may list under the current access recording.
-- `context.scoped_recordings` and `context.scoped_recording_ids` return that recording, or that recording plus its descendants. `context.scoped_screen_path` builds a link to an existing screen.
+- `context.scoped_recordings` and `context.scoped_recording_ids` return that recording plus its kept descendants. `context.scoped_screen_path` builds a link to an existing screen.
+- Filter type `:within` picks one named item and lists that item plus everything under it. `all_label:` and `name:` set the All text and the item label. `config.within_search_threshold` defaults to 20. Above that, options load from `GET screens/:key/filters/:filter_key/options`.
 - Filter `label:` accepts a string, an i18n key, or a callable. The field label and the search placeholder use it. Without a label, the filter key is still humanized.
-- `config.max_scoped_recordings` defaults to `5_000`. A larger descendant set raises `ScopeLimitExceeded`. The screen responds with 422.
+- `config.max_scoped_recordings` defaults to `5_000`. A larger descendant set raises `ScopeLimitExceeded`. The screen and the within search respond with 422.
 
 ### Changed
 
-- A `:scope` filter reads the query param `reach` (`self` or `subtree`). `scope` stays the Root Switchable param. A `:recordable_type` filter accepts only types from the screen allowlist. Unknown values are ignored.
+- `scope` stays the Root Switchable param. A `:within` param of `scope` or `reach` is rejected. Blank and unknown item ids are ignored. A `:recordable_type` filter accepts only types from the screen allowlist. Unknown values are ignored.
 - Subtree results leave out a kept recording when a trashed ancestor sits between it and the access recording.
 - Horizontal bar charts put the integer count scale on `xaxis`, with `forceNiceScale: false`, and draw the bars without a grow animation, so a count of N ends on N. Their background grid is hidden. Column, line, and area charts keep theirs.
 
 ### Upgrade notes
 
-- Screens that do not call `scopeable` or the context helpers behave as before. This release is an additive feat, not feat!. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2120).
+- Screens that do not call `scopeable` behave as before. This release is an additive feat, not feat!. Hosts that copied `filter :scope` or a reach query from this unreleased version delete them. There is no deprecation shim. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2120).
 
 ## 2.11.0 - 2026-11-11
 

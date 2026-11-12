@@ -72,6 +72,17 @@ begin
   folder_recording = record_seed_child.call(folder, root_recording, root_recording, actor: user, created_at: 6.weeks.ago.change(hour: 9))
   record_seed_child.call(page, root_recording, folder_recording, actor: user, created_at: 6.weeks.ago.change(hour: 11))
 
+  24.times do |index|
+    field_notes = Folder.find_or_create_by!(name: format("Field Notes %02d", index + 1))
+    record_seed_child.call(
+      field_notes,
+      root_recording,
+      root_recording,
+      actor: user,
+      created_at: (4.weeks - index.days).ago.change(hour: 8)
+    )
+  end
+
   {
     root_recording => {
       "Analytics" => [ "Weekly KPI Dashboard", "Revenue Snapshot" ],

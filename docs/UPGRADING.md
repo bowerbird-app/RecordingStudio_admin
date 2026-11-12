@@ -2,34 +2,42 @@
 
 ## Upgrading to 2.12.0
 
-Admin `2.12.0` lets a screen list recordings under the current access recording. Declare the allowed types, then read them from the context. This is an additive feat, not feat!. Screens that never call `scopeable` or the new helpers behave as before.
+Admin `2.12.0` lets a screen list recordings under the current access recording. Declare the allowed types, then read them from the context. A `:within` filter lets a person pick one named item. The screen then shows that item and everything under it. This is an additive feat, not feat!. Screens that do not call `scopeable` behave as before.
 
 ```ruby
 class PressDownloads < RecordingStudioAdmin::Screen
   key "press_downloads"
   scopeable recordable_types: %w[PressKit Image]
-  filter :scope, label: "Reach"
+  filter :press_kit, type: :within, label: "Press kit", recordable_type: "PressKit",
+         name: ->(recording) { recording.recordable.name },
+         all_label: "All press kits"
   filter :recordable_type, label: "Kind"
   filter :person, label: "Who"
   query { |context| context.scoped_recordings }
 end
 ```
 
-`scopeable recordable_types:` takes class names or classes. It adds a `:scope` filter and a `:recordable_type` filter when those types are not already declared. `self` is the access recording. `subtree` is that recording plus descendants from `RecordingStudio::Tree.descendant_ids`. The walk starts at `context.access_recording` and only goes down. A request cannot name another root, a sibling, or a wider blast radius.
+`scopeable recordable_types:` takes class names or classes. It adds a `:recordable_type` filter when that filter is not already declared. It does not add a `:within` filter. With nothing picked, `context.scoped_recordings` is the access recording plus descendants from `RecordingStudio::Tree.descendant_ids`. The walk starts at `context.access_recording` and only goes down. A request cannot name another root, a sibling, or a wider blast radius.
 
-The `:scope` filter uses the query param `reach`. Root Switchable already reads `params[:scope]` as the workspace scope, so a `scope` param would clear the current root. `context.scoped_screen_path(:press_downloads, scope: :subtree, recordable_type: "Image")` writes `reach` and `recordable_type` on the existing screen path. There are no new routes.
+`scope` stays the Root Switchable param. `context.scoped_screen_path(:press_downloads, recordable_type: "Image")` writes `recordable_type` on the existing screen path and leaves `scope` and `reach` out of the query.
 
-Unknown `reach` values fall back to `self`. Unknown or disallowed `recordable_type` values are ignored, and the allowlist is used. Values are bound with `where`. They are not interpolated into SQL. Trashed recordings are left out when `recording_studio_trashable_kept_sql` exists. A kept recording under a trashed ancestor is left out too.
+A `:within` filter requires `recordable_type:`. The param key is the filter key unless `param:` is set. A param of `scope` or `reach` is rejected. The blank option means All. Its label comes from `recording_studio.admin.screens.filters.all_labeled`, so Folder reads "All folders" and Press kit reads "All press kits". `all_label:` replaces that text as written. It accepts a string, a symbol, a dotted i18n key, or a callable. `name:` sets each item's label. With no `name:`, the label is the recordable name, then the title, then the recording id. Blank strings are skipped.
+
+The choices, the query, and the search endpoint share one catalog. A row is included when its type matches the filter, it sits in the kept access subtree, and `RecordingStudioAccessible.authorized?` allows the current actor. The access recording is included only when its type matches. Trashed recordings are left out when `recording_studio_trashable_kept_sql` exists. A kept recording under a trashed ancestor is left out too.
+
+Picking an allowed id walks from that recording with the same cap. The screen relation is that subtree intersected with the scopeable types. Several `:within` filters intersect. An empty intersection is an empty relation. A blank param is All. An unknown id is ignored and does not 403. An id outside the catalog is not applied.
+
+`config.within_search_threshold` defaults to 20. When more rows are allowed, the select uses FlatPack remote search. The route is `GET screens/:key/filters/:filter_key/options` (`screen_filter_options`). The JSON body is `{ items: [{ value:, label: }] }` and does not include All. Search matches the label, ignoring case. `config.max_scoped_recordings` defaults to `5_000`. The cap counts descendants, not the starting recording. Past the cap, the screen and the search endpoint raise `ScopeLimitExceeded` and the controller renders that message with status 422.
+
+Unknown or disallowed `recordable_type` values are ignored, and the allowlist is used. Values are bound with `where`. They are not interpolated into SQL.
+
+Hosts that copied `filter :scope` or a reach query from this unreleased version delete them. There is no deprecation shim.
 
 Horizontal bar charts (`:bar` and `:stacked_bar`) put the whole-number count scale on `xaxis`. `tickAmount`, `max`, `stepSize`, and `forceNiceScale: false` apply there, so a count of N ends on the tick labeled N. The grow animation is off, so the bar is that length on the first paint. Line, column, and area charts keep that scale on `yaxis`.
 
-`config.max_scoped_recordings` defaults to `5_000`. The cap counts descendants, not the access recording. Past the cap, the screen raises `ScopeLimitExceeded` and the controller renders that message with status 422.
-
 `label:` may be a string, a symbol or dotted string passed to `I18n.t`, or a callable. Inline fields, modal fields, and the search placeholder use the same label. Select option hashes may still carry their own `label`.
 
-A host that wants one item, rather than a recordable type, can add its own select. Use `context.scoped_recordings` as the option source. This release does not add an item picker.
-
-Section links and widget `link_to` callables can call `scoped_screen_path`. The dummy stats section links to the library screen with `scope: :subtree`.
+Section links and widget `link_to` callables can call `scoped_screen_path`. The dummy stats section links to the library screen with `scoped_screen_path("library")`.
 
 ## Upgrading to 2.11.0
 

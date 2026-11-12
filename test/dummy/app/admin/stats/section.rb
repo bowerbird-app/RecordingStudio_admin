@@ -18,7 +18,7 @@ module AdminScreens
          style: :secondary
     link :library,
          text: "Browse the library",
-         url: ->(context) { context.scoped_screen_path("library", scope: :subtree) },
+         url: ->(context) { context.scoped_screen_path("library") },
          style: :secondary
 
     widget "widgets.workspace_stats.total_items",

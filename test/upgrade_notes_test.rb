@@ -19,8 +19,14 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes upgrading, "scoped_screen_path"
     assert_includes upgrading, "label:"
     assert_includes upgrading, "max_scoped_recordings"
-    assert_includes upgrading, "reach"
+    assert_includes upgrading, "type: :within"
+    assert_includes upgrading, "all_label"
+    assert_includes upgrading, "within_search_threshold"
     assert_includes upgrading, "additive feat, not feat!"
+    section = upgrading.split("## Upgrading to 2.12.0", 2).last.split("## Upgrading to 2.11.0", 2).first
+    refute_includes section, "query param `reach`"
+    refute_includes section, "`reach` (`self` or `subtree`)"
+    refute_includes section, "does not add an item picker"
     assert_includes readme, "docs/UPGRADING.md#upgrading-to-2120"
     assert_includes readme, "scopeable recordable_types:"
     assert_includes readme, 'filter :person, label: "Who"'

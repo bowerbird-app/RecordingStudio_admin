@@ -1,6 +1,6 @@
 <% filters.each do |filter| %>
   <% field_label = filter.options[:display_label].presence || filter.key.to_s.humanize %>
-  <div class="<%= wrapper_class %>">
+  <div class="<%= wrapper_class %>" data-action="input->recording-studio-admin--screen-filters#preventSelectSearchSubmit">
     <% if filter.type == :date_range %>
       <% date_range_presets = [
            {
@@ -40,7 +40,7 @@
           options: select_options,
           value: filter.value,
           label: field_label,
-          placeholder: t("recording_studio.admin.screens.filters.all_placeholder", default: "All"),
+          placeholder: filter.options[:placeholder].presence || t("recording_studio.admin.screens.filters.all_placeholder", default: "All"),
           **select_search_options
         ) %>
       <% else %>

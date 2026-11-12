@@ -21,7 +21,7 @@ module RecordingStudioAdmin
       return merge_filter(existing, type, options) if existing
 
       resolved_type = (type || builtin_filter_type(key)).to_sym
-      options[:param] ||= :reach if resolved_type == :scope
+      validate_within_filter!(key, options) if resolved_type == :within
       @filters_value << Definitions::FilterDefinition.new(key, resolved_type, options)
     end
 
@@ -61,6 +61,7 @@ module RecordingStudioAdmin
       end
 
       existing.options.merge!(options)
+      validate_within_filter!(existing.key, existing.options) if existing.type.to_sym == :within
       existing
     end
 
