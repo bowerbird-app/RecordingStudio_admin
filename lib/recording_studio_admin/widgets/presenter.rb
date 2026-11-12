@@ -18,6 +18,7 @@ module RecordingStudioAdmin
         geo: :geochart
       }.freeze
       INTEGER_TICK_CHART_TYPES = %i[line column bar stacked_column stacked_bar area radar].freeze
+      HORIZONTAL_VALUE_CHARTS = %i[bar stacked_bar].freeze
 
       def self.renderable_chart_type(type, default: :line)
         normalized = (type || default).to_s.downcase.to_sym
@@ -57,12 +58,26 @@ module RecordingStudioAdmin
       def self.readable_axis_options(type, series, compact: false)
         return {} if compact
         return {} unless category_chart?(type, series)
+        return horizontal_axis_options(type, series) if horizontal_value_axis?(type)
 
         options = { xaxis: category_xaxis(series) }
         return options unless integer_ticks?(type, series: series)
 
         options.merge(yaxis: count_yaxis(series))
       end
+
+      def self.horizontal_axis_options(type, series)
+        options = { yaxis: category_xaxis(series) }
+        return options unless integer_ticks?(type, series: series)
+
+        options.merge(xaxis: count_yaxis(series))
+      end
+      private_class_method :horizontal_axis_options
+
+      def self.horizontal_value_axis?(type)
+        HORIZONTAL_VALUE_CHARTS.include?(renderable_chart_type(type, default: :line))
+      end
+      private_class_method :horizontal_value_axis?
 
       def self.plot_series_entry(entry)
         data_key = if entry.key?(:data)
@@ -241,7 +256,8 @@ module RecordingStudioAdmin
           max: step * Y_TICK_AMOUNT,
           tickAmount: Y_TICK_AMOUNT,
           stepSize: step,
-          decimalsInFloat: 0
+          decimalsInFloat: 0,
+          forceNiceScale: false
         }
       end
       private_class_method :count_yaxis

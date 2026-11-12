@@ -50,7 +50,43 @@ module RecordingStudioAdmin
       limit = scope_limit
       raise ScopeLimitExceeded, limit if descendant_ids.size > limit
 
-      [recording.id, *descendant_ids]
+      [recording.id, *kept_branch_ids(recording, descendant_ids)]
+    end
+
+    def kept_branch_ids(recording, descendant_ids)
+      return descendant_ids if descendant_ids.empty?
+      return [] if recording.respond_to?(:trashed_at) && recording.trashed_at.present?
+      return descendant_ids unless recording_class.respond_to?(:recording_studio_trashable_kept_sql)
+
+      drop_trashed_branches(recording.id, descendant_ids)
+    end
+
+    def drop_trashed_branches(root_id, descendant_ids)
+      parents, trashed = trash_index(descendant_ids)
+      descendant_ids.reject { |id| trashed_branch?(id, root_id, parents, trashed) }
+    end
+
+    def trash_index(descendant_ids)
+      parents = {}
+      trashed = {}
+      rows = recording_class.where(id: descendant_ids).pluck(:id, :parent_recording_id, :trashed_at)
+      rows.each do |id, parent_id, trashed_at|
+        parents[id] = parent_id
+        trashed[id] = true if trashed_at
+      end
+      [parents, trashed]
+    end
+
+    def trashed_branch?(id, root_id, parents, trashed)
+      seen = {}
+      current = id
+      while current && current != root_id
+        return true if trashed[current] || seen[current]
+
+        seen[current] = true
+        current = parents[current]
+      end
+      false
     end
 
     def descendant_ids_for(recording)

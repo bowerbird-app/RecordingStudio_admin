@@ -47,6 +47,7 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Atlas Notes"
     assert_includes response.body, "Zephyr Brief"
     refute_includes response.body, "Atlas Trash"
+    refute_includes response.body, "Buried Note"
     refute_includes response.body, tree.fetch(:foreign_title)
 
     get "/stats/screens/library/table_count", params: { reach: "subtree", recordable_type: "Page" }
@@ -110,6 +111,7 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
     refute_includes ids, tree.fetch(:zephyr_folder).id
     refute_includes ids, tree.fetch(:zephyr_page).id
     refute_includes ids, tree.fetch(:trashed_folder).id
+    refute_includes ids, tree.fetch(:buried_page).id
     refute_includes ids, tree.fetch(:foreign_page).id
 
     get "/stats/screens/workspace_stats/table_count", params: { reach: "subtree" }
@@ -187,6 +189,7 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
     zephyr_folder = record_child!(Folder.create!(name: "Zephyr Kit #{token}"), root, root, user)
     zephyr_page = record_child!(Page.create!(title: "Zephyr Brief #{token}"), root, zephyr_folder, user)
     trashed_folder = record_child!(Folder.create!(name: "Atlas Trash #{token}"), root, root, user)
+    buried_page = record_child!(Page.create!(title: "Buried Note #{token}"), root, trashed_folder, user)
     trashed_folder.update_columns(trashed_at: Time.current, updated_at: Time.current)
     foreign_root_recordable = Workspace.create!(name: "Foreign #{token}")
     foreign_root = RecordingStudio.root_recording_for(foreign_root_recordable)
@@ -201,6 +204,7 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
       zephyr_folder: zephyr_folder,
       zephyr_page: zephyr_page,
       trashed_folder: trashed_folder,
+      buried_page: buried_page,
       foreign_root: foreign_root,
       foreign_page: foreign_page,
       foreign_title: foreign_title,

@@ -262,6 +262,33 @@ class WidgetPresenterTest < Minitest::Test
     ], visible
   end
 
+  def test_horizontal_bar_value_axis_uses_unique_integer_ticks
+    series = [{ name: "Items", data: [{ x: "Oct 1", y: 4 }, { x: "Oct 8", y: 1 }, { x: "Oct 9", y: 2 }] }]
+
+    options = RecordingStudioAdmin::Widgets::Presenter.readable_axis_options(:bar, series)
+    axis = options.fetch(:xaxis)
+    ticks = (0..axis.fetch(:tickAmount)).map { |index| axis.fetch(:min) + (index * axis.fetch(:stepSize)) }
+
+    assert_equal ticks.uniq, ticks
+    assert ticks.all?(Integer)
+    assert_includes ticks, 1
+    assert_includes ticks, 4
+    assert_equal false, axis.fetch(:forceNiceScale)
+    assert_equal 0, axis.fetch(:decimalsInFloat)
+    assert_nil options.dig(:xaxis, :type)
+    assert_equal "category", options.dig(:yaxis, :type)
+    assert_nil options.dig(:yaxis, :max)
+
+    column = RecordingStudioAdmin::Widgets::Presenter.readable_axis_options(:column, series)
+    column_axis = column.fetch(:yaxis)
+    column_ticks = (0..column_axis.fetch(:tickAmount)).map do |index|
+      column_axis.fetch(:min) + (index * column_axis.fetch(:stepSize))
+    end
+
+    assert_equal ticks, column_ticks
+    assert_equal "category", column.dig(:xaxis, :type)
+  end
+
   def test_readable_axis_options_skip_compact_charts_and_numeric_series
     category = [{ name: "Requests", data: [{ x: "3pm", y: 1 }] }]
     numeric = [{ name: "Counts", data: [1, 2, 3] }]
