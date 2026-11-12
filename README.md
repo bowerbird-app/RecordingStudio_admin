@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.12.1` hides the chart background grid on screen charts, full widget charts, and compact charts. Geo charts are unchanged. A widget draws the grid again with `chart_options: { grid: { show: true } }`. A screen chart passes the same hash to `options`. Host options are deep-merged last. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2121).
+
 Admin `2.12.0` adds scoped screens. `scopeable recordable_types:` names the types a screen may list under the access recording. `context.scoped_recordings` returns that subtree. A `:within` filter lets a person pick one named item and see that item plus everything under it. `scope` stays the Root Switchable param. Filter `label:` sets the field label. This is an additive feat, not feat!. Screens that do not call `scopeable` behave as before. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2120).
 
 Admin `2.11.0` adds `RecordingStudioAdmin::DateAxisLabels` and uses it for built-in chart date series. Method signatures stay the same. This is an additive feat, not feat!. Exact label strings in host tests may need updating. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2110).
@@ -597,6 +599,8 @@ Widgets support four rendered types:
 - `number`: numeric summary cards with `value` and optional `change`
 - `list`: list cards with `items`
 - `chart`: embedded charts with `chart_type`, `series`, and optional `chart_options`
+
+Charts hide the background grid. A widget draws it again with `chart_options: { grid: { show: true } }`. A screen chart passes that same hash to `options`. Host options are deep-merged last.
 - `progress`: progress bars with metadata-backed `progress_value`, optional `progress_max`, and optional `progress_label`
 
 Chart series label the horizontal axis with `RecordingStudioAdmin::DateAxisLabels.call`. Pass the bucket times in order. The helper returns one string per time, in that same order.

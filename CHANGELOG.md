@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2.12.1 - 2026-11-12
+
+### Changed
+
+- Charts hide the background grid. Line, area, column, bar, pie, donut, radar, and gauge charts set `grid.show` to false on screen charts, full widget charts, and compact charts. Horizontal bar charts already hid the grid in 2.12.0. Geo charts are unchanged.
+
+### Upgrade notes
+
+- To draw the grid again, set `chart_options: { grid: { show: true } }` on a widget. A screen chart uses `options { { grid: { show: true } } }`. Host options are deep-merged last, so they win. Method signatures are unchanged. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2121).
+
 ## 2.12.0 - 2026-11-12
 
 ### Added

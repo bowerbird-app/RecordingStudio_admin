@@ -678,6 +678,46 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes html, "[--list-item-padding-y:0.5rem]"
   end
 
+  test "screen and widget charts hide the grid unless the host turns it on" do
+    series = [{ name: "Counts", data: [{ x: "Mon", y: 2 }, { x: "Tue", y: 5 }] }]
+    types = RecordingStudioAdmin::Widgets::Presenter::SUPPORTED_CHART_TYPES - [:geochart]
+
+    types.each do |type|
+      screen_options = chart_attribute(render_admin_screen_chart(type: type, series: series, options: {}), "options")
+      widget_options = chart_attribute(render_admin_chart_widget(series: series, chart_type: type), "options")
+      compact_options = chart_attribute(
+        render_admin_chart_widget(series: series, chart_type: type, view_variant: :compact),
+        "options"
+      )
+
+      assert_equal false, screen_options.dig("grid", "show"), "screen #{type}"
+      assert_equal false, widget_options.dig("grid", "show"), "widget #{type}"
+      assert_equal false, compact_options.dig("grid", "show"), "compact #{type}"
+    end
+
+    screen_options = chart_attribute(
+      render_admin_screen_chart(type: :column, series: series, options: { grid: { show: true } }),
+      "options"
+    )
+    widget_options = chart_attribute(
+      render_admin_chart_widget(series: series, chart_type: :line, chart_options: { grid: { show: true } }),
+      "options"
+    )
+    compact_options = chart_attribute(
+      render_admin_chart_widget(
+        series: series,
+        chart_type: :area,
+        chart_options: { grid: { show: true } },
+        view_variant: :compact
+      ),
+      "options"
+    )
+
+    assert_equal true, screen_options.dig("grid", "show")
+    assert_equal true, widget_options.dig("grid", "show")
+    assert_equal true, compact_options.dig("grid", "show")
+  end
+
   test "chart widgets set integer ticks for integer series and omit them for fractional series" do
     integer_html = render_admin_chart_widget(series: [{ name: "Counts", data: [1, 2, 3] }])
     fractional_html = render_admin_chart_widget(series: [{ name: "Rates", data: [1.5, 2.25] }])
@@ -1524,7 +1564,19 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     JSON.parse(CGI.unescapeHTML(raw))
   end
 
-  def render_admin_chart_widget(series:)
+  def render_admin_screen_chart(type:, series:, options:)
+    screen = Struct.new(:chart, :summary, :query_result).new(
+      RecordingStudioAdmin::Results::ResolvedChart.new("Counts", nil, type, series, options),
+      RecordingStudioAdmin::Results::ResolvedSummary.new("Total", 4, nil, :up, nil, true, false, false),
+      nil
+    )
+    RecordingStudioAdmin::ApplicationController.renderer.render(
+      partial: "recording_studio_admin/screens/chart",
+      locals: { screen: screen }
+    )
+  end
+
+  def render_admin_chart_widget(series:, chart_type: :area, chart_options: {}, view_variant: nil)
     widget = RecordingStudioAdmin::Results::ResolvedWidget.new(
       key: "widgets.test.chart_ticks",
       type: :chart,
@@ -1538,20 +1590,25 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
       link_to: nil,
       link_label: nil,
       series: series,
-      chart_type: :area,
-      chart_options: {},
+      chart_type: chart_type,
+      chart_options: chart_options,
       list_options: {},
       items: nil,
       rows: nil,
       metadata: {},
-      view_variant: nil,
+      view_variant: view_variant,
       show_metric: false,
       show_change: false,
       show_period: false
     )
     presenter = RecordingStudioAdmin::Widgets::Presenter.new(widget)
+    partial = if view_variant == :compact
+                "recording_studio_admin/shared/widget"
+              else
+                "recording_studio_admin/shared/widgets/chart"
+              end
     RecordingStudioAdmin::ApplicationController.renderer.render(
-      partial: "recording_studio_admin/shared/widgets/chart",
+      partial: partial,
       locals: { widget: widget, presenter: presenter }
     )
   end

@@ -1,5 +1,24 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.12.1
+
+Admin `2.12.1` hides the chart background grid. Line, area, column, bar, pie, donut, radar, and gauge charts set `grid.show` to false. That covers screen charts, full widget charts, and compact charts. Horizontal bar charts already hid the grid in `2.12.0`. Geo charts are unchanged. Method signatures are unchanged.
+
+A widget draws the grid again with `chart_options: { grid: { show: true } }`. A screen chart uses the same hash inside `options`.
+
+```ruby
+widget "widgets.requests.volume", chart_options: { grid: { show: true } }
+```
+
+```ruby
+chart do
+  type :line
+  options { |_context| { grid: { show: true } } }
+end
+```
+
+Host options are deep-merged last, so `show: true` wins over the default. Other `chart_options` keys stay as they were.
+
 ## Upgrading to 2.12.0
 
 Admin `2.12.0` lets a screen list recordings under the current access recording. Declare the allowed types, then read them from the context. A `:within` filter lets a person pick one named item. The screen then shows that item and everything under it. This is an additive feat, not feat!. Screens that do not call `scopeable` behave as before.

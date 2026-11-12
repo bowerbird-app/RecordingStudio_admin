@@ -365,6 +365,78 @@ class WidgetPresenterTest < Minitest::Test
     end
   end
 
+  def test_chart_render_options_hide_the_grid_for_each_apex_chart_type
+    series = [{ name: "Counts", data: [{ x: "Mon", y: 2 }, { x: "Tue", y: 4 }] }]
+    types = RecordingStudioAdmin::Widgets::Presenter::SUPPORTED_CHART_TYPES - [:geochart]
+
+    types.each do |type|
+      options = RecordingStudioAdmin::Widgets::Presenter.chart_render_options(type, series)
+
+      assert_equal false, options.dig(:grid, :show), "#{type} screen and widget charts"
+    end
+
+    numeric = RecordingStudioAdmin::Widgets::Presenter.chart_render_options(
+      :line,
+      [{ name: "Counts", data: [1, 2, 3] }]
+    )
+    assert_equal false, numeric.dig(:grid, :show)
+  end
+
+  def test_chart_render_options_let_host_chart_options_show_the_grid
+    series = [{ name: "Counts", data: [{ x: "Mon", y: 2 }, { x: "Tue", y: 4 }] }]
+    host = { grid: { show: true } }
+    types = RecordingStudioAdmin::Widgets::Presenter::SUPPORTED_CHART_TYPES - [:geochart]
+
+    types.each do |type|
+      options = RecordingStudioAdmin::Widgets::Presenter.chart_render_options(type, series, chart_options: host)
+
+      assert_equal true, options.dig(:grid, :show), type.inspect
+    end
+
+    bar = RecordingStudioAdmin::Widgets::Presenter.chart_render_options(
+      :bar,
+      series,
+      chart_options: { grid: { show: true }, colors: ["#123456"] }
+    )
+
+    assert_equal true, bar.dig(:grid, :show)
+    assert_equal ["#123456"], bar[:colors]
+    assert_equal false, bar.dig(:chart, :animations, :enabled)
+    assert_equal "category", bar.dig(:yaxis, :type)
+  end
+
+  def test_mini_chart_options_hide_the_grid_unless_the_host_shows_it
+    series = [{ name: "Counts", data: [{ x: "Mon", y: 2 }] }]
+    types = RecordingStudioAdmin::Widgets::Presenter::SUPPORTED_CHART_TYPES - [:geochart]
+
+    types.each do |type|
+      presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+        resolved_widget(chart_type: type, series: series, chart_options: {})
+      )
+
+      assert_equal false, presenter.mini_chart_options.dig(:grid, :show), type.inspect
+    end
+
+    shown = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(chart_type: :area, series: series, chart_options: { grid: { show: true } })
+    )
+    assert_equal true, shown.mini_chart_options.dig(:grid, :show)
+
+    pie = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(
+        chart_type: :donut,
+        series: [1, 2],
+        chart_options: { grid: { show: true }, colors: ["#abcdef"] }
+      )
+    )
+    pie_options = pie.mini_chart_options
+
+    assert_equal true, pie_options.dig(:grid, :show)
+    assert_equal ["#abcdef"], pie_options[:colors]
+    assert_equal true, pie_options.dig(:chart, :sparkline, :enabled)
+    assert_equal false, pie_options.dig(:legend, :show)
+  end
+
   def test_readable_axis_options_skip_compact_charts_and_numeric_series
     category = [{ name: "Requests", data: [{ x: "3pm", y: 1 }] }]
     numeric = [{ name: "Counts", data: [1, 2, 3] }]
