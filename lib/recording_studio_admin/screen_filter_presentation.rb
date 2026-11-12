@@ -15,9 +15,14 @@ module RecordingStudioAdmin
       @inline_filter_count_value || 0
     end
 
-    def filter(name, **options)
-      type = builtin_filter_type(name)
-      @filters_value << Definitions::FilterDefinition.new(name.to_sym, type, options)
+    def filter(name, type: nil, **options)
+      key = name.to_sym
+      existing = filters.find { |entry| entry.key == key }
+      return merge_filter(existing, type, options) if existing
+
+      resolved_type = (type || builtin_filter_type(key)).to_sym
+      validate_within_filter!(key, options) if resolved_type == :within
+      @filters_value << Definitions::FilterDefinition.new(key, resolved_type, options)
     end
 
     private
@@ -48,6 +53,16 @@ module RecordingStudioAdmin
       raise InvalidDefinition, "Screen filter_presentation inline_count must be a non-negative integer"
     rescue ArgumentError, TypeError
       raise InvalidDefinition, "Screen filter_presentation inline_count must be a non-negative integer"
+    end
+
+    def merge_filter(existing, type, options)
+      if type && existing.type.to_sym != type.to_sym
+        raise InvalidDefinition, "filter #{existing.key} is already #{existing.type}"
+      end
+
+      existing.options.merge!(options)
+      validate_within_filter!(existing.key, existing.options) if existing.type.to_sym == :within
+      existing
     end
 
     def builtin_filter_type(name)

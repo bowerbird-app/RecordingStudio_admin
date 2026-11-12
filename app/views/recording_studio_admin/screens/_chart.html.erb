@@ -51,7 +51,10 @@
         <% screen_chart_series = if screen_chart_type == :geochart
                                     recording_studio_flatpack_geochart_series(screen.chart.series)
                                   else
-                                    RecordingStudioAdmin::Widgets::Presenter.plot_series(screen.chart.series)
+                                    RecordingStudioAdmin::Widgets::Presenter.plot_series(
+                                      screen.chart.series,
+                                      type: screen_chart_type
+                                    )
                                   end %>
         <% screen_chart_render_options = if screen_chart_type == :geochart
                                           recording_studio_flatpack_geochart_options(screen_chart_options)

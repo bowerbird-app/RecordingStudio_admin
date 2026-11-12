@@ -1,5 +1,6 @@
 <% filters.each do |filter| %>
-  <div class="<%= wrapper_class %>">
+  <% field_label = filter.options[:display_label].presence || filter.key.to_s.humanize %>
+  <div class="<%= wrapper_class %>" data-action="input->recording-studio-admin--screen-filters#preventSelectSearchSubmit">
     <% if filter.type == :date_range %>
       <% date_range_presets = [
            {
@@ -20,28 +21,34 @@
         end_name: filter.end_param,
         start_value: filter.value&.start_date,
         end_value: filter.value&.end_date,
-        label: filter.key.to_s.humanize,
+        label: field_label,
         presets: date_range_presets,
         preset_name: filter.preset_param.to_s
       ) %>
     <% else %>
-      <% select_options = Array(filter.options[:values] || filter.options[:options]).map { |value| { label: value.to_s.humanize, value: value } } %>
+      <% choice = RecordingStudioAdmin::Definitions::FilterDefinition %>
+      <% select_options = Array(filter.options[:values] || filter.options[:options]).map { |entry|
+           {
+             label: choice.choice_label(entry),
+             value: choice.choice_value(entry)
+           }
+         } %>
       <% select_search_options = filter.options.slice(:searchable, :search_mode, :search_param, :search_endpoint).compact %>
       <% if select_options.any? %>
         <%= render FlatPack::Select::Component.new(
           name: filter.param_key,
           options: select_options,
           value: filter.value,
-          label: filter.key.to_s.humanize,
-          placeholder: t("recording_studio.admin.screens.filters.all_placeholder", default: "All"),
+          label: field_label,
+          placeholder: filter.options[:placeholder].presence || t("recording_studio.admin.screens.filters.all_placeholder", default: "All"),
           **select_search_options
         ) %>
       <% else %>
         <%= render FlatPack::SearchInput::Component.new(
           name: filter.param_key,
           value: filter.value,
-          label: filter.key.to_s.humanize,
-          placeholder: filter.key.to_s.humanize
+          label: field_label,
+          placeholder: field_label
         ) %>
       <% end %>
     <% end %>

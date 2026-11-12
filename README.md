@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.12.0` adds scoped screens. `scopeable recordable_types:` names the types a screen may list under the access recording. `context.scoped_recordings` returns that subtree. A `:within` filter lets a person pick one named item and see that item plus everything under it. `scope` stays the Root Switchable param. Filter `label:` sets the field label. This is an additive feat, not feat!. Screens that do not call `scopeable` behave as before. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2120).
+
 Admin `2.11.0` adds `RecordingStudioAdmin::DateAxisLabels` and uses it for built-in chart date series. Method signatures stay the same. This is an additive feat, not feat!. Exact label strings in host tests may need updating. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2110).
 
 Admin `2.10.0` passes the request `RecordingStudioAdmin::Context` into select filter `values` / `options` callables that accept an argument. Zero-arg callables stay as they are. Use `context.controller.current_root_recording` when dropdown options should match the table's root. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2100).
@@ -666,6 +668,29 @@ To keep the leading filters visible while placing the remaining filters in the F
 ```ruby
 filter_presentation :modal, inline_count: 2
 ```
+
+Pass `label:` when the humanized key is the wrong field name. A string is used as written. A symbol or a dotted string is translated, and the humanized key is the fallback. A callable can read the context.
+
+```ruby
+filter :person, label: "Who"
+filter :owner, label: :owner_label
+filter :owner, label: ->(context) { context.params[:who].presence || "Who" }
+```
+
+A screen can list recordings under the current access recording. Name the allowed recordable types. The query reads `context.scoped_recordings`. With nothing picked, that is the access recording plus everything kept under it. `context.scoped_screen_path` adds `recordable_type` on the existing screen path and leaves `scope` and `reach` out. `scope` stays the Root Switchable param.
+
+```ruby
+scopeable recordable_types: %w[PressKit Image]
+filter :press_kit, type: :within, label: "Press kit", recordable_type: "PressKit",
+       name: ->(recording) { recording.recordable.name },
+       all_label: "All press kits"
+filter :recordable_type, label: "Kind"
+query { |context| context.scoped_recordings }
+
+url: ->(context) { context.scoped_screen_path(:downloads, recordable_type: "Image") }
+```
+
+`:within` choices come from one catalog. A row must match the filter's recordable type, sit in the kept access subtree, and be allowed for the current actor. The blank option is All. `all_label:` replaces the default "All press kits" text. `name:` sets the item label. A blank param and an unknown id are ignored. Trashed rows, and kept rows under a trashed ancestor, are left out. `config.within_search_threshold` defaults to 20. Above that, the select searches `GET screens/:key/filters/:filter_key/options`. `config.max_scoped_recordings` defaults to `5_000`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2120).
 
 Select filters pass FlatPack select search options through to the component. Use `searchable`, `search_mode`,
 `search_param`, and `search_endpoint` with a declared `values` or `options` collection:

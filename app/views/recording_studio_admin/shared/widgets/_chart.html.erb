@@ -1,6 +1,10 @@
 <% presenter ||= recording_studio_widget_presenter(widget) %>
 <% chart_type = presenter.chart_type %>
-<% chart_series = chart_type == :geochart ? recording_studio_flatpack_geochart_series(widget.series) : RecordingStudioAdmin::Widgets::Presenter.plot_series(widget.series) %>
+<% chart_series = if chart_type == :geochart
+                     recording_studio_flatpack_geochart_series(widget.series)
+                   else
+                     RecordingStudioAdmin::Widgets::Presenter.plot_series(widget.series, type: chart_type)
+                   end %>
 <% chart_options = if chart_type == :geochart
                      recording_studio_flatpack_geochart_options(widget.chart_options || {})
                    else

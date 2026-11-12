@@ -17,6 +17,7 @@ module AdminScreens
     StatsSection
     WorkspaceStats
     ItemTypes
+    Library
     UserInvitations
     UserGeography
     UserActivityScreen
@@ -117,6 +118,9 @@ module AdminScreens
     stats/item_types/screen
     stats/item_types/chart
     stats/item_types/table
+    stats/library/screen
+    stats/library/chart
+    stats/library/table
     stats/workspace_stats/widgets/total_items
     stats/workspace_stats/widgets/total_pages
     stats/workspace_stats/widgets/total_folders

@@ -26,6 +26,7 @@ en:
         filters:
           trigger_label: "Filters"
           all_placeholder: "All"
+          all_labeled: "All %{label}"
           date_presets:
             today: "Today"
             yesterday: "Yesterday"

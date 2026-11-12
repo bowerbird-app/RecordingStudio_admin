@@ -4,6 +4,7 @@ module RecordingStudioAdmin
   class Screen < Definitions::Base
     class << self
       include ScreenFilterPresentation
+      include ScreenScope
 
       attr_reader :query_value, :filters_value, :chart_value, :table_value, :widget_usages_value, :summary_value,
                   :availability_scope_value, :export_config_value, :filter_presentation_value,

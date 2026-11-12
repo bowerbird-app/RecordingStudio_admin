@@ -50,15 +50,15 @@ class DummyAppAdminTest < Minitest::Test
     assert_includes admin_root, "section :jobs"
     refute_includes manifest, "admin_activity_logs/admin_activity_logs/screen"
     refute_includes manifest, "AdminActivityLogsScreen"
-    assert_equal 12, screen_files.size
-    assert_equal 12, chart_files.size
-    assert_equal 12, table_files.size
+    assert_equal 13, screen_files.size
+    assert_equal 13, chart_files.size
+    assert_equal 13, table_files.size
     assert_equal 24, widget_files.size
     assert_empty(screen_files.select { |path| File.read(path).match?(/^\s+widget :/) })
     assert_empty(screen_files.select { |path| File.read(path).match?(/^\s+(chart|table) do/) })
     manifests = [api_manifest, users_manifest, jobs_manifest, root_manifest, stats_manifest]
 
-    assert_equal(12, manifests.sum do |source|
+    assert_equal(13, manifests.sum do |source|
       source.scan("RecordingStudioAdmin.register_screen").size
     end)
     assert_equal(5, manifests.sum do |source|

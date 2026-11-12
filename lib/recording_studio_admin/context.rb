@@ -3,10 +3,10 @@
 module RecordingStudioAdmin
   class Context
     attr_reader :params, :current_actor, :controller, :routes, :view_context, :surface
-    attr_accessor :query_result, :table_result
+    attr_accessor :query_result, :table_result, :screen_definition
 
     def initialize(params: {}, current_actor: nil, controller: nil, routes: nil, view_context: nil, filter_values: nil,
-                   widget_params: nil, query_result: nil, table_result: nil, surface: nil)
+                   widget_params: nil, query_result: nil, table_result: nil, surface: nil, screen_definition: nil)
       @params = params || {}
       @current_actor = current_actor
       @controller = controller
@@ -17,6 +17,7 @@ module RecordingStudioAdmin
       @widget_params = normalize_widget_params(widget_params)
       @query_result = query_result
       @table_result = table_result
+      @screen_definition = screen_definition
     end
 
     def set_filter_value(key, value)
@@ -40,7 +41,8 @@ module RecordingStudioAdmin
         widget_params: merged_widget_params,
         query_result: query_result,
         table_result: table_result,
-        surface: surface
+        surface: surface,
+        screen_definition: screen_definition
       )
     end
 
@@ -140,6 +142,35 @@ module RecordingStudioAdmin
 
     def period_label(filter_key: :date_range, duration: nil, reference_time: current_time)
       period_for(filter_key: filter_key, duration: duration, reference_time: reference_time)&.label
+    end
+
+    def scoped_recordings
+      ScopedRecordings.relation_for(self)
+    end
+
+    def scoped_recording_ids
+      relation = scoped_recordings
+      return [] unless relation.respond_to?(:pluck)
+
+      relation.pluck(:id)
+    end
+
+    def within_catalog_for(definition)
+      @within_catalogs ||= {}.compare_by_identity
+      @within_catalogs[definition] ||= WithinCatalog.new(self, definition)
+    end
+
+    def scoped_screen_path(key, recordable_type: nil, **extra)
+      definition = RecordingStudioAdmin.screen_for(key)
+      query = extra.to_h.symbolize_keys
+      query.delete(:scope)
+      query.delete(:reach)
+      query[RecordingScope.param_key(definition, :recordable_type)] = recordable_type if recordable_type
+      query.compact!
+      path = admin_screen_path(key)
+      return path if query.empty?
+
+      "#{path}?#{query.to_query}"
     end
 
     def admin_screen_path(key)

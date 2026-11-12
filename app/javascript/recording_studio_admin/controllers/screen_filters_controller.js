@@ -31,6 +31,12 @@ export default class extends Controller {
     this.hideTableSkeletons()
   }
 
+  preventSelectSearchSubmit(event) {
+    if (event.target.closest("[data-controller~='flat-pack--select']")) {
+      event.stopPropagation()
+    }
+  }
+
   showTableSkeletons() {
     const tableFrame = document.getElementById("screen-table")
     if (!tableFrame) {
