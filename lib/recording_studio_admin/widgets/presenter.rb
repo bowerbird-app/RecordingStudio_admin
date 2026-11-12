@@ -67,6 +67,17 @@ module RecordingStudioAdmin
         options.merge(yaxis: count_yaxis(series))
       end
 
+      def self.chart_render_options(type, series, chart_options: nil)
+        hidden_grid
+          .deep_merge(marker_options_for_sparse_line(type, series))
+          .deep_merge(readable_axis_options(type, series))
+          .deep_merge(chart_options || {})
+      end
+
+      def self.hidden_grid
+        { grid: { show: false } }
+      end
+
       def self.bucketed_series(series, type)
         return series unless horizontal_value_axis?(type)
 
@@ -77,9 +88,8 @@ module RecordingStudioAdmin
       def self.horizontal_axis_options(type, series)
         counts = count_axis_for(type, series)
         options = {
-          yaxis: horizontal_category_axis(series, step_size: counts&.fetch(:stepSize)),
-          grid: { show: false }
-        }
+          yaxis: horizontal_category_axis(series, step_size: counts&.fetch(:stepSize))
+        }.merge(hidden_grid)
         return options unless counts
 
         options.merge(xaxis: counts, chart: { animations: { enabled: false } })
@@ -593,12 +603,14 @@ module RecordingStudioAdmin
       end
 
       def pie_or_donut_mini_chart_options
-        (widget.chart_options || {}).deep_merge(
-          chart: { sparkline: { enabled: true }, toolbar: { show: false } },
-          legend: { show: false },
-          tooltip: { enabled: false },
-          dataLabels: { enabled: false }
-        )
+        self.class.hidden_grid
+            .deep_merge(widget.chart_options || {})
+            .deep_merge(
+              chart: { sparkline: { enabled: true }, toolbar: { show: false } },
+              legend: { show: false },
+              tooltip: { enabled: false },
+              dataLabels: { enabled: false }
+            )
       end
 
       def geo_mini_chart_options
@@ -613,7 +625,6 @@ module RecordingStudioAdmin
           chart: { sparkline: { enabled: true }, toolbar: { show: false } },
           markers: { size: 0 },
           tooltip: { enabled: false },
-          grid: { show: false },
           xaxis: {
             labels: { show: false },
             axisBorder: { show: false },
@@ -622,7 +633,7 @@ module RecordingStudioAdmin
           yaxis: { show: false },
           legend: { show: false },
           dataLabels: { enabled: false }
-        }
+        }.merge(self.class.hidden_grid)
       end
 
       def geo_chart_type?(value)
