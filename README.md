@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.13.0` adds `blank_label:` and `humanize_options: false` on select filters. Default labels stay humanized. This is an additive feat, not feat!. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2130).
+
 Admin `2.12.1` hides the chart background grid on screen charts, full widget charts, and compact charts. Geo charts are unchanged. A widget draws the grid again with `chart_options: { grid: { show: true } }`. A screen chart passes the same hash to `options`. Host options are deep-merged last. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2121).
 
 Admin `2.12.0` adds scoped screens. `scopeable recordable_types:` names the types a screen may list under the access recording. `context.scoped_recordings` returns that subtree. A `:within` filter lets a person pick one named item and see that item plus everything under it. `scope` stays the Root Switchable param. Filter `label:` sets the field label. This is an additive feat, not feat!. Screens that do not call `scopeable` behave as before. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2120).
@@ -714,6 +716,15 @@ filter :workspace_status,
          root = context.controller.current_root_recording
          ApiRequest.where(workspace_id: root.id).distinct.order(:status).pluck(:status)
        }
+```
+
+Pass `blank_label:` when the empty option should read something other than a humanized blank. `humanize_options: false` keeps labels as written (`queued_root` stays `queued_root`). Both are opt-in. Omit them and the select still humanizes labels and uses the All placeholder.
+
+```ruby
+filter :root_type,
+       options: -> { [""] + Root.distinct.order(:type).pluck(:type) },
+       blank_label: "All roots",
+       humanize_options: false
 ```
 
 Widget-oriented helper methods on `RecordingStudioAdmin::Context` let sections reference standalone widgets while preserving date semantics:

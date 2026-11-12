@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2.13.0 - 2026-11-12
+
+### Added
+
+- Select filters accept `blank_label:` for the empty option and the placeholder when no other placeholder is set. `humanize_options: false` keeps option labels as written. Default labels stay humanized.
+
+### Upgrade notes
+
+- This release is an additive feat, not feat!. Screens that omit both options render as they did in `2.12.1`. Pass `blank_label:` and `humanize_options: false` on a select filter instead of copying `_filter_fields`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2130).
+
 ## 2.12.1 - 2026-11-12
 
 ### Changed
