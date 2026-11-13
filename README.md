@@ -257,13 +257,14 @@ Runtime (gemspec):
 
 Development and dummy Gemfile pins:
 
-- RecordingStudio `v6.3.0`
-- Accessible `v0.24.1`
+- RecordingStudio `v6.7.0`
+- Accessible `v0.32.0`
 - Dummy Exportable `v0.5.12`
-- Logs `v0.7.3`
-- Trashable `v0.12.2` (`require: false` in the root Gemfile)
-- Metrics `v0.7.2` (`require: false` in the root Gemfile)
-- Flatpack tag `v0.1.341`
+- Logs `v0.7.4`
+- Trashable `v0.14.0` (`require: false` in the root Gemfile)
+- Metrics `v0.8.0` (`require: false` in the root Gemfile)
+- Flatpack tag `v0.1.356`
+- Dummy Root Switchable `v0.15.0` with Cache `v0.6.3`
 - `view_component` `4.20.0`
 
 `RecordingStudioAccessible` is required. Enable Accessible on the admin root (and any other recordable that should hold grants) with `RecordingStudio.enable_capability(:accessible, on: self)`. Keep the admin root owned (`shared: false`).
@@ -841,7 +842,7 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
-The dummy pins RecordingStudio `v6.3.0`, Flatpack `v0.1.341`, Accessible `v0.24.1`, Logs `v0.7.3`, Metrics `v0.7.2`, Trashable `v0.12.2`, and Exportable `v0.5.12`. Root switchable is `v0.11.4` with Cache `v0.6.2`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+The dummy pins RecordingStudio `v6.7.0`, Flatpack `v0.1.356`, Accessible `v0.32.0`, Logs `v0.7.4`, Metrics `v0.8.0`, Trashable `v0.14.0`, and Exportable `v0.5.12`. Root switchable is `v0.15.0` with Cache `v0.6.3`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
 
 ## Cloud Agent boot
 

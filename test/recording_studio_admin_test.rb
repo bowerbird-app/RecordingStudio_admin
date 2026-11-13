@@ -14,8 +14,8 @@ class RecordingStudioAdminTest < Minitest::Test
     assert_includes gemspec, '"recording_studio_logs", ">= 0.4.1", "< 1.0"'
     %w[Gemfile test/dummy/Gemfile].each do |path|
       contents = File.read(File.join(root, path))
-      assert_includes contents, 'RecordingStudio_logs", tag: "v0.7.3"', path
-      assert_includes contents, 'RecordingStudio_metrics", tag: "v0.7.2"', path
+      assert_includes contents, 'RecordingStudio_logs", tag: "v0.7.4"', path
+      assert_includes contents, 'RecordingStudio_metrics", tag: "v0.8.0"', path
     end
   end
 
