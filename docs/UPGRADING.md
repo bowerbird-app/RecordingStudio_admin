@@ -1,5 +1,25 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.14.0
+
+Admin `2.14.0` reads kept recordings through Recording Studio `6.14.0`. `RecordingStudio::Recording.kept` applies the filters an addon registers. `RecordingStudio.kept_sql` is that same condition as SQL. Pass a table alias when a join needs one.
+
+Section recording lookup uses `RecordingStudio::Recording.unscoped.kept`. Access-recording resolvers, scoped screens, seeds, and stats screens use `RecordingStudio::Recording.kept` on the default relation, so a host `default_scope` stays in the query.
+
+Admin no longer calls `recording_studio_trashable_kept_sql`, `recording_studio_trashable_active`, or `recording_studio_trashable_including_trashed`. It does not check that a `trashed_at` column exists, and it does not fall back to `trashed_at: nil`. Trashable `0.16.0` registers the kept filter. When the column is missing, that filter matches every row.
+
+The gemspec requires `recording_studio >= 6.14.0, < 7` and `recording_studio_trashable >= 0.16.0, < 1`. Development and dummy Gemfiles pin core `v6.14.0` and Trashable `v0.16.0`.
+
+Hosts that copied an admin-root resolver replace the old helper:
+
+```ruby
+RecordingStudio::Recording.kept.find_by(recordable: admin_root)
+```
+
+A scoped subtree still leaves out a kept recording when a trashed ancestor sits between it and the access recording. That check uses `Recording.kept`.
+
+The dummy app defines `Recording.recording_studio_trashable_kept_sql` so Accessible `0.41` can boot. That method is not part of Admin. It returns `RecordingStudio.kept_sql`.
+
 ## Upgrading to 2.13.1
 
 Admin `2.13.1` asks before a destructive action runs when the action has no `confirm:`.
@@ -72,7 +92,7 @@ end
 
 A `:within` filter requires `recordable_type:`. The param key is the filter key unless `param:` is set. A param of `scope` or `reach` is rejected. The blank option means All. Its label comes from `recording_studio.admin.screens.filters.all_labeled`, so Folder reads "All folders" and Press kit reads "All press kits". `all_label:` replaces that text as written. It accepts a string, a symbol, a dotted i18n key, or a callable. `name:` sets each item's label. With no `name:`, the label is the recordable name, then the title, then the recording id. Blank strings are skipped.
 
-The choices, the query, and the search endpoint share one catalog. A row is included when its type matches the filter, it sits in the kept access subtree, and `RecordingStudioAccessible.authorized?` allows the current actor. The access recording is included only when its type matches. Trashed recordings are left out when `recording_studio_trashable_kept_sql` exists. A kept recording under a trashed ancestor is left out too.
+The choices, the query, and the search endpoint share one catalog. A row is included when its type matches the filter, it sits in the kept access subtree, and `RecordingStudioAccessible.authorized?` allows the current actor. The access recording is included only when its type matches. Trashed recordings are left out by `RecordingStudio::Recording.kept`. A kept recording under a trashed ancestor is left out too.
 
 Picking an allowed id walks from that recording with the same cap. The screen relation is that subtree intersected with the scopeable types. Several `:within` filters intersect. An empty intersection is an empty relation. A blank param is All. An unknown id is ignored and does not 403. An id outside the catalog is not applied.
 

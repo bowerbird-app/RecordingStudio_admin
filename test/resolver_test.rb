@@ -1599,6 +1599,7 @@ class ResolverTest < Minitest::Test
     previous_recording_constant = RecordingStudio.const_get(:Recording) if previous_recording_constant_defined
     recording_class = Class.new do
       define_singleton_method(:unscoped) { self }
+      define_singleton_method(:kept) { self }
       define_singleton_method(:find_by) { |_attributes| stored_recording }
     end
 
@@ -1654,6 +1655,7 @@ class ResolverTest < Minitest::Test
     previous_recording_constant = RecordingStudio.const_get(:Recording) if previous_recording_constant_defined
     recording_class = Class.new do
       define_singleton_method(:unscoped) { self }
+      define_singleton_method(:kept) { self }
       define_singleton_method(:find_by) { |_attributes| stored_recording }
     end
 

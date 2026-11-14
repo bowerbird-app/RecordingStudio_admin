@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.14.0` reads kept recordings with `RecordingStudio::Recording.kept` (Recording Studio `>= 6.14.0`, Trashable `>= 0.16.0`). Section lookup uses `unscoped.kept`. Host resolvers that still call `recording_studio_trashable_kept_sql` switch to `kept`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2140).
+
 Admin `2.13.1` asks "Are you sure?" before a destructive row or resource action when `confirm:` is blank. A delete with no `destructive:` value is destructive. An explicit `confirm:` is kept. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2131).
 
 Admin `2.13.0` adds `blank_label:` and `humanize_options: false` on select filters. Default labels stay humanized. This is an additive feat, not feat!. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2130).
@@ -47,8 +49,8 @@ Admin `2.7.1` compact widgets stack the title above the metric and clip the mini
 
 Hosts moving from Admin `1.x` (Accessible `~> 0.3`, RecordingStudio 3.x) to `2.0.0` should follow [docs/UPGRADING.md](docs/UPGRADING.md). That release requires Accessible `~> 0.6` and RecordingStudio `~> 4.1`.
 
-Admin `2.3.0` adds RecordingStudioTrashable `~> 0.10` (query-only) and replaces
-`trashed_at: nil` filters with `recording_studio_trashable_kept_sql`. See
+Admin `2.3.0` adds RecordingStudioTrashable `~> 0.10` (query-only). Admin `2.14.0`
+replaces those trash helpers with `RecordingStudio::Recording.kept`. See
 [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-230).
 
 Admin `2.4.0` requires FlatPack `~> 0.1.254` (git tag `v0.1.254`). Hosts'
@@ -250,20 +252,20 @@ Runtime (gemspec):
 
 - Ruby `>= 3.3.0`
 - Rails `~> 8.1.0`
-- RecordingStudio `>= 6.3.0, < 7`
+- RecordingStudio `>= 6.14.0, < 7`
 - RecordingStudioAccessible `~> 0.6`
 - RecordingStudioLogs `>= 0.4.1, < 1.0`
-- RecordingStudioTrashable `~> 0.10`
+- RecordingStudioTrashable `>= 0.16.0, < 1`
 - FlatPack `>= 0.1.341`
 - view_component `>= 4.14, < 5`
 
 Development and dummy Gemfile pins:
 
-- RecordingStudio `v6.7.0`
+- RecordingStudio `v6.14.0`
 - Accessible `v0.32.0`
 - Dummy Exportable `v0.5.12`
 - Logs `v0.7.4`
-- Trashable `v0.14.0` (`require: false` in the root Gemfile)
+- Trashable `v0.16.0` (`require: false` in the root Gemfile)
 - Metrics `v0.8.0` (`require: false` in the root Gemfile)
 - Flatpack tag `v0.1.356`
 - Dummy Root Switchable `v0.15.0` with Cache `v0.6.3`
@@ -438,9 +440,7 @@ RecordingStudioAdmin.configure do |config|
     admin_root = AdminRoot.find_by(name: "Admin")
     next unless admin_root
 
-    RecordingStudio::Recording.where(
-      RecordingStudio::Recording.recording_studio_trashable_kept_sql
-    ).find_by(recordable: admin_root)
+    RecordingStudio::Recording.kept.find_by(recordable: admin_root)
   end
 end
 ```
@@ -848,7 +848,7 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
-The dummy pins RecordingStudio `v6.7.0`, Flatpack `v0.1.356`, Accessible `v0.32.0`, Logs `v0.7.4`, Metrics `v0.8.0`, Trashable `v0.14.0`, and Exportable `v0.5.12`. Root switchable is `v0.15.0` with Cache `v0.6.3`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+The dummy pins RecordingStudio `v6.14.0`, Flatpack `v0.1.356`, Accessible `v0.32.0`, Logs `v0.7.4`, Metrics `v0.8.0`, Trashable `v0.16.0`, and Exportable `v0.5.12`. Root switchable is `v0.15.0` with Cache `v0.6.3`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
 
 ## Cloud Agent boot
 

@@ -60,8 +60,7 @@ module RecordingStudioAdmin
 
     def kept_branch_ids(recording, descendant_ids)
       return descendant_ids if descendant_ids.empty?
-      return [] if recording.respond_to?(:trashed_at) && recording.trashed_at.present?
-      return descendant_ids unless recording_class.respond_to?(:recording_studio_trashable_kept_sql)
+      return [] unless recording_class.kept.exists?(id: recording.id)
 
       drop_trashed_branches(recording.id, descendant_ids)
     end
@@ -74,12 +73,20 @@ module RecordingStudioAdmin
     def trash_index(descendant_ids)
       parents = {}
       trashed = {}
-      rows = recording_class.where(id: descendant_ids).pluck(:id, :parent_recording_id, :trashed_at)
-      rows.each do |id, parent_id, trashed_at|
+      kept_lookup = kept_id_lookup(descendant_ids)
+      parent_rows(descendant_ids).each do |id, parent_id|
         parents[id] = parent_id
-        trashed[id] = true if trashed_at
+        trashed[id] = true unless kept_lookup[id]
       end
       [parents, trashed]
+    end
+
+    def kept_id_lookup(descendant_ids)
+      recording_class.kept.where(id: descendant_ids).pluck(:id).to_h { |id| [id, true] }
+    end
+
+    def parent_rows(descendant_ids)
+      recording_class.where(id: descendant_ids).pluck(:id, :parent_recording_id)
     end
 
     def trashed_branch?(id, root_id, parents, trashed)
@@ -100,10 +107,7 @@ module RecordingStudioAdmin
     end
 
     def kept(klass, ids)
-      relation = klass.where(id: ids)
-      return relation unless klass.respond_to?(:recording_studio_trashable_kept_sql)
-
-      relation.where(klass.recording_studio_trashable_kept_sql)
+      klass.where(id: ids).kept
     end
 
     def recording_class

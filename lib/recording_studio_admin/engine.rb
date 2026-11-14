@@ -2,7 +2,7 @@
 
 require "rails/engine"
 require "recording_studio_accessible" if defined?(Bundler)
-# Query-only: kept/trashed helpers without Trashable engine/importmap/metrics.
+# Query-only: trash scopes and the kept filter, without the Trashable engine.
 require "recording_studio_trashable/query" if defined?(Bundler)
 
 module RecordingStudioAdmin
