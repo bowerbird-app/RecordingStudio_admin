@@ -101,10 +101,12 @@ class GeneratedAdminTemplatesTest < ActionDispatch::IntegrationTest
     AdminAuditLog.where(request_id: "generated-template").delete_all
   end
 
-  test "the generated install file sets the mount path, the actor, and an empty access resolver" do
+  test "the generated install file sets the mount path, the actor, and empty resolvers" do
     config = RecordingStudioAdmin.configuration
+    accessible = RecordingStudioAccessible.configuration
     previous_mount = config.default_mount_path
     previous_resolver = config.access_recording_resolver
+    previous_admin_root_resolver = accessible.admin_root_resolver
 
     load TEMPLATE_ROOT.join("install/templates/recording_studio_admin_initializer.rb").to_s
 
@@ -112,9 +114,11 @@ class GeneratedAdminTemplatesTest < ActionDispatch::IntegrationTest
     assert_equal :authenticate_user!, config.authentication_method
     assert_equal :current_user, config.current_actor_method
     assert_nil config.access_recording_resolver.call(nil)
+    assert_nil accessible.admin_root_resolver.call
   ensure
     config.default_mount_path = previous_mount
     config.access_recording_resolver = previous_resolver
+    accessible.admin_root_resolver = previous_admin_root_resolver
     config.authentication_method = @previous_authentication_method
     config.current_actor_method = @previous_actor_method
   end

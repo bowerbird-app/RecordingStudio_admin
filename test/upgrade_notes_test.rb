@@ -5,6 +5,47 @@ require "test_helper"
 class UpgradeNotesTest < Minitest::Test
   ROOT = File.expand_path("..", __dir__)
 
+  def test_docs_cover_the_2_15_0_admin_root
+    upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
+    changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
+    readme = File.read(File.join(ROOT, "README.md"))
+    version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
+    gemspec = File.read(File.join(ROOT, "recording_studio_admin.gemspec"))
+    gemfile = File.read(File.join(ROOT, "Gemfile"))
+    dummy_gemfile = File.read(File.join(ROOT, "test/dummy/Gemfile"))
+    blast_radius = File.read(File.join(ROOT, "lib/recording_studio_admin/blast_radius.rb"))
+    configuration = File.read(File.join(ROOT, "lib/recording_studio_admin/configuration.rb"))
+    initializer = File.read(File.join(ROOT, "test/dummy/config/initializers/recording_studio_accessible.rb"))
+    admin_initializer = File.read(File.join(ROOT, "test/dummy/config/initializers/recording_studio_admin.rb"))
+    install_template = File.read(File.join(ROOT, "lib/generators/recording_studio_admin/install/templates",
+                                           "recording_studio_admin_initializer.rb"))
+    section = upgrading.split("## Upgrading to 2.15.0", 2).last.split("## Upgrading to 2.14.0", 2).first
+    release_notes = changelog.split("## 2.14.0").first
+
+    assert_includes version, 'VERSION = "2.15.0"'
+    assert_includes gemspec, 'recording_studio_accessible", ">= 0.43.0", "< 1"'
+    assert_includes gemfile, 'RecordingStudio_accessible", tag: "v0.43.0"'
+    assert_includes dummy_gemfile, 'RecordingStudio_accessible", tag: "v0.43.0"'
+    assert_includes blast_radius, "RecordingStudioAccessible.admin_root(context: context)"
+    assert_includes blast_radius, "RecordingStudioAccessible.admin?"
+    refute_includes configuration, "site_admin_recording_resolver"
+    refute_includes blast_radius, "site_admin_recording"
+    assert_includes initializer, "config.admin_root_resolver"
+    assert_includes admin_initializer, "RecordingStudioAccessible.admin_root(context: context)"
+    refute_includes admin_initializer, "site_admin_recording_resolver"
+    assert_includes install_template, "config.admin_root_resolver"
+    assert_includes section, "admin_root_resolver"
+    assert_includes section, "RecordingStudioAccessible.admin?"
+    refute_includes section, "site admin"
+    assert_includes readme, "docs/UPGRADING.md#upgrading-to-2150"
+    assert_includes readme, "config.admin_root_resolver"
+    refute_includes readme.split("## Access, enablement", 2).last, "site_admin_recording_resolver"
+    assert_includes release_notes, "## 2.15.0"
+    assert_includes release_notes, "### Upgrade notes"
+    assert_includes release_notes, "docs/UPGRADING.md#upgrading-to-2150"
+    assert changelog.index("## 2.15.0") < changelog.index("## 2.14.0")
+  end
+
   def test_docs_cover_the_2_14_0_kept_recordings
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
@@ -18,16 +59,16 @@ class UpgradeNotesTest < Minitest::Test
     release_notes = changelog.split("## 2.13.1").first
     section = upgrading.split("## Upgrading to 2.14.0", 2).last.split("## Upgrading to 2.13.1", 2).first
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes gemspec, 'recording_studio", ">= 6.14.0", "< 7"'
     assert_includes gemspec, 'recording_studio_trashable", ">= 0.16.0", "< 1"'
-    assert_includes gemspec, 'recording_studio_accessible", ">= 0.42.0", "< 1"'
+    assert_includes gemspec, 'recording_studio_accessible", ">= 0.43.0", "< 1"'
     assert_includes gemfile, 'RecordingStudio", tag: "v6.14.0"'
     assert_includes gemfile, 'RecordingStudio_trashable", tag: "v0.16.0"'
-    assert_includes gemfile, 'RecordingStudio_accessible", tag: "v0.42.0"'
+    assert_includes gemfile, 'RecordingStudio_accessible", tag: "v0.43.0"'
     assert_includes dummy_gemfile, 'RecordingStudio", tag: "v6.14.0"'
     assert_includes dummy_gemfile, 'RecordingStudio_trashable", tag: "v0.16.0"'
-    assert_includes dummy_gemfile, 'RecordingStudio_accessible", tag: "v0.42.0"'
+    assert_includes dummy_gemfile, 'RecordingStudio_accessible", tag: "v0.43.0"'
     refute File.exist?(File.join(ROOT, "test/dummy/config/initializers/recording_studio_trashable_kept_sql.rb"))
     assert_includes resolver, "unscoped.kept"
     refute_includes resolver, "column_names"
@@ -52,7 +93,7 @@ class UpgradeNotesTest < Minitest::Test
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     release_notes = changelog.split("## 2.13.0").first
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes upgrading, "## Upgrading to 2.13.1"
     assert_includes upgrading, "Are you sure?"
     section = upgrading.split("## Upgrading to 2.13.1", 2).last.split("## Upgrading to 2.13.0", 2).first
@@ -74,7 +115,7 @@ class UpgradeNotesTest < Minitest::Test
     filter_fields = File.read(File.join(ROOT, "app/views/recording_studio_admin/screens/_filter_fields.html.erb"))
     release_notes = changelog.split("## 2.12.1").first
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes upgrading, "## Upgrading to 2.13.0"
     assert_includes upgrading, "blank_label:"
     assert_includes upgrading, "humanize_options: false"
@@ -99,7 +140,7 @@ class UpgradeNotesTest < Minitest::Test
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     release_notes = changelog.split("## 2.12.0").first
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes upgrading, "## Upgrading to 2.12.1"
     assert_includes upgrading, "chart_options: { grid: { show: true } }"
     assert_includes upgrading, "grid.show"
@@ -122,7 +163,7 @@ class UpgradeNotesTest < Minitest::Test
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     release_notes = changelog.split("## 2.11.0").first
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes upgrading, "## Upgrading to 2.12.0"
     assert_includes upgrading, "scopeable recordable_types:"
     assert_includes upgrading, "scoped_recordings"
@@ -153,7 +194,7 @@ class UpgradeNotesTest < Minitest::Test
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     release_notes = changelog.split("## 2.10.0").first
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes upgrading, "## Upgrading to 2.11.0"
     assert_includes upgrading, "DateAxisLabels.call"
     assert_includes upgrading, "Exact label strings"
@@ -178,7 +219,7 @@ class UpgradeNotesTest < Minitest::Test
     readme = File.read(File.join(ROOT, "README.md"))
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
 
     assert_includes upgrading, "## Upgrading to 2.10.0"
     assert_includes upgrading, "allowed_values"
@@ -245,7 +286,7 @@ class UpgradeNotesTest < Minitest::Test
     gemspec = File.read(File.join(ROOT, "recording_studio_admin.gemspec"))
     gemfile = File.read(File.join(ROOT, "Gemfile"))
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes gemspec, 'view_component", ">= 4.14", "< 5"'
     assert_includes gemfile, 'tag: "v0.16.0"'
 
@@ -272,7 +313,7 @@ class UpgradeNotesTest < Minitest::Test
       File.join(ROOT, "app/controllers/recording_studio_admin/application_controller.rb")
     )
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes period, "LAST_4_WEEKS_LOOKBACK_DAYS = 27"
     assert_includes controller, "def current_root_recording"
 
@@ -309,7 +350,7 @@ class UpgradeNotesTest < Minitest::Test
       File.join(ROOT, "app/javascript/recording_studio_admin/controllers/screen_filters_controller.js")
     )
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes gemspec, 'flat_pack", ">= 0.1.341"'
     assert_includes gemfile, 'tag: "v0.1.356"'
     assert_includes dummy_gemfile, 'tag: "v0.1.356"'
@@ -347,7 +388,7 @@ class UpgradeNotesTest < Minitest::Test
     initializer = File.read(File.join(ROOT, "test/dummy/config/initializers/recording_studio.rb"))
     seeds = File.read(File.join(ROOT, "test/dummy/db/seeds.rb"))
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes resolver, "actor: @context.current_actor"
     assert_includes audit, "attributes[:actor] = @context.current_actor unless attributes.key?(:actor)"
     assert_includes initializer, "config.authorize_write"
@@ -382,7 +423,7 @@ class UpgradeNotesTest < Minitest::Test
       Dir[File.join(ROOT, "lib/generators/**/*.{rb,erb}")]
     ).map { |path| File.read(path) }.join
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes gemspec, 'flat_pack", ">= 0.1.341"'
     assert_includes gemfile, 'tag: "v0.1.356"'
     assert_includes dummy_gemfile, 'tag: "v0.1.356"'
@@ -435,15 +476,15 @@ class UpgradeNotesTest < Minitest::Test
       Dir[File.join(ROOT, "lib/generators/**/*.{rb,erb}")]
     ).map { |path| File.read(path) }.join
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes gemspec, 'recording_studio", ">= 6.14.0", "< 7"'
     assert_includes gemspec, 'flat_pack", ">= 0.1.341"'
     assert_includes gemspec, 'view_component", ">= 4.14", "< 5"'
     assert_includes gemfile, 'tag: "v6.14.0"'
     assert_includes gemfile, 'tag: "v0.1.356"'
-    assert_includes gemfile, 'tag: "v0.42.0"'
+    assert_includes gemfile, 'tag: "v0.43.0"'
     assert_includes dummy_gemfile, 'tag: "v0.5.12"'
-    assert_includes dummy_gemfile, 'tag: "v0.42.0"'
+    assert_includes dummy_gemfile, 'tag: "v0.43.0"'
     assert_includes controller, "recording_studio_layout"
     assert_includes controller, "RecordingStudioAdmin.configuration.layout_for(recording_studio_admin_surface)"
     refute_match(/\blayout ["']/, controller)
@@ -493,7 +534,7 @@ class UpgradeNotesTest < Minitest::Test
       File.join(ROOT, "app/views/recording_studio_admin/sections/index.html.erb")
     )
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.7.4"'
     assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.8.0"'
     assert_includes gemfile, 'RecordingStudio_trashable", tag: "v0.16.0"'
@@ -528,7 +569,7 @@ class UpgradeNotesTest < Minitest::Test
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     readme = File.read(File.join(ROOT, "README.md"))
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes gemspec, 'flat_pack", ">= 0.1.341"'
     assert_includes gemfile, 'tag: "v0.1.356"'
     assert_includes dummy_gemfile, 'tag: "v0.1.356"'
@@ -554,7 +595,7 @@ class UpgradeNotesTest < Minitest::Test
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     readme = File.read(File.join(ROOT, "README.md"))
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes changelog, "## 2.7.3"
     assert_includes changelog, "docs/UPGRADING.md#upgrading-to-273"
     assert_includes upgrading, "## Upgrading to 2.7.3"
@@ -572,12 +613,12 @@ class UpgradeNotesTest < Minitest::Test
     gemfile = File.read(File.join(ROOT, "Gemfile"))
     dummy_gemfile = File.read(File.join(ROOT, "test/dummy/Gemfile"))
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes gemspec, 'recording_studio", ">= 6.14.0", "< 7"'
     refute_includes gemspec, 'recording_studio", "~> 6.3'
     assert_includes gemfile, 'tag: "v6.14.0"'
     assert_includes gemfile, 'tag: "v0.1.356"'
-    assert_includes gemfile, 'tag: "v0.42.0"'
+    assert_includes gemfile, 'tag: "v0.43.0"'
     assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.7.4"'
     assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.8.0"'
     assert_includes gemfile, 'view_component", "4.20.0"'
@@ -616,7 +657,7 @@ class UpgradeNotesTest < Minitest::Test
     readme = File.read(File.join(ROOT, "README.md"))
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes upgrading, "## Upgrading to 2.7.1"
     assert_includes upgrading, "min-h-28"
     assert_includes upgrading, "plotOptions.radialBar.dataLabels.value.show"
@@ -638,7 +679,7 @@ class UpgradeNotesTest < Minitest::Test
     gemfile = File.read(File.join(ROOT, "Gemfile"))
     dummy_gemfile = File.read(File.join(ROOT, "test/dummy/Gemfile"))
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.7.4"'
     assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.8.0"'
     assert_includes dummy_gemfile, 'RecordingStudio_logs", tag: "v0.7.4"'
@@ -680,7 +721,7 @@ class UpgradeNotesTest < Minitest::Test
     dummy_gemfile = File.read(File.join(ROOT, "test/dummy/Gemfile"))
     registration = File.read(File.join(ROOT, "lib/recording_studio_admin/logs_registration.rb"))
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes gemspec, '"recording_studio_logs", ">= 0.4.1", "< 1.0"'
     assert_includes gemfile, 'tag: "v0.7.4"'
     assert_includes dummy_gemfile, 'RecordingStudio_logs", tag: "v0.7.4"'
@@ -724,7 +765,7 @@ class UpgradeNotesTest < Minitest::Test
     screen = File.read(File.join(ROOT, "lib/recording_studio_admin/admin_activity_logs_screen.rb"))
     section = File.read(File.join(ROOT, "lib/recording_studio_admin/admin_activity_logs_section.rb"))
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     refute_includes screen, 'widget "widgets.admin_activity_logs.activity_overview"'
     assert_includes screen, "filter_presentation :modal, inline_count: 2"
     assert_includes section, 'widget "widgets.admin_activity_logs.activity_overview"'
@@ -750,7 +791,7 @@ class UpgradeNotesTest < Minitest::Test
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     support = File.read(File.join(ROOT, "lib/recording_studio_admin/admin_activity_logs_support.rb"))
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes support, "def date_series(relation, field: :created_at, bucket: :day)"
     assert_includes support, "MAX_DATE_SERIES_BUCKETS = 1_000"
 
@@ -778,7 +819,7 @@ class UpgradeNotesTest < Minitest::Test
     dummy_gemfile = File.read(File.join(ROOT, "test/dummy/Gemfile"))
     views = Dir[File.join(ROOT, "app/views/**/*.erb")].map { |path| File.read(path) }.join
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes gemspec, 'flat_pack", ">= 0.1.341"'
     assert_includes gemfile, 'tag: "v0.1.356"'
     assert_includes dummy_gemfile, 'tag: "v0.1.356"'
@@ -810,7 +851,7 @@ class UpgradeNotesTest < Minitest::Test
     gemfile = File.read(File.join(ROOT, "Gemfile"))
     resolver = File.read(File.join(ROOT, "lib/recording_studio_admin/section_recording_resolver.rb"))
 
-    assert_includes version, 'VERSION = "2.14.0"'
+    assert_includes version, 'VERSION = "2.15.0"'
     assert_includes gemspec, 'recording_studio_trashable", ">= 0.16.0", "< 1"'
     assert_includes gemfile, 'tag: "v0.16.0"'
     assert_includes gemfile, "require: false"
@@ -873,7 +914,7 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "## Upgrading"
     assert_includes readme, "docs/UPGRADING.md"
     assert_includes readme, "RecordingStudio `v6.14.0`"
-    assert_includes readme, "Accessible `v0.42.0`"
+    assert_includes readme, "Accessible `v0.43.0`"
     assert_includes readme, "bootstrap_owner_access!"
   end
 

@@ -1,5 +1,41 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.15.0
+
+Admin `2.15.0` requires Accessible `>= 0.43.0, < 1`. Development and dummy Gemfiles pin Accessible `v0.43.0`.
+
+`RecordingStudioAdmin.configuration.site_admin_recording_resolver` is gone. Accessible owns the admin root:
+
+```ruby
+RecordingStudioAccessible.configure do |config|
+  config.admin_root_resolver = lambda do |context: nil|
+    admin_root = AdminRoot.find_by(name: "Admin")
+    next unless admin_root
+
+    RecordingStudio::Recording.kept.find_by(recordable: admin_root)
+  end
+end
+```
+
+`RecordingStudioAccessible.admin_root(context:)` returns that kept root recording, or nil. The resolver may take an optional `context:` argument. Pass the admin context from the current request.
+
+`RecordingStudioAccessible.admin?(actor:, role: :view, context:)` is true when the actor holds that role on the admin root. It delegates to `authorized?` and fails closed. Site-wide screens (`blast_radius :site`) use the configured `required_access_role` (default `:view`).
+
+A site-wide screen, widget, or action resolves only when both are true:
+
+- the current access recording is the admin root
+- `admin?` allows the current actor
+
+A missing admin root, a trashed admin root, or a denied actor leaves the allowed radius at `:root` or `:recording`. The site-wide definition does not resolve. Every other admin screen and action still requires `authorized?` on its access recording and fails closed with `403 Forbidden` when that recording or the actor is missing.
+
+Point the mounted admin's `access_recording_resolver` at the same root when that mount is the admin:
+
+```ruby
+config.access_recording_resolver = lambda do |context|
+  RecordingStudioAccessible.admin_root(context: context)
+end
+```
+
 ## Upgrading to 2.14.0
 
 Admin `2.14.0` reads kept recordings through Recording Studio `6.14.0`. `RecordingStudio::Recording.kept` applies the filters an addon registers. `RecordingStudio.kept_sql` is that same condition as SQL. Pass a table alias when a join needs one.

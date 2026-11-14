@@ -48,21 +48,28 @@
   ) %>
 
   <%= render FlatPack::SectionTitle::Component.new(
-    title: "Site-wide safety check",
-    subtitle: "Site-wide definitions resolve only when the current access recording matches the configured site admin recording.",
+    title: "Admin root check",
+    subtitle: "Site-wide definitions resolve only when the current access recording is the admin root and the actor is an authorized admin.",
   ) %>
 
   <%= render FlatPack::CodeBlock::Component.new(
     language: :ruby,
     code: <<~'CODE'
-      RecordingStudioAdmin.configure do |config|
-        config.site_admin_recording_resolver = lambda do |_context|
+      RecordingStudioAccessible.configure do |config|
+        config.admin_root_resolver = lambda do |context: nil|
           admin_root = AdminRoot.find_by(name: "Admin")
           next unless admin_root
 
           RecordingStudio::Recording.kept.find_by(recordable: admin_root)
         end
       end
+
+      RecordingStudioAccessible.admin_root(context: recording_studio_admin_context)
+      RecordingStudioAccessible.admin?(
+        actor: current_user,
+        role: RecordingStudioAdmin.configuration.required_access_role,
+        context: recording_studio_admin_context
+      )
     CODE
   ) %>
 

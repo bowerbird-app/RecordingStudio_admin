@@ -206,7 +206,10 @@ class DocsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", text: "Blast radius"
     assert_includes response.body, "blast_radius :site"
-    assert_includes response.body, "config.site_admin_recording_resolver"
+    assert_includes response.body, "config.admin_root_resolver"
+    assert_includes response.body, "RecordingStudioAccessible.admin_root"
+    assert_includes response.body, "RecordingStudioAccessible.admin?"
+    refute_includes response.body, "site_admin_recording_resolver"
     assert_includes response.body, "Nested guardrails"
     assert_includes response.body, "RecordingStudioAccessible.authorized?"
   end

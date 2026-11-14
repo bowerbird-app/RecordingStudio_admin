@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## 2.15.0 - 2026-11-14
+
+### Changed
+
+- Site-wide screens (`blast_radius :site`) resolve when the current access recording is `RecordingStudioAccessible.admin_root(context:)` and `RecordingStudioAccessible.admin?` allows the actor. The role is `config.required_access_role` (default `:view`). A missing admin root or a denied actor fails closed.
+- The gemspec requires Accessible `>= 0.43.0, < 1`. Development and dummy Gemfiles pin Accessible `v0.43.0`.
+
+### Removed
+
+- `config.site_admin_recording_resolver`. Name the admin root with `RecordingStudioAccessible.configuration.admin_root_resolver`.
+
+### Upgrade notes
+
+- Set `admin_root_resolver` on Accessible. There is no compatibility shim. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2150).
+
 ## 2.14.0 - 2026-11-14
 
 ### Changed

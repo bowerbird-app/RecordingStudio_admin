@@ -13,7 +13,7 @@ class ConfigurationTest < Minitest::Test
     assert_equal :recording_studio_admin_access_recording, config.access_recording_method
     assert_nil config.access_recording_resolver
     assert_nil config.current_root_recording_resolver
-    assert_nil config.site_admin_recording_resolver
+    refute_respond_to config, :site_admin_recording_resolver
     assert_equal :view, config.required_access_role
     assert_equal 1_000, config.max_page
     assert_equal true, config.async_widgets.enabled

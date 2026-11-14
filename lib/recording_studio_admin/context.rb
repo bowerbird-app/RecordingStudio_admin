@@ -289,13 +289,6 @@ module RecordingStudioAdmin
       access_recording&.recordable
     end
 
-    def site_admin_recording
-      return @site_admin_recording if defined?(@site_admin_recording)
-
-      resolver = RecordingStudioAdmin.configuration.site_admin_recording_resolver
-      @site_admin_recording = resolve_callable(resolver) if resolver
-    end
-
     def root_recording
       recording = access_recording
       return unless recording

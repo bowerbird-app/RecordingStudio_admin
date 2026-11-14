@@ -48,7 +48,7 @@ module RecordingStudioAdmin
     end
 
     def allowed_radius(context, recording: context.access_recording)
-      return :site if site_admin_recording?(context, recording)
+      return :site if admin_root_scope?(context, recording)
       return :root if root_recording?(recording)
 
       :recording
@@ -58,11 +58,39 @@ module RecordingStudioAdmin
       RANKS.fetch(normalize(left)) > RANKS.fetch(normalize(right))
     end
 
-    def site_admin_recording?(context, recording)
-      site_admin_recording = context.site_admin_recording if context.respond_to?(:site_admin_recording)
-      return false unless site_admin_recording && recording
+    def admin_root_scope?(context, recording)
+      return false unless context && recording
+      return false unless defined?(::RecordingStudioAccessible)
 
-      site_admin_recording == recording
+      admin_root = cached_admin_root(context)
+      return false unless admin_root && admin_root == recording
+
+      cached_admin?(context)
+    end
+
+    def cached_admin_root(context)
+      cached_on(context, :@recording_studio_accessible_admin_root) do
+        ::RecordingStudioAccessible.admin_root(context: context)
+      end
+    end
+
+    def cached_admin?(context)
+      cached_on(context, :@recording_studio_accessible_admin_allowed) do
+        actor = context.current_actor if context.respond_to?(:current_actor)
+        ::RecordingStudioAccessible.admin?(
+          actor: actor,
+          role: RecordingStudioAdmin.configuration.required_access_role,
+          context: context
+        )
+      end
+    end
+
+    def cached_on(context, name)
+      return context.instance_variable_get(name) if context.instance_variable_defined?(name)
+
+      value = yield
+      context.instance_variable_set(name, value)
+      value
     end
 
     def root_recording?(recording)

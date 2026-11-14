@@ -21,7 +21,13 @@
         config.required_access_role = :view
         config.max_page = 1_000
 
-        config.access_recording_resolver = lambda do |_context|
+        config.access_recording_resolver = lambda do |context|
+          RecordingStudioAccessible.admin_root(context: context)
+        end
+      end
+
+      RecordingStudioAccessible.configure do |config|
+        config.admin_root_resolver = lambda do |context: nil|
           admin_root = AdminRoot.find_by(name: "Admin")
           next unless admin_root
 
@@ -45,7 +51,6 @@
       config.current_actor_method
       config.access_recording_method
       config.access_recording_resolver
-      config.site_admin_recording_resolver
       config.admin_sections_resolver
       config.required_access_role
       config.max_page
