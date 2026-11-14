@@ -25,9 +25,7 @@ module AdminScreens
         root_recording = context.controller.current_root_recording
         return RecordingStudio::Recording.none unless root_recording
 
-        RecordingStudio::Recording.where(
-          RecordingStudio::Recording.recording_studio_trashable_kept_sql
-        ).where(
+        RecordingStudio::Recording.kept.where(
           root_recording_id: root_recording.id,
           recordable_type: [ "Folder", "Page" ]
         ).where.not(id: root_recording.id)

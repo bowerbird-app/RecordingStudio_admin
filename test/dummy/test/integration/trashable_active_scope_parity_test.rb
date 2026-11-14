@@ -5,28 +5,24 @@ require "test_helper"
 class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
   include DummyAccessTestHelpers
 
-  test "admin-root kept_sql matches main trashed_at nil filter" do
-    assert RecordingStudio::Recording.respond_to?(:recording_studio_trashable_kept_sql)
+  test "admin-root kept matches a nil trashed_at lookup" do
+    assert RecordingStudio::Recording.respond_to?(:kept)
+    assert_match(/trashed_at IS NULL/, RecordingStudio.kept_sql("child_recordings"))
 
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
     admin_root_recording = RecordingStudio.root_recording_for(admin_root)
 
-    kept = RecordingStudio::Recording.where(
-      RecordingStudio::Recording.recording_studio_trashable_kept_sql
-    ).find_by(recordable: admin_root)
-    legacy = RecordingStudio::Recording.find_by(
-      recordable: admin_root,
-      trashed_at: nil
-    )
+    kept = RecordingStudio::Recording.kept.find_by(recordable: admin_root)
+    legacy = RecordingStudio::Recording.find_by(recordable: admin_root, trashed_at: nil)
 
     assert_equal admin_root_recording, kept
     assert_equal legacy, kept
     assert_nil kept.trashed_at
   end
 
-  test "real admin-root resolver matches main under trashed_at default_scope" do
+  test "real admin-root resolver keeps a host default scope" do
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    RecordingStudio.root_recording_for(admin_root)
+    admin_root_recording = RecordingStudio.root_recording_for(admin_root)
     recording_class = RecordingStudio::Recording
     previous_default_scopes = recording_class.default_scopes.dup
 
@@ -35,19 +31,13 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
     end
 
     begin
-      legacy = recording_class.find_by(recordable: admin_root, trashed_at: nil)
-      kept = recording_class.where(recording_class.recording_studio_trashable_kept_sql)
-                            .find_by(recordable: admin_root)
-      active = recording_class.recording_studio_trashable_active.find_by(recordable: admin_root)
+      kept = recording_class.kept.find_by(recordable: admin_root)
+      unscoped_kept = recording_class.unscoped.kept.find_by(recordable: admin_root)
       configured = RecordingStudioAdmin.configuration.access_recording_resolver.call(nil)
 
-      assert_nil legacy, "main admin-root lookup intersects host trashed_at default_scope"
-      assert_nil kept, "kept_sql must preserve host trashed_at default_scope like main"
-      assert_nil configured, "configured access_recording_resolver must match main"
-      assert_equal legacy.nil?, kept.nil?
-      assert_equal legacy.nil?, configured.nil?
-      assert_not_nil active,
-                     "recording_studio_trashable_active would unscope trashed_at and diverge from main"
+      assert_nil kept, "kept must intersect a host trashed_at default scope"
+      assert_nil configured, "configured access_recording_resolver must match kept"
+      assert_equal admin_root_recording, unscoped_kept
     ensure
       recording_class.default_scopes.replace(previous_default_scopes)
     end
@@ -82,21 +72,20 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
     end
 
     begin
-      legacy = recording_class.where(
+      kept = recording_class.kept.where(
         root_recording_id: root_recording.id,
-        trashed_at: nil,
         recordable_type: %w[Folder Page]
       ).where.not(id: root_recording.id)
       current = AdminScreens::WorkspaceStats.recordings_scope(context)
-      active = recording_class.recording_studio_trashable_active.where(
+      unscoped_kept = recording_class.unscoped.kept.where(
         root_recording_id: root_recording.id,
         recordable_type: %w[Folder Page]
       ).where.not(id: root_recording.id)
 
-      assert_equal 0, legacy.count
+      assert_equal 0, kept.count
       assert_equal 0, current.count
-      assert_operator active.count, :>, 0,
-                      "chaining _active would drop the host trashed_at default_scope"
+      assert_operator unscoped_kept.count, :>, 0,
+                      "unscoped.kept drops the host default scope; the stats screen must not"
     ensure
       recording_class.default_scopes.replace(previous_default_scopes)
     end
@@ -145,11 +134,10 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
       resolver = RecordingStudioAdmin::SectionRecordingResolver.allocate
       found_kept = resolver.send(:find_recording, folder, root_recording, root_recording)
       found_trashed = resolver.send(:find_recording, trashed_folder, root_recording, root_recording)
-      legacy_kept = recording_class.unscoped.find_by(
+      legacy_kept = recording_class.unscoped.kept.find_by(
         root_recording: root_recording,
         parent_recording: root_recording,
-        recordable: folder,
-        trashed_at: nil
+        recordable: folder
       )
 
       assert_equal kept, found_kept
@@ -220,14 +208,12 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
     Current.actor = previous_actor
   end
 
-  # Kills "switch seeds to _active" — source must keep kept_sql on the same
-  # relation base (no unscope).
-  test "seeds find_or_record_child uses kept_sql not recording_studio_trashable_active" do
+  test "seeds find_or_record_child uses kept on the default relation" do
     seeds = File.read(Rails.root.join("db/seeds.rb"))
 
-    assert_includes seeds, "recording_studio_trashable_kept_sql"
-    refute_includes seeds, "recording_studio_trashable_active",
-                    "seeds must not use _active (it unscopes host trashed_at default scopes)"
+    assert_includes seeds, "RecordingStudio::Recording.kept.find_by"
+    refute_includes seeds, "recording_studio_trashable_"
+    refute_includes seeds, "unscoped"
     assert_includes seeds, "actor: actor"
     refute_includes seeds, "allow_unauthorized_writes"
 
@@ -257,27 +243,19 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
     end
 
     begin
-      # Same lookup shape as seeds.rb find_or_record_child.
-      seed_style = recording_class.where(recording_class.recording_studio_trashable_kept_sql).find_by(
+      seed_style = recording_class.kept.find_by(
         root_recording: root_recording,
         parent_recording: root_recording,
         recordable: folder
       )
-      active_style = recording_class.recording_studio_trashable_active.find_by(
+      unscoped_style = recording_class.unscoped.kept.find_by(
         root_recording: root_recording,
         parent_recording: root_recording,
         recordable: folder
-      )
-      legacy = recording_class.find_by(
-        root_recording: root_recording,
-        parent_recording: root_recording,
-        recordable: folder,
-        trashed_at: nil
       )
 
-      assert_nil legacy
-      assert_nil seed_style, "seeds kept_sql must match main under trashed_at default_scope"
-      assert_not_nil active_style, "setup: _active would diverge from main (and from seeds)"
+      assert_nil seed_style, "seeds kept must intersect a host trashed_at default scope"
+      assert_not_nil unscoped_style
     ensure
       recording_class.default_scopes.replace(previous_default_scopes)
     end
@@ -289,9 +267,9 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
     initializer = File.read(Rails.root.join("config/initializers/recording_studio_admin.rb"))
     screen = File.read(Rails.root.join("app/admin/stats/workspace_stats/screen.rb"))
 
-    assert_includes initializer, "recording_studio_trashable_kept_sql"
-    refute_includes initializer, "recording_studio_trashable_active"
-    assert_includes screen, "recording_studio_trashable_kept_sql"
-    refute_includes screen, "recording_studio_trashable_active"
+    assert_includes initializer, "RecordingStudio::Recording.kept.find_by"
+    refute_includes initializer, "recording_studio_trashable_"
+    assert_includes screen, "RecordingStudio::Recording.kept.where"
+    refute_includes screen, "recording_studio_trashable_"
   end
 end

@@ -158,9 +158,7 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
     assert_equal parent_recording, first_result.recording.root_recording
     assert_equal parent_recording, first_result.recording.parent_recording
     assert_equal 1,
-                 RecordingStudio::Recording.where(
-                   RecordingStudio::Recording.recording_studio_trashable_kept_sql
-                 ).where(recordable: first_result.recordable).count
+                 RecordingStudio::Recording.kept.where(recordable: first_result.recordable).count
   ensure
     Workspace.instance_variable_set(
       :@recording_studio_admin_sections_definition,
