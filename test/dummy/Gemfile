@@ -3,12 +3,12 @@ source "https://rubygems.org"
 # Use the RecordingStudioAdmin engine
 gem "recording_studio_admin", path: "../.."
 
-gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v6.7.0"
+gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v6.14.0"
 # Exportable 0.5.12 requires Accessible ~> 0.24, which still accepts 0.32.0.
 gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.32.0"
 gem "recording_studio_exportable", github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.5.12"
 gem "recording_studio_logs", github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.4"
-gem "recording_studio_trashable", github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.14.0",
+gem "recording_studio_trashable", github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.16.0",
                                  require: false
 gem "view_component", "4.20.0"
 

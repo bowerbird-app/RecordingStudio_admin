@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## 2.14.0 - 2026-11-14
+
+### Changed
+
+- Kept recording queries use `RecordingStudio::Recording.kept`. Section lookup uses `unscoped.kept`. A scoped subtree drops a trashed row, and a kept row under a trashed ancestor, with that same scope.
+- The gemspec requires Recording Studio `>= 6.14.0, < 7` and Trashable `>= 0.16.0, < 1`. Development and dummy pins are core `v6.14.0` and Trashable `v0.16.0`.
+
+### Removed
+
+- Calls to `recording_studio_trashable_kept_sql`, and the `trashed_at` column check in `SectionRecordingResolver`. There is no `trashed_at: nil` fallback.
+
+### Upgrade notes
+
+- Copy `Recording.kept.find_by(...)` into host resolvers that still call `recording_studio_trashable_kept_sql`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2140).
+
 ## 2.13.1 - 2026-11-14
 
 ### Fixed

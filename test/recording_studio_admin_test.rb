@@ -9,7 +9,7 @@ class RecordingStudioAdminTest < Minitest::Test
     load File.expand_path("../lib/recording_studio_admin/version.rb", __dir__)
     $VERBOSE = verbose
 
-    assert_equal "2.13.1", ::RecordingStudioAdmin::VERSION
+    assert_equal "2.14.0", ::RecordingStudioAdmin::VERSION
   end
 
   def test_gemspec_pins_recording_studio_logs

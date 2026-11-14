@@ -7,8 +7,18 @@ require "test_helper"
 class TrashableQuerySurfaceTest < ActionDispatch::IntegrationTest
   test "query-only load does not boot Trashable engine side effects" do
     assert defined?(RecordingStudioTrashable), "query helpers module should load"
-    assert RecordingStudio::Recording.respond_to?(:recording_studio_trashable_kept_sql)
-    assert RecordingStudio::Recording.respond_to?(:recording_studio_trashable_active)
+    assert RecordingStudio::Recording.respond_to?(:kept)
+    assert RecordingStudio.respond_to?(:kept_sql)
+    refute RecordingStudio::Recording.respond_to?(:recording_studio_trashable_active)
+    refute RecordingStudio::Recording.respond_to?(:recording_studio_trashable_including_trashed)
+
+    stand_in = Rails.root.join("config/initializers/recording_studio_trashable_kept_sql.rb").read
+    assert_includes stand_in, "RecordingStudio.kept_sql(table)"
+    assert_equal RecordingStudio.kept_sql, RecordingStudio::Recording.recording_studio_trashable_kept_sql
+    assert_equal(
+      RecordingStudio.kept_sql("child_recordings"),
+      RecordingStudio::Recording.recording_studio_trashable_kept_sql("child_recordings")
+    )
 
     refute defined?(RecordingStudioTrashable::Engine),
            "full Trashable engine must not load via Admin query-only require"
