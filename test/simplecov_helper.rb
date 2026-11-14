@@ -25,6 +25,9 @@ module AdminSuiteCoverage
       coverage_dir File.join(AdminSuiteCoverage::ROOT, "coverage")
       command_name AdminSuiteCoverage.command_name
       merge_timeout AdminSuiteCoverage::MERGE_TIMEOUT
+      # `cover` is SimpleCov 1.1's replacement for `track_files`: files under
+      # app/ and lib/ that no suite loads still count, at 0%.
+      cover "app/**/*.rb", "lib/**/*.rb"
       skip "/test/"
       skip "/config/"
       skip "/db/"
