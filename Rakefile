@@ -32,6 +32,7 @@ DUMMY_APP_TEST_FILES = %w[
   test/integration/scoped_library_screen_test.rb
   test/integration/trashable_active_scope_parity_test.rb
   test/integration/trashable_query_surface_test.rb
+  test/integration/generated_admin_templates_test.rb
 ].freeze
 TEST_ROOT = File.expand_path("test", __dir__)
 TEST_DATABASE_NAME = "recording_studio_admin_test"

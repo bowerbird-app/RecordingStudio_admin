@@ -4,6 +4,11 @@ require "test_helper"
 
 class RecordingStudioAdminTest < Minitest::Test
   def test_version_matches_the_current_release
+    verbose = $VERBOSE
+    $VERBOSE = nil
+    load File.expand_path("../lib/recording_studio_admin/version.rb", __dir__)
+    $VERBOSE = verbose
+
     assert_equal "2.13.1", ::RecordingStudioAdmin::VERSION
   end
 

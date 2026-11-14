@@ -20,7 +20,7 @@ user-invocable: false
 3. Prefer unit tests for POROs and services, and minimal integration tests for engine wiring and generator behavior.
 4. Preserve public behavior; do not bypass production code to make tests pass.
 5. Run `bundle exec rake test` from the repository root for the gem suite.
-6. Run `bundle exec rake test:all` before merge. It runs both suites, collates SimpleCov with branch coverage for `app/` and `lib/`, and fails below 94% line coverage.
+6. Run `bundle exec rake test:all` before merge. It runs both suites, collates SimpleCov with branch coverage, and fails below 94% line coverage. Unloaded Ruby files under `app/` and `lib/` stay in that report.
 7. If the change affects dummy app boot, assets, or migrations, also validate the dummy app setup used in CI.
 
 ## Repository Expectations
