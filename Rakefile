@@ -76,7 +76,6 @@ end
 def dummy_bundle_process_env
   {
     "BUNDLE_GEMFILE" => DUMMY_GEMFILE,
-    "DISABLE_SIMPLECOV" => "true",
     "DATABASE_URL" => ENV.fetch("DATABASE_URL", nil)
   }
 end
@@ -103,25 +102,55 @@ Rake::TestTask.new(:test) do |t|
   t.verbose = false
 end
 
+def run_dummy_suite
+  Dir.chdir(DUMMY_APP_ROOT) do
+    env = dummy_bundle_env
+
+    run_command!(env, "bundle", "install") unless bundle_satisfied?(env)
+    run_command!(env, "bundle", "exec", "bin/rails", "db:test:prepare")
+    run_dummy_app_tests(env)
+    run_dummy_gem_tests(env)
+  end
+end
+
+def run_dummy_app_tests(env)
+  DUMMY_APP_TEST_FILES.each do |test_file|
+    run_dummy_test(env, "dummy:#{test_file}", "bundle", "exec", "bin/rails", "test", test_file)
+  end
+end
+
+def run_dummy_gem_tests(env)
+  DUMMY_TEST_FILES.each do |test_file|
+    run_dummy_test(env, "dummy:#{File.basename(test_file)}", "bundle", "exec", "ruby", "-I#{TEST_ROOT}", test_file)
+  end
+end
+
+def run_dummy_test(env, command_name, *command)
+  run_command!(env.merge("SIMPLECOV_COMMAND_NAME" => command_name), *command)
+end
+
+def enforce_merged_coverage
+  resultset = File.expand_path("coverage/.resultset.json", __dir__)
+  raise "No coverage resultset at #{resultset}. Run the gem and dummy suites first." unless File.file?(resultset)
+
+  run_command!({}, "bundle", "exec", "ruby", "-I#{TEST_ROOT}", File.expand_path("test/coverage_check.rb", __dir__))
+end
+
 namespace :test do
   desc "Run dummy app integration tests under the dummy app bundle"
-  task :dummy do
-    Dir.chdir(DUMMY_APP_ROOT) do
-      env = dummy_bundle_env
+  task(:dummy) { run_dummy_suite }
 
-      run_command!(env, "bundle", "install") unless bundle_satisfied?(env)
-      run_command!(env, "bundle", "exec", "bin/rails", "db:test:prepare")
-      DUMMY_APP_TEST_FILES.each do |test_file|
-        run_command!(env, "bundle", "exec", "bin/rails", "test", test_file)
-      end
-      DUMMY_TEST_FILES.each do |test_file|
-        run_command!(env, "bundle", "exec", "ruby", "-I#{TEST_ROOT}", test_file)
-      end
-    end
+  desc "Collate gem and dummy coverage and require 94% lines"
+  task(:coverage) { enforce_merged_coverage }
+
+  desc "Run gem and dummy app tests, then enforce merged line coverage"
+  task :all do
+    FileUtils.rm_rf(File.expand_path("coverage", __dir__))
+    ENV["SIMPLECOV_COMMAND_NAME"] = "gem"
+    Rake::Task["test"].invoke
+    Rake::Task["test:dummy"].invoke
+    Rake::Task["test:coverage"].invoke
   end
-
-  desc "Run gem and dummy app tests"
-  task all: %i[test dummy]
 end
 
 namespace :app do
