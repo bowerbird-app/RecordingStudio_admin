@@ -10,6 +10,7 @@ SimpleCov.collate([resultset]) do
   enable_coverage :branch
   root root
   coverage_dir File.join(root, "coverage")
+  cover "app/**/*.rb", "lib/**/*.rb"
   skip "/test/"
   skip "/config/"
   skip "/db/"

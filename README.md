@@ -825,7 +825,7 @@ Admin registers `AdminAuditLog` with RecordingStudioLogs as an unpartitioned, in
 
 ## Tests
 
-`bundle exec rake test` runs the gem suite. `bundle exec rake test:all` runs the gem suite and the dummy app suite, collates SimpleCov for `app/` and `lib/` with branch coverage, and fails when line coverage is below 94%.
+`bundle exec rake test` runs the gem suite. `bundle exec rake test:all` runs the gem suite and the dummy app suite, collates SimpleCov with branch coverage, and fails when line coverage is below 94%. The report covers `app/` and `lib/`, including Ruby files neither suite loaded.
 
 ## Documentation map
 
