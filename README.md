@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.15.0` requires Accessible `>= 0.43.0`. `config.site_admin_recording_resolver` is gone. Set `RecordingStudioAccessible.configuration.admin_root_resolver` to the kept admin root recording. Site-wide screens resolve only when the current access recording is that root and `RecordingStudioAccessible.admin?` allows the actor. A missing root fails closed. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2150).
+
 Admin `2.14.0` reads kept recordings with `RecordingStudio::Recording.kept` (Recording Studio `>= 6.14.0`, Trashable `>= 0.16.0`). Section lookup uses `unscoped.kept`. Host resolvers that still call `recording_studio_trashable_kept_sql` switch to `kept`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2140).
 
 Admin `2.13.1` asks "Are you sure?" before a destructive row or resource action when `confirm:` is blank. A delete with no `destructive:` value is destructive. An explicit `confirm:` is kept. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2131).
@@ -253,7 +255,7 @@ Runtime (gemspec):
 - Ruby `>= 3.3.0`
 - Rails `~> 8.1.0`
 - RecordingStudio `>= 6.14.0, < 7`
-- RecordingStudioAccessible `>= 0.42.0, < 1`
+- RecordingStudioAccessible `>= 0.43.0, < 1`
 - RecordingStudioLogs `>= 0.4.1, < 1.0`
 - RecordingStudioTrashable `>= 0.16.0, < 1`
 - FlatPack `>= 0.1.341`
@@ -262,7 +264,7 @@ Runtime (gemspec):
 Development and dummy Gemfile pins:
 
 - RecordingStudio `v6.14.0`
-- Accessible `v0.42.0`
+- Accessible `v0.43.0`
 - Dummy Exportable `v0.5.12`
 - Logs `v0.7.4`
 - Trashable `v0.16.0` (`require: false` in the root Gemfile)
@@ -432,11 +434,11 @@ class WorkspaceStats < RecordingStudioAdmin::Screen
 end
 ```
 
-`blast_radius :site` definitions require a nominated site admin recording:
+`blast_radius :site` definitions resolve only when the current access recording is the admin root and the current actor is an authorized admin:
 
 ```ruby
-RecordingStudioAdmin.configure do |config|
-  config.site_admin_recording_resolver = lambda do |_context|
+RecordingStudioAccessible.configure do |config|
+  config.admin_root_resolver = lambda do |context: nil|
     admin_root = AdminRoot.find_by(name: "Admin")
     next unless admin_root
 
@@ -444,6 +446,10 @@ RecordingStudioAdmin.configure do |config|
   end
 end
 ```
+
+`RecordingStudioAccessible.admin_root(context:)` returns that kept root recording, or nil. `RecordingStudioAccessible.admin?(actor:, role: :view, context:)` is true when the actor holds the role on that root. Both fail closed. The `context:` keyword is optional. Pass the admin context when the resolver needs the current request.
+
+Every admin screen and action still requires `RecordingStudioAccessible.authorized?` for `config.required_access_role` (default `:view`) on the access recording. A missing access recording, a missing admin root, or a denied actor is `403 Forbidden`.
 
 Supported values are `:recording`, `:root`, and `:site`; the default is `:recording`. Nested widgets and admin actions cannot resolve with a wider blast radius than their containing section, screen, or resource.
 
@@ -848,7 +854,7 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
-The dummy pins RecordingStudio `v6.14.0`, Flatpack `v0.1.356`, Accessible `v0.42.0`, Logs `v0.7.4`, Metrics `v0.8.0`, Trashable `v0.16.0`, and Exportable `v0.5.12`. Root switchable is `v0.15.0` with Cache `v0.6.3`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+The dummy pins RecordingStudio `v6.14.0`, Flatpack `v0.1.356`, Accessible `v0.43.0`, Logs `v0.7.4`, Metrics `v0.8.0`, Trashable `v0.16.0`, and Exportable `v0.5.12`. Root switchable is `v0.15.0` with Cache `v0.6.3`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
 
 ## Cloud Agent boot
 

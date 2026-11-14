@@ -88,7 +88,6 @@ class BlastRadiusTest < Minitest::Test
     @site_recording = Recording.new(recordable: :admin_root, parent_recording: nil)
     @workspace_recording = Recording.new(recordable: :workspace, parent_recording: @site_recording)
 
-    RecordingStudioAdmin.configuration.site_admin_recording_resolver = ->(_context) { @site_recording }
     RecordingStudioAdmin.register_widget(SiteTotalWidget)
     RecordingStudioAdmin.register_screen(SiteScreen)
     RecordingStudioAdmin.register_screen(RecordingScreen)
@@ -104,24 +103,51 @@ class BlastRadiusTest < Minitest::Test
     RecordingStudioAdmin.instance_variable_set(:@configuration, @original_configuration)
   end
 
-  def test_site_screen_requires_configured_site_admin_recording
+  def test_site_screen_requires_the_admin_root
     error = assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
-      with_singleton_stub(RecordingStudioAccessible, :authorized?, true) do
+      with_admin_root(@site_recording) do
         RecordingStudioAdmin.resolve_screen(key: "blast_site", context: context_for(@workspace_recording))
       end
     end
 
     assert_includes error.message, "blast_radius :site"
 
-    with_singleton_stub(RecordingStudioAccessible, :authorized?, true) do
-      screen = RecordingStudioAdmin.resolve_screen(key: "blast_site", context: context_for(@site_recording))
+    seen_context = nil
+    with_admin_root(@site_recording, on_lookup: ->(context) { seen_context = context }) do
+      admin_context = context_for(@site_recording)
+      screen = RecordingStudioAdmin.resolve_screen(key: "blast_site", context: admin_context)
       assert_equal "blast_site", screen.key
+      assert_same admin_context, seen_context
     end
   end
 
-  def test_site_resource_action_requires_site_admin_recording
+  def test_missing_admin_root_denies_site_scope_screens
+    with_admin_root(nil) do
+      error = assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
+        RecordingStudioAdmin.resolve_screen(key: "blast_site", context: context_for(@site_recording))
+      end
+
+      assert_includes error.message, "blast_radius :site"
+      assert_includes error.message, ":root"
+
+      screen = RecordingStudioAdmin.resolve_screen(key: "blast_recording", context: context_for(@workspace_recording))
+      assert_equal "blast_recording", screen.key
+    end
+  end
+
+  def test_site_screen_requires_an_authorized_admin
     error = assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
-      with_singleton_stub(RecordingStudioAccessible, :authorized?, true) do
+      with_admin_root(@site_recording, admin: false) do
+        RecordingStudioAdmin.resolve_screen(key: "blast_site", context: context_for(@site_recording))
+      end
+    end
+
+    assert_includes error.message, "blast_radius :site"
+  end
+
+  def test_site_resource_action_requires_the_admin_root
+    error = assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
+      with_admin_root(@site_recording) do
         RecordingStudioAdmin.resolve_resource_action(
           key: "blast_site_users",
           action: :flag,
@@ -134,7 +160,7 @@ class BlastRadiusTest < Minitest::Test
     assert_includes error.message, "Section \"blast_site_section\""
     assert_includes error.message, "blast_radius :site"
 
-    with_singleton_stub(RecordingStudioAccessible, :authorized?, true) do
+    with_admin_root(@site_recording) do
       action = RecordingStudioAdmin.resolve_resource_action(
         key: "blast_site_users",
         action: :flag,
@@ -147,7 +173,7 @@ class BlastRadiusTest < Minitest::Test
 
   def test_site_resource_action_is_rejected_in_recording_scoped_resource
     error = assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
-      with_singleton_stub(RecordingStudioAccessible, :authorized?, true) do
+      with_admin_root(@site_recording) do
         RecordingStudioAdmin.resolve_resource_action(
           key: "blast_recording_users",
           action: :flag,
@@ -162,22 +188,22 @@ class BlastRadiusTest < Minitest::Test
   end
 
   def test_site_table_action_is_filtered_from_recording_scoped_screen
-    with_singleton_stub(RecordingStudioAccessible, :authorized?, true) do
+    with_admin_root(@site_recording) do
       screen = RecordingStudioAdmin.resolve_screen(key: "blast_recording", context: context_for(@workspace_recording))
       assert_empty screen.table.actions
     end
   end
 
   def test_site_widget_is_filtered_from_recording_scoped_section
-    with_singleton_stub(RecordingStudioAccessible, :authorized?, true) do
+    with_admin_root(@site_recording) do
       section = RecordingStudioAdmin.resolve_section(key: "blast_recording_section",
                                                      context: context_for(@workspace_recording))
       assert_empty section.widgets
     end
   end
 
-  def test_available_items_omit_site_definitions_outside_site_admin_recording
-    with_singleton_stub(RecordingStudioAccessible, :authorized?, true) do
+  def test_available_items_omit_site_definitions_outside_the_admin_root
+    with_admin_root(@site_recording) do
       recording_items = RecordingStudioAdmin.available_admin_items(
         context: context_for(@workspace_recording),
         recording: @workspace_recording
@@ -211,5 +237,18 @@ class BlastRadiusTest < Minitest::Test
     end.new
 
     RecordingStudioAdmin::Context.new(current_actor: :actor, controller: controller)
+  end
+
+  def with_admin_root(recording, admin: true, on_lookup: nil, &block)
+    lookup = lambda do |context: nil|
+      on_lookup&.call(context)
+      recording
+    end
+
+    with_singleton_stub(RecordingStudioAccessible, :admin_root, lookup) do
+      with_singleton_stub(RecordingStudioAccessible, :admin?, admin) do
+        with_singleton_stub(RecordingStudioAccessible, :authorized?, true, &block)
+      end
+    end
   end
 end

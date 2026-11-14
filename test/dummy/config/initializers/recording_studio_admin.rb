@@ -1,14 +1,10 @@
 # frozen_string_literal: true
 
-# Resolve the access recording that gates both the mounted engine and the host-app admin root page.
+# The access recording gates every admin screen. The mounted admin uses the admin root.
 RecordingStudioAdmin.configure do |config|
-  config.access_recording_resolver = lambda do |_context|
-    admin_root = AdminRoot.find_by(name: "Admin")
-    next unless admin_root
-
-    RecordingStudio::Recording.kept.find_by(recordable: admin_root)
+  config.access_recording_resolver = lambda do |context|
+    RecordingStudioAccessible.admin_root(context: context)
   end
-  config.site_admin_recording_resolver = config.access_recording_resolver
   config.admin_action_auditor = lambda do |event|
     AdminAuditLog.record_admin_action!(event) if defined?(AdminAuditLog) && AdminAuditLog.table_exists?
   end

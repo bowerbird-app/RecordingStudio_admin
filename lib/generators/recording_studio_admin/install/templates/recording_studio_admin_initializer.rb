@@ -1,5 +1,19 @@
 # frozen_string_literal: true
 
+# Site-wide screens (blast_radius :site) resolve only when the current access
+# recording is this kept root and RecordingStudioAccessible.admin? allows the
+# actor. The callable may take an optional context: keyword. A missing root
+# fails closed.
+RecordingStudioAccessible.configure do |config|
+  config.admin_root_resolver = lambda do |context: nil|
+    # Return the kept RecordingStudio::Recording for the admin root.
+    # Example:
+    #   admin_root = AdminRoot.find_by(name: "Admin")
+    #   next unless admin_root
+    #   RecordingStudio::Recording.kept.find_by(recordable: admin_root)
+  end
+end
+
 RecordingStudioAdmin.configure do |config|
   config.default_mount_path = "__MOUNT_PATH__"
   # Leave layout unset so Recording Studio core's Default Layout applies.
@@ -15,7 +29,8 @@ RecordingStudioAdmin.configure do |config|
 
   config.access_recording_resolver = lambda do |context|
     # Must return the RecordingStudio::Recording that owns the current admin screen context.
-    # Example: context.controller.current_root_recording if your app exposes one.
+    # The mounted admin usually uses the admin root:
+    #   RecordingStudioAccessible.admin_root(context: context)
   end
 
   # Admin audit logs register with RecordingStudioLogs as an unpartitioned,

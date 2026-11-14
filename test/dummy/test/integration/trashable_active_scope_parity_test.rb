@@ -264,11 +264,14 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
   end
 
   test "initializer and workspace stats sources keep kept_sql trash filter" do
-    initializer = File.read(Rails.root.join("config/initializers/recording_studio_admin.rb"))
+    admin_initializer = File.read(Rails.root.join("config/initializers/recording_studio_admin.rb"))
+    accessible_initializer = File.read(Rails.root.join("config/initializers/recording_studio_accessible.rb"))
     screen = File.read(Rails.root.join("app/admin/stats/workspace_stats/screen.rb"))
 
-    assert_includes initializer, "RecordingStudio::Recording.kept.find_by"
-    refute_includes initializer, "recording_studio_trashable_"
+    assert_includes accessible_initializer, "RecordingStudio::Recording.kept.find_by"
+    refute_includes accessible_initializer, "recording_studio_trashable_"
+    assert_includes admin_initializer, "RecordingStudioAccessible.admin_root(context: context)"
+    refute_includes admin_initializer, "recording_studio_trashable_"
     assert_includes screen, "RecordingStudio::Recording.kept.where"
     refute_includes screen, "recording_studio_trashable_"
   end

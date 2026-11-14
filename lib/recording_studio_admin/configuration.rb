@@ -24,7 +24,7 @@ module RecordingStudioAdmin
     DEFAULT_SURFACE_KEY = "default"
 
     attr_accessor :authentication_method, :current_actor_method, :access_recording_method,
-                  :access_recording_resolver, :site_admin_recording_resolver, :admin_sections_resolver,
+                  :access_recording_resolver, :admin_sections_resolver,
                   :current_root_recording_resolver, :admin_action_auditor, :required_access_role,
                   :default_mount_path, :max_page, :max_scoped_recordings, :within_search_threshold,
                   :logs_retention, :audit_log_model
@@ -37,7 +37,6 @@ module RecordingStudioAdmin
       @current_actor_method = :current_user
       @access_recording_method = :recording_studio_admin_access_recording
       @access_recording_resolver = nil
-      @site_admin_recording_resolver = nil
       @admin_sections_resolver = nil
       @current_root_recording_resolver = nil
       @admin_action_auditor = nil
