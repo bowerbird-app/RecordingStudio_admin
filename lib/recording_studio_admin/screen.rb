@@ -311,8 +311,9 @@ module RecordingStudioAdmin
       return if resolved_url.blank?
 
       resolved_method = normalize_method(resolve_value(method, row, context))
-      resolved_confirm = resolve_value(confirm, row, context)
       resolved_destructive = resolve_destructive(row, context, resolved_method)
+      resolved_confirm = resolve_value(confirm, row, context)
+      resolved_confirm = "Are you sure?" if resolved_confirm.blank? && resolved_destructive
 
       Results::ResolvedRowAction.new(
         name: name,

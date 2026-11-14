@@ -561,6 +561,45 @@ class WidgetPresenterTest < Minitest::Test
     ], view.screen_widget_path_args
   end
 
+  def test_plot_series_accepts_a_hash_string_keys_and_a_bare_value
+    plotted = RecordingStudioAdmin::Widgets::Presenter.plot_series(
+      { "name" => "Counts", "data" => [{ "x" => "Mon", "y" => 1 }, { "x" => "Mon", "y" => 2 }] }
+    )
+
+    assert_equal "Mon", plotted["data"][0]["x"]
+    assert_equal "Mon\u200b", plotted["data"][1]["x"]
+    assert_equal 7, RecordingStudioAdmin::Widgets::Presenter.plot_series(7)
+  end
+
+  def test_integer_ticks_count_array_points_and_skip_a_missing_series
+    assert RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(
+      :column,
+      series: [{ data: [["Mon", 2], ["Tue", 3]] }]
+    )
+    refute RecordingStudioAdmin::Widgets::Presenter.integer_ticks?(:line, series: nil)
+  end
+
+  def test_change_text_class_marks_a_bad_move_as_danger
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(change: "-12%", change_good_when: :up, view_variant: nil)
+    )
+
+    assert_includes presenter.change_text_class, "danger"
+    assert_equal "Recent activity", presenter.header_subtitle
+  end
+
+  def test_compact_progress_hides_the_period_and_shows_the_unit
+    presenter = RecordingStudioAdmin::Widgets::Presenter.new(
+      resolved_widget(
+        type: :progress,
+        metadata: { period_label: "This week", unit_label: "reviews" }
+      )
+    )
+
+    assert_nil presenter.compact_period_label
+    assert_equal "reviews", presenter.compact_unit_label
+  end
+
   def test_helper_uses_usage_index_for_distinct_frame_ids
     view = FakeWidgetView.new
     first = resolved_widget(metadata: { recording_studio_admin_widget_usage_index: 0 })

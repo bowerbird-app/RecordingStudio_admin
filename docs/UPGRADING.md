@@ -1,5 +1,20 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.13.1
+
+Admin `2.13.1` asks before a destructive action runs when the action has no `confirm:`.
+
+A table row action with `method: :delete` is destructive when `destructive:` is omitted. A resource action with `method: :delete` is destructive the same way. Both resolve a blank `confirm:` to "Are you sure?" when the action is destructive. A `confirm:` you pass is unchanged. An action that is not destructive still has no confirm.
+
+```ruby
+row_action :remove, text: "Remove", url: ->(row) { row_path(row) }, method: :delete
+# confirm is "Are you sure?"
+
+row_action :archive, text: "Archive", url: ->(row) { row_path(row) }, method: :post,
+                     destructive: true, confirm: "Archive this row?"
+# confirm stays "Archive this row?"
+```
+
 ## Upgrading to 2.13.0
 
 Admin `2.13.0` lets a select filter name its blank option and keep option labels as written. This is an additive feat, not feat!. Screens that omit `blank_label:` and `humanize_options:` render as they did in `2.12.1`.

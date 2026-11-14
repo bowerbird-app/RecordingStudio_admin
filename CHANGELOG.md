@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2.13.1 - 2026-11-14
+
+### Fixed
+
+- A destructive row action or resource action asks "Are you sure?" when `confirm:` is blank. A delete with no `destructive:` value is destructive. An explicit `confirm:` is kept. An action that is not destructive stays silent.
+
+### Upgrade notes
+
+- Delete buttons and other destructive actions that omitted `confirm:` now prompt before they submit. Pass `confirm:` to use your own words. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2131).
+
 ## 2.13.0 - 2026-11-12
 
 ### Added
