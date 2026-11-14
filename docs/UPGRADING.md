@@ -8,7 +8,7 @@ Section recording lookup uses `RecordingStudio::Recording.unscoped.kept`. Access
 
 Admin no longer calls `recording_studio_trashable_kept_sql`, `recording_studio_trashable_active`, or `recording_studio_trashable_including_trashed`. It does not check that a `trashed_at` column exists, and it does not fall back to `trashed_at: nil`. Trashable `0.16.0` registers the kept filter. When the column is missing, that filter matches every row.
 
-The gemspec requires `recording_studio >= 6.14.0, < 7` and `recording_studio_trashable >= 0.16.0, < 1`. Development and dummy Gemfiles pin core `v6.14.0` and Trashable `v0.16.0`.
+The gemspec requires `recording_studio >= 6.14.0, < 7`, `recording_studio_trashable >= 0.16.0, < 1`, and `recording_studio_accessible >= 0.42.0, < 1`. Development and dummy Gemfiles pin core `v6.14.0`, Trashable `v0.16.0`, and Accessible `v0.42.0`. Accessible `0.42.0` reads kept recordings the same way, so the dummy app does not define `recording_studio_trashable_kept_sql`.
 
 Hosts that copied an admin-root resolver replace the old helper:
 
@@ -17,8 +17,6 @@ RecordingStudio::Recording.kept.find_by(recordable: admin_root)
 ```
 
 A scoped subtree still leaves out a kept recording when a trashed ancestor sits between it and the access recording. That check uses `Recording.kept`.
-
-The dummy app defines `Recording.recording_studio_trashable_kept_sql` so Accessible `0.41` can boot. That method is not part of Admin. It returns `RecordingStudio.kept_sql`.
 
 ## Upgrading to 2.13.1
 

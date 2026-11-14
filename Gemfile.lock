@@ -9,13 +9,13 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_accessible.git
-  revision: 97b935ecd1f6147e20ce0c0d1efb7366a93f018b
-  tag: v0.32.0
+  revision: 721787a4d07a38e5e4341146f8e6ff990f94fa4c
+  tag: v0.42.0
   specs:
-    recording_studio_accessible (0.32.0)
+    recording_studio_accessible (0.42.0)
       rails (~> 8.1.0)
-      recording_studio (~> 6.1, >= 6.1.0)
-      recording_studio_trashable (~> 0.10)
+      recording_studio (~> 6.1, >= 6.14.0)
+      recording_studio_trashable (~> 0.10, >= 0.16.0)
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_logs.git
@@ -65,7 +65,7 @@ PATH
       flat_pack (>= 0.1.341)
       rails (~> 8.1.0)
       recording_studio (>= 6.14.0, < 7)
-      recording_studio_accessible (~> 0.6)
+      recording_studio_accessible (>= 0.42.0, < 1)
       recording_studio_logs (>= 0.4.1, < 1.0)
       recording_studio_trashable (>= 0.16.0, < 1)
       view_component (>= 4.14, < 5)

@@ -21,10 +21,14 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes version, 'VERSION = "2.14.0"'
     assert_includes gemspec, 'recording_studio", ">= 6.14.0", "< 7"'
     assert_includes gemspec, 'recording_studio_trashable", ">= 0.16.0", "< 1"'
+    assert_includes gemspec, 'recording_studio_accessible", ">= 0.42.0", "< 1"'
     assert_includes gemfile, 'RecordingStudio", tag: "v6.14.0"'
     assert_includes gemfile, 'RecordingStudio_trashable", tag: "v0.16.0"'
+    assert_includes gemfile, 'RecordingStudio_accessible", tag: "v0.42.0"'
     assert_includes dummy_gemfile, 'RecordingStudio", tag: "v6.14.0"'
     assert_includes dummy_gemfile, 'RecordingStudio_trashable", tag: "v0.16.0"'
+    assert_includes dummy_gemfile, 'RecordingStudio_accessible", tag: "v0.42.0"'
+    refute File.exist?(File.join(ROOT, "test/dummy/config/initializers/recording_studio_trashable_kept_sql.rb"))
     assert_includes resolver, "unscoped.kept"
     refute_includes resolver, "column_names"
     refute_includes resolver, "recording_studio_trashable_"
@@ -437,9 +441,9 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes gemspec, 'view_component", ">= 4.14", "< 5"'
     assert_includes gemfile, 'tag: "v6.14.0"'
     assert_includes gemfile, 'tag: "v0.1.356"'
-    assert_includes gemfile, 'tag: "v0.32.0"'
+    assert_includes gemfile, 'tag: "v0.42.0"'
     assert_includes dummy_gemfile, 'tag: "v0.5.12"'
-    assert_includes dummy_gemfile, 'tag: "v0.32.0"'
+    assert_includes dummy_gemfile, 'tag: "v0.42.0"'
     assert_includes controller, "recording_studio_layout"
     assert_includes controller, "RecordingStudioAdmin.configuration.layout_for(recording_studio_admin_surface)"
     refute_match(/\blayout ["']/, controller)
@@ -573,7 +577,7 @@ class UpgradeNotesTest < Minitest::Test
     refute_includes gemspec, 'recording_studio", "~> 6.3'
     assert_includes gemfile, 'tag: "v6.14.0"'
     assert_includes gemfile, 'tag: "v0.1.356"'
-    assert_includes gemfile, 'tag: "v0.32.0"'
+    assert_includes gemfile, 'tag: "v0.42.0"'
     assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.7.4"'
     assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.8.0"'
     assert_includes gemfile, 'view_component", "4.20.0"'
@@ -869,7 +873,7 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes readme, "## Upgrading"
     assert_includes readme, "docs/UPGRADING.md"
     assert_includes readme, "RecordingStudio `v6.14.0`"
-    assert_includes readme, "Accessible `v0.32.0`"
+    assert_includes readme, "Accessible `v0.42.0`"
     assert_includes readme, "bootstrap_owner_access!"
   end
 

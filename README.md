@@ -253,7 +253,7 @@ Runtime (gemspec):
 - Ruby `>= 3.3.0`
 - Rails `~> 8.1.0`
 - RecordingStudio `>= 6.14.0, < 7`
-- RecordingStudioAccessible `~> 0.6`
+- RecordingStudioAccessible `>= 0.42.0, < 1`
 - RecordingStudioLogs `>= 0.4.1, < 1.0`
 - RecordingStudioTrashable `>= 0.16.0, < 1`
 - FlatPack `>= 0.1.341`
@@ -262,7 +262,7 @@ Runtime (gemspec):
 Development and dummy Gemfile pins:
 
 - RecordingStudio `v6.14.0`
-- Accessible `v0.32.0`
+- Accessible `v0.42.0`
 - Dummy Exportable `v0.5.12`
 - Logs `v0.7.4`
 - Trashable `v0.16.0` (`require: false` in the root Gemfile)
@@ -848,7 +848,7 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
-The dummy pins RecordingStudio `v6.14.0`, Flatpack `v0.1.356`, Accessible `v0.32.0`, Logs `v0.7.4`, Metrics `v0.8.0`, Trashable `v0.16.0`, and Exportable `v0.5.12`. Root switchable is `v0.15.0` with Cache `v0.6.3`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+The dummy pins RecordingStudio `v6.14.0`, Flatpack `v0.1.356`, Accessible `v0.42.0`, Logs `v0.7.4`, Metrics `v0.8.0`, Trashable `v0.16.0`, and Exportable `v0.5.12`. Root switchable is `v0.15.0` with Cache `v0.6.3`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
 
 ## Cloud Agent boot
 

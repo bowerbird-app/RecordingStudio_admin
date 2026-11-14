@@ -7,7 +7,7 @@
 ### Changed
 
 - Kept recording queries use `RecordingStudio::Recording.kept`. Section lookup uses `unscoped.kept`. A scoped subtree drops a trashed row, and a kept row under a trashed ancestor, with that same scope.
-- The gemspec requires Recording Studio `>= 6.14.0, < 7` and Trashable `>= 0.16.0, < 1`. Development and dummy pins are core `v6.14.0` and Trashable `v0.16.0`.
+- The gemspec requires Recording Studio `>= 6.14.0, < 7`, Trashable `>= 0.16.0, < 1`, and Accessible `>= 0.42.0, < 1`. Development and dummy pins are core `v6.14.0`, Trashable `v0.16.0`, and Accessible `v0.42.0`.
 
 ### Removed
 
