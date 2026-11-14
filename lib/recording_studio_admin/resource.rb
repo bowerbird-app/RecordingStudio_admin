@@ -19,14 +19,20 @@ module RecordingStudioAdmin
       resolved_url = RecordingStudioAdmin::UrlSafety.safe_href(resolve_value(url, record, context))
       return if resolved_url.blank?
 
+      resolved_method = normalize_method(resolve_value(method, record, context))
+      resolved_destructive = resolve_value(destructive, record, context)
+      resolved_destructive = true if resolved_destructive.nil? && resolved_method == :delete
+      resolved_confirm = resolve_value(confirm, record, context)
+      resolved_confirm = "Are you sure?" if resolved_confirm.blank? && resolved_destructive
+
       Results::ResolvedRowAction.new(
         name: key,
         text: resolve_value(text, record, context),
         url: resolved_url,
         icon: resolve_value(icon, record, context),
-        method: normalize_method(resolve_value(method, record, context)),
-        confirm: resolve_value(confirm, record, context),
-        destructive: resolve_value(destructive, record, context)
+        method: resolved_method,
+        confirm: resolved_confirm,
+        destructive: resolved_destructive
       )
     end
 

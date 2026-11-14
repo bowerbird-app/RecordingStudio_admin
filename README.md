@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.13.1` asks "Are you sure?" before a destructive row or resource action when `confirm:` is blank. A delete with no `destructive:` value is destructive. An explicit `confirm:` is kept. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2131).
+
 Admin `2.13.0` adds `blank_label:` and `humanize_options: false` on select filters. Default labels stay humanized. This is an additive feat, not feat!. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2130).
 
 Admin `2.12.1` hides the chart background grid on screen charts, full widget charts, and compact charts. Geo charts are unchanged. A widget draws the grid again with `chart_options: { grid: { show: true } }`. A screen chart passes the same hash to `options`. Host options are deep-merged last. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2121).
@@ -820,6 +822,10 @@ The admin root generator creates editable app-owned files including `Admin::Base
 Admin registers `AdminAuditLog` with RecordingStudioLogs as an unpartitioned, indefinite raw log (`partition_interval: nil`, `root_column: :root_recording_id`). Existing rows stay in `admin_audit_logs`. The table is not copied or partitioned. There is no summary table and no `aggregate` call. Actor, IP, user agent, request id, and error text stay off the aggregatable allowlist.
 
 `config.logs_retention` defaults to `:indefinite`. Registration always uses `:indefinite`. RecordingStudioLogs does not clean a log with no summaries, so a finite window would sit at "Cleanup waiting". Do not schedule Logs partition or retention jobs for this table. Existing hosts run `bin/rails generate recording_studio_admin:logs` after `recording_studio_logs:migrations` to add `root_recording_id` only.
+
+## Tests
+
+`bundle exec rake test` runs the gem suite. `bundle exec rake test:all` runs the gem suite and the dummy app suite, collates SimpleCov for `app/` and `lib/` with branch coverage, and fails when line coverage is below 94%.
 
 ## Documentation map
 

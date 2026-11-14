@@ -2,6 +2,7 @@
 
 ENV["RAILS_ENV"] ||= "test"
 
+require_relative "../../../test/simplecov_helper"
 require_relative "../config/environment"
 require_relative "../../../test/support/dummy_access_test_helpers"
 require "minitest/mock"

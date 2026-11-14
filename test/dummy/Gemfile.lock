@@ -96,7 +96,7 @@ GIT
 PATH
   remote: ../..
   specs:
-    recording_studio_admin (2.13.0)
+    recording_studio_admin (2.13.1)
       flat_pack (>= 0.1.341)
       rails (~> 8.1.0)
       recording_studio (>= 6.3.0, < 7)
@@ -429,6 +429,7 @@ GEM
       ffi (~> 1.12)
       logger
     securerandom (0.4.1)
+    simplecov (1.1.1)
     sin_lru_redux (2.5.3)
     solid_cable (4.0.2)
       actioncable (>= 7.2)
@@ -538,6 +539,7 @@ DEPENDENCIES
   recording_studio_root_switchable!
   recording_studio_trashable!
   rubocop-rails-omakase
+  simplecov (= 1.1.1)
   solid_cable
   solid_cache
   solid_queue
