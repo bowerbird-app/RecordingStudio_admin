@@ -1,5 +1,9 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.15.1
+
+Admin `2.15.1` allows Recording Studio `>= 6.14.0, < 8.0`. Development and dummy Gemfiles still pin `v6.14.0`. No Admin API change. Hosts that stay on core 6 do nothing.
+
 ## Upgrading to 2.15.0
 
 Admin `2.15.0` requires Accessible `>= 0.43.0, < 1`. Development and dummy Gemfiles pin Accessible `v0.43.0`.

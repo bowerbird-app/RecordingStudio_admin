@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.15.1` allows Recording Studio `>= 6.14.0, < 8.0`. Development still pins `v6.14.0`. No Admin API change. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2151).
+
 Admin `2.15.0` requires Accessible `>= 0.43.0`. `config.site_admin_recording_resolver` is gone. Set `RecordingStudioAccessible.configuration.admin_root_resolver` to the kept admin root recording. Site-wide screens resolve only when the current access recording is that root and `RecordingStudioAccessible.admin?` allows the actor. A missing root fails closed. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2150).
 
 Admin `2.14.0` reads kept recordings with `RecordingStudio::Recording.kept` (Recording Studio `>= 6.14.0`, Trashable `>= 0.16.0`). Section lookup uses `unscoped.kept`. Host resolvers that still call `recording_studio_trashable_kept_sql` switch to `kept`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2140).
@@ -254,7 +256,7 @@ Runtime (gemspec):
 
 - Ruby `>= 3.3.0`
 - Rails `~> 8.1.0`
-- RecordingStudio `>= 6.14.0, < 7`
+- RecordingStudio `>= 6.14.0, < 8.0`
 - RecordingStudioAccessible `>= 0.43.0, < 1`
 - RecordingStudioLogs `>= 0.4.1, < 1.0`
 - RecordingStudioTrashable `>= 0.16.0, < 1`

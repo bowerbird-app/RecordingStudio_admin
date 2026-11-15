@@ -111,7 +111,7 @@ class SectionRecordingResolverTrashableParityTest < Minitest::Test
     gemfile = File.read(File.join(root, "Gemfile"))
     dummy_gemfile = File.read(File.join(root, "test/dummy/Gemfile"))
 
-    assert_includes gemspec, 'recording_studio", ">= 6.14.0", "< 7"'
+    assert_includes gemspec, 'recording_studio", ">= 6.14.0", "< 8.0"'
     assert_includes gemspec, 'recording_studio_trashable", ">= 0.16.0", "< 1"'
     assert_includes gemspec, 'recording_studio_accessible", ">= 0.43.0", "< 1"'
     assert_includes gemfile, 'tag: "v6.14.0"'

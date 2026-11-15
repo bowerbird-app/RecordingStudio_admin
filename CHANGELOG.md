@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2.15.1 - 2026-11-15
+
+### Changed
+
+- Allow recording_studio < 8.0 (core 7 phase 1)
+
+### Upgrade notes
+
+- Hosts may use Recording Studio 7. The floor stays `>= 6.14.0`. This repo still develops and tests on `v6.14.0`. No Admin API change. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2151).
+
 ## 2.15.0 - 2026-11-14
 
 ### Changed
