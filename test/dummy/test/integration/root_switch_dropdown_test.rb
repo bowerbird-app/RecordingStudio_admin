@@ -16,7 +16,7 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     sign_in user
 
     workspace = Workspace.create!(name: "Dropdown Workspace")
-    root_recording = RecordingStudio.root_recording_for(workspace)
+    root_recording = create_root_recording_for_test!(workspace)
     grant_admin_access_for_test!(recording: root_recording, actor: user)
 
     get root_path
@@ -44,7 +44,7 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     sign_in user
 
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    admin_root_recording = RecordingStudio.root_recording_for(admin_root)
+    admin_root_recording = create_root_recording_for_test!(admin_root)
     grant_admin_access_for_test!(recording: admin_root_recording, actor: user)
 
     get root_path
@@ -68,7 +68,7 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     sign_in user
 
     workspace = Workspace.create!(name: "Switch Page Workspace")
-    root_recording = RecordingStudio.root_recording_for(workspace)
+    root_recording = create_root_recording_for_test!(workspace)
     grant_admin_access_for_test!(recording: root_recording, actor: user)
 
     get "/recording_studio_root_switchable/v1/root_switch?scope=all_workspaces"
@@ -87,8 +87,8 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
 
     source_workspace = Workspace.create!(name: "Source Workspace")
     target_workspace = Workspace.create!(name: "Target Workspace")
-    target_root_recording = RecordingStudio.root_recording_for(target_workspace)
-    source_root_recording = RecordingStudio.root_recording_for(source_workspace)
+    target_root_recording = create_root_recording_for_test!(target_workspace)
+    source_root_recording = create_root_recording_for_test!(source_workspace)
     grant_admin_access_for_test!(recording: source_root_recording, actor: user)
     grant_admin_access_for_test!(recording: target_root_recording, actor: user)
 
@@ -113,8 +113,8 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
 
     source_workspace = Workspace.create!(name: "Fallback Source Workspace")
     target_workspace = Workspace.create!(name: "Fallback Target Workspace")
-    target_root_recording = RecordingStudio.root_recording_for(target_workspace)
-    source_root_recording = RecordingStudio.root_recording_for(source_workspace)
+    target_root_recording = create_root_recording_for_test!(target_workspace)
+    source_root_recording = create_root_recording_for_test!(source_workspace)
     grant_admin_access_for_test!(recording: source_root_recording, actor: user)
     grant_admin_access_for_test!(recording: target_root_recording, actor: user)
 
@@ -138,9 +138,9 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     sign_in user
 
     workspace = Workspace.create!(name: "Guarded Workspace")
-    workspace_root_recording = RecordingStudio.root_recording_for(workspace)
+    workspace_root_recording = create_root_recording_for_test!(workspace)
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    admin_root_recording = RecordingStudio.root_recording_for(admin_root)
+    admin_root_recording = create_root_recording_for_test!(admin_root)
     grant_admin_access_for_test!(recording: workspace_root_recording, actor: user)
     grant_admin_access_for_test!(recording: admin_root_recording, actor: user)
 

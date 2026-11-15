@@ -20,7 +20,7 @@ class AdminLayoutWidthConsistencyTest < ActionDispatch::IntegrationTest
 
   def admin_root_recording_for_test
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    RecordingStudio.root_recording_for(admin_root)
+    create_root_recording_for_test!(admin_root)
   end
 
   test "admin section routes use the same uncapped width as admin screens" do

@@ -8,7 +8,7 @@ class AdminAuditLogsRegistrationTest < ActiveSupport::TestCase
   setup do
     RecordingStudioAdmin::LogsRegistration.register!
     @admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    @recording = RecordingStudio.root_recording_for(@admin_root)
+    @recording = create_root_recording_for_test!(@admin_root)
   end
 
   test "registers the existing admin audit log as an unpartitioned indefinite Logs source" do

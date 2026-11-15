@@ -1,5 +1,48 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.16.0
+
+Admin `2.16.0` requires Recording Studio `>= 7.0, < 8.0`, Accessible `>= 0.43.1, < 1.0`, and Trashable `>= 0.16.1, < 1.0`. Development and dummy Gemfiles pin core `v7.0.0`, Accessible `v0.43.1`, Trashable `v0.16.1`, and Logs `v0.7.5`. The dummy also pins Root Switchable `v0.15.1`, Cache `v0.6.3`, and Exportable `v0.6.1`.
+
+`RecordingStudio.root_recording_for` only finds a root recording. It returns nil when that recordable has no root, and it does not write.
+
+```ruby
+root = RecordingStudio.root_recording_for(workspace)
+return unless root
+```
+
+Seeds, setup, and request paths that used to create a root the first time they looked it up call `create_root_recording!` with an actor:
+
+```ruby
+root = RecordingStudio.create_root_recording!(workspace, actor: current_user)
+```
+
+A second call returns the same root and does not append another event. Core calls `authorize_write!` with `root_recording: nil` for that first create. A host authorizer that rejects a nil root blocks every new root. Allow a persisted actor to create a root, then keep the role check for later writes:
+
+```ruby
+config.authorize_write = lambda { |actor:, root_recording:, recordable:, **|
+  next false unless actor.is_a?(User) && actor.persisted?
+  next true if root_recording.nil?
+
+  RecordingStudioAccessible.authorized?(actor: actor, recording: root_recording, role: :edit)
+}
+```
+
+The generated admin root controller finds the admin root, then creates it when the recording is missing and the current actor is present. Copy that into a host `Admin::BaseController` that still calls only `root_recording_for`. A missing actor leaves the access recording nil, and admin authorization fails closed.
+
+A backed section with `parent:` does the same find-then-create for that parent recordable. The actor is the admin context actor, who is already authorized for the screen. A missing `parent`, or a `parent_recording:` that resolves to nil, raises `RecordingStudioAdmin::AuthorizationFailed`. The screen does not invent a parent.
+
+The first staff grant still uses Accessible bootstrap, on a root that already exists:
+
+```ruby
+admin_root = AdminRoot.find_by!(name: "Admin")
+admin_root_recording = RecordingStudio.create_root_recording!(admin_root, actor: first_staff_user)
+RecordingStudioAccessible.bootstrap_owner_access!(
+  recording: admin_root_recording,
+  actor: first_staff_user
+)
+```
+
 ## Upgrading to 2.15.0
 
 Admin `2.15.0` requires Accessible `>= 0.43.0, < 1`. Development and dummy Gemfiles pin Accessible `v0.43.0`.

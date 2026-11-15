@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.16.0` requires Recording Studio `>= 7.0, < 8.0`. `root_recording_for` only finds a root. Create one with `RecordingStudio.create_root_recording!(recordable, actor:)`. `authorize_write` must allow that create when `root_recording` is nil. A backed section creates a missing `parent:` root and fails closed when the parent is missing. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2160).
+
 Admin `2.15.0` requires Accessible `>= 0.43.0`. `config.site_admin_recording_resolver` is gone. Set `RecordingStudioAccessible.configuration.admin_root_resolver` to the kept admin root recording. Site-wide screens resolve only when the current access recording is that root and `RecordingStudioAccessible.admin?` allows the actor. A missing root fails closed. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2150).
 
 Admin `2.14.0` reads kept recordings with `RecordingStudio::Recording.kept` (Recording Studio `>= 6.14.0`, Trashable `>= 0.16.0`). Section lookup uses `unscoped.kept`. Host resolvers that still call `recording_studio_trashable_kept_sql` switch to `kept`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2140).
@@ -254,23 +256,23 @@ Runtime (gemspec):
 
 - Ruby `>= 3.3.0`
 - Rails `~> 8.1.0`
-- RecordingStudio `>= 6.14.0, < 7`
-- RecordingStudioAccessible `>= 0.43.0, < 1`
+- RecordingStudio `>= 7.0, < 8.0`
+- RecordingStudioAccessible `>= 0.43.1, < 1.0`
 - RecordingStudioLogs `>= 0.4.1, < 1.0`
-- RecordingStudioTrashable `>= 0.16.0, < 1`
+- RecordingStudioTrashable `>= 0.16.1, < 1.0`
 - FlatPack `>= 0.1.341`
 - view_component `>= 4.14, < 5`
 
 Development and dummy Gemfile pins:
 
-- RecordingStudio `v6.14.0`
-- Accessible `v0.43.0`
-- Dummy Exportable `v0.5.12`
-- Logs `v0.7.4`
-- Trashable `v0.16.0` (`require: false` in the root Gemfile)
+- RecordingStudio `v7.0.0`
+- Accessible `v0.43.1`
+- Dummy Exportable `v0.6.1`
+- Logs `v0.7.5`
+- Trashable `v0.16.1` (`require: false` in the root Gemfile)
 - Metrics `v0.8.0` (`require: false` in the root Gemfile)
 - Flatpack tag `v0.1.356`
-- Dummy Root Switchable `v0.15.0` with Cache `v0.6.3`
+- Dummy Root Switchable `v0.15.1` with Cache `v0.6.3`
 - `view_component` `4.20.0`
 
 `RecordingStudioAccessible` is required. Enable Accessible on the admin root (and any other recordable that should hold grants) with `RecordingStudio.enable_capability(:accessible, on: self)`. Keep the admin root owned (`shared: false`).
@@ -297,8 +299,10 @@ end
 For the first staff grant on an empty owned admin root, use Accessible bootstrap (no ENV authorizer):
 
 ```ruby
+admin_root = AdminRoot.find_by!(name: "Admin")
+admin_root_recording = RecordingStudio.create_root_recording!(admin_root, actor: first_staff_user)
 RecordingStudioAccessible.bootstrap_owner_access!(
-  recording: RecordingStudio.root_recording_for(admin_root),
+  recording: admin_root_recording,
   actor: first_staff_user
 )
 ```
@@ -854,7 +858,7 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
-The dummy pins RecordingStudio `v6.14.0`, Flatpack `v0.1.356`, Accessible `v0.43.0`, Logs `v0.7.4`, Metrics `v0.8.0`, Trashable `v0.16.0`, and Exportable `v0.5.12`. Root switchable is `v0.15.0` with Cache `v0.6.3`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+The dummy pins RecordingStudio `v7.0.0`, Flatpack `v0.1.356`, Accessible `v0.43.1`, Logs `v0.7.5`, Metrics `v0.8.0`, Trashable `v0.16.1`, and Exportable `v0.6.1`. Root switchable is `v0.15.1` with Cache `v0.6.3`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
 
 ## Cloud Agent boot
 

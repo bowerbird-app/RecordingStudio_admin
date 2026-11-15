@@ -55,7 +55,7 @@ class StatsRootTest < ActionDispatch::IntegrationTest
     user = sign_in_stats_user
 
     workspace = Workspace.create!(name: "Stats Workspace")
-    workspace_root_recording = RecordingStudio.root_recording_for(workspace)
+    workspace_root_recording = create_root_recording_for_test!(workspace)
     grant_admin_access_for_test!(recording: workspace_root_recording, actor: user)
 
     switch_to_workspace_root!(workspace_root_recording)
@@ -73,7 +73,7 @@ class StatsRootTest < ActionDispatch::IntegrationTest
     user = sign_in_stats_user(email: "stats-demo-test@example.com")
 
     workspace = Workspace.create!(name: "Workspace Stats Demo")
-    workspace_root_recording = RecordingStudio.root_recording_for(workspace)
+    workspace_root_recording = create_root_recording_for_test!(workspace)
     grant_admin_access_for_test!(recording: workspace_root_recording, actor: user)
 
     analytics_folder = Folder.create!(name: "Demo Analytics")
@@ -143,9 +143,9 @@ class StatsRootTest < ActionDispatch::IntegrationTest
     user = sign_in_stats_user(email: "stats-admin-root-guard@example.com")
 
     workspace = Workspace.create!(name: "Admin Guard Workspace")
-    workspace_root_recording = RecordingStudio.root_recording_for(workspace)
+    workspace_root_recording = create_root_recording_for_test!(workspace)
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    admin_root_recording = RecordingStudio.root_recording_for(admin_root)
+    admin_root_recording = create_root_recording_for_test!(admin_root)
 
     grant_admin_access_for_test!(recording: workspace_root_recording, actor: user)
     grant_admin_access_for_test!(recording: admin_root_recording, actor: user)

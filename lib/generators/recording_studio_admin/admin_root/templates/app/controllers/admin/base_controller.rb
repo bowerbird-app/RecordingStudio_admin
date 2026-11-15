@@ -50,8 +50,15 @@ class Admin::BaseController < ApplicationController
   def recording_studio_admin_access_recording
     @recording_studio_admin_access_recording ||= begin
       admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-      RecordingStudio.root_recording_for(admin_root)
+      RecordingStudio.root_recording_for(admin_root) || create_admin_root_recording(admin_root)
     end
+  end
+
+  def create_admin_root_recording(admin_root)
+    actor = recording_studio_admin_current_actor
+    return if actor.nil?
+
+    RecordingStudio.create_root_recording!(admin_root, actor: actor)
   end
 
   def page_nav_anchor_url(default: RecordingStudioAdmin.configuration.default_mount_path)

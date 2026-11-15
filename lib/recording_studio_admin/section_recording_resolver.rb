@@ -41,9 +41,24 @@ module RecordingStudioAdmin
     end
 
     def resolve_parent_recording
-      return resolve_value(@definition.parent_recording) if @definition.parent_recording
+      if @definition.parent_recording
+        parent_recording = resolve_value(@definition.parent_recording)
+        return parent_recording if parent_recording
 
-      RecordingStudio.root_recording_for(resolve_value(@definition.parent))
+        raise AuthorizationFailed, "RecordingStudioAdmin section parent recording is missing"
+      end
+
+      parent = resolve_value(@definition.parent)
+      raise AuthorizationFailed, "RecordingStudioAdmin section parent is missing" unless parent
+
+      RecordingStudio.root_recording_for(parent) || create_parent_root!(parent)
+    end
+
+    def create_parent_root!(parent)
+      actor = @context.current_actor
+      raise AuthorizationFailed, "RecordingStudioAdmin current actor is not configured" unless actor
+
+      RecordingStudio.create_root_recording!(parent, actor: actor)
     end
 
     def find_recording(recordable, root_recording, parent_recording)

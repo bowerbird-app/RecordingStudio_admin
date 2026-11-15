@@ -3,18 +3,17 @@ source "https://rubygems.org"
 # Use the RecordingStudioAdmin engine
 gem "recording_studio_admin", path: "../.."
 
-gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v6.14.0"
-# Exportable 0.5.12 requires Accessible ~> 0.24, which still accepts 0.43.0.
-gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.43.0"
-gem "recording_studio_exportable", github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.5.12"
-gem "recording_studio_logs", github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.4"
-gem "recording_studio_trashable", github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.16.0",
+gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v7.0.0"
+gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.43.1"
+gem "recording_studio_exportable", github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.6.1"
+gem "recording_studio_logs", github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.5"
+gem "recording_studio_trashable", github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.16.1",
                                  require: false
 gem "view_component", "4.20.0"
 
-# Root switcher for the top nav. v0.15.0 requires recording_studio_cache ~> 0.5.
+# Root switcher for the top nav.
 gem "recording_studio_root_switchable", github: "bowerbird-app/RecordingStudio_root_switchable",
-                                        tag: "v0.15.0"
+                                        tag: "v0.15.1"
 gem "recording_studio_cache", github: "bowerbird-app/RecordingStudio_cache", tag: "v0.6.3"
 # Required by root_switchable >= 0.7.0 (git source; not on RubyGems)
 gem "recording_studio_metrics", github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.8.0"

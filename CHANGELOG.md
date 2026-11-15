@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## 2.16.0 - 2026-11-15
+
+### Changed
+
+- Recording Studio is `>= 7.0, < 8.0`. `RecordingStudio.root_recording_for` only finds a root. A missing root is `nil`.
+- A backed section with `parent:` finds that root, then calls `RecordingStudio.create_root_recording!(parent, actor:)` when it is missing. A missing `parent` or `parent_recording` fails closed. Admin screens still require an authorized actor.
+- The generated admin root controller finds the admin root recording, then creates it with `create_root_recording!` when it is missing and an actor is present.
+- The gemspec requires Accessible `>= 0.43.1, < 1.0` and Trashable `>= 0.16.1, < 1.0`. Development and dummy Gemfiles pin core `v7.0.0`, Accessible `v0.43.1`, Trashable `v0.16.1`, Logs `v0.7.5`, and Metrics `v0.8.0`. The dummy also pins Root Switchable `v0.15.1`, Cache `v0.6.3`, and Exportable `v0.6.1`.
+
+### Upgrade notes
+
+- Seeds, setup, and request paths that created a root by looking it up call `create_root_recording!` with an actor. `config.authorize_write` must allow that create when `root_recording` is nil. There is no compatibility shim. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2160).
+
 ## 2.15.0 - 2026-11-14
 
 ### Changed
