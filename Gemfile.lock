@@ -1,28 +1,28 @@
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio.git
-  revision: 1b20abf63e55e884ab557007fc0f24a013fb1168
-  tag: v6.14.0
+  revision: 9516fe1562b7934b3c92a5272d9c509f60ae0bb9
+  tag: v7.0.0
   specs:
-    recording_studio (6.14.0)
+    recording_studio (7.0.0)
       flat_pack (>= 0.1.315)
       rails (>= 8.1.4.1)
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_accessible.git
-  revision: eed3c76b31c1d1de9ed7b20a19134b17da6b8f86
-  tag: v0.43.0
+  revision: 5dcb0c4050c1fb100433db0eda8685d435d065e6
+  tag: v0.43.1
   specs:
-    recording_studio_accessible (0.43.0)
+    recording_studio_accessible (0.43.1)
       rails (~> 8.1.0)
-      recording_studio (~> 6.1, >= 6.14.0)
+      recording_studio (>= 6.14.0, >= 6.1, < 8.0)
       recording_studio_trashable (~> 0.10, >= 0.16.0)
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_logs.git
-  revision: 47d70f2c1d72cdc9bbb9ce7f63d98835347ce449
-  tag: v0.7.4
+  revision: e0cc2c652b79e85105b8d2fc041050e559360a79
+  tag: v0.7.5
   specs:
-    recording_studio_logs (0.7.4)
+    recording_studio_logs (0.7.5)
       rails (~> 8.1.0)
       recording_studio (>= 6.1.0)
       recording_studio_metrics (>= 0.6.1, < 1.0)
@@ -38,13 +38,13 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_trashable.git
-  revision: 7a7dc45a223fde77f6bf9b48ac640d1cf98b7dac
-  tag: v0.16.0
+  revision: e48cf881faa894c81281b47a41f1a06468115c92
+  tag: v0.16.1
   specs:
-    recording_studio_trashable (0.16.0)
+    recording_studio_trashable (0.16.1)
       flat_pack (>= 0.1.315)
       rails (~> 8.1.0)
-      recording_studio (>= 6.14.0, < 7.0)
+      recording_studio (>= 6.14.0, < 8.0)
       recording_studio_metrics (>= 0.3.0, < 1.0)
 
 GIT
@@ -61,13 +61,13 @@ GIT
 PATH
   remote: .
   specs:
-    recording_studio_admin (2.15.0)
+    recording_studio_admin (2.16.0)
       flat_pack (>= 0.1.341)
       rails (~> 8.1.0)
-      recording_studio (>= 6.14.0, < 7)
-      recording_studio_accessible (>= 0.43.0, < 1)
+      recording_studio (>= 7.0, < 8.0)
+      recording_studio_accessible (>= 0.43.1, < 1.0)
       recording_studio_logs (>= 0.4.1, < 1.0)
-      recording_studio_trashable (>= 0.16.0, < 1)
+      recording_studio_trashable (>= 0.16.1, < 1.0)
       view_component (>= 4.14, < 5)
 
 GEM
@@ -173,7 +173,7 @@ GEM
     i18n (1.15.2)
       concurrent-ruby (~> 1.0)
     io-console (0.9.5)
-    irb (1.18.0)
+    irb (1.19.0)
       pp (>= 0.6.0)
       prism (>= 1.3.0)
       rdoc (>= 4.0.0)
@@ -193,9 +193,9 @@ GEM
       net-smtp
     marcel (1.2.1)
     mini_mime (1.1.5)
-    minitest (6.0.6)
+    minitest (6.1.0)
       drb (~> 2.0)
-      prism (~> 1.5)
+      prism (>= 1.5, < 3)
     minitest-mock (5.27.0)
     net-imap (0.6.8)
       date
@@ -323,7 +323,7 @@ GEM
       actionpack (>= 6.1)
       activesupport (>= 6.1)
       sprockets (>= 3.0.0)
-    tailwind_merge (0.16.0)
+    tailwind_merge (1.5.6)
       sin_lru_redux (~> 2.5)
     thor (1.5.0)
     timeout (0.6.1)

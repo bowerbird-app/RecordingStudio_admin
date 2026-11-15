@@ -86,7 +86,7 @@ class AdminRegisteredActionsTest < ActionDispatch::IntegrationTest
 
   test "host admin actions are forbidden when the current root is outside the admin surface" do
     workspace = Workspace.create!(name: "Resource Guard Workspace")
-    workspace_root_recording = RecordingStudio.root_recording_for(workspace)
+    workspace_root_recording = create_root_recording_for_test!(workspace)
     grant_admin_access_for_test!(recording: workspace_root_recording, actor: @admin_user)
 
     switch_to_root!(workspace_root_recording)
@@ -173,7 +173,7 @@ class AdminRegisteredActionsTest < ActionDispatch::IntegrationTest
 
   def admin_root_recording_for_test
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    RecordingStudio.root_recording_for(admin_root)
+    create_root_recording_for_test!(admin_root)
   end
 
   def with_admin_action_events

@@ -33,7 +33,7 @@ class DummyAccessEnforcementTest < ActionDispatch::IntegrationTest
     end
 
     workspace = Workspace.find_or_create_by!(name: "With Access Workspace")
-    root_recording = RecordingStudio.root_recording_for(workspace)
+    root_recording = create_root_recording_for_test!(workspace)
     grant_admin_access_for_test!(recording: root_recording, actor: user)
 
     sign_in user

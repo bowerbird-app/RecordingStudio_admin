@@ -316,7 +316,7 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
   def build_tree(user)
     token = SecureRandom.hex(4)
     workspace = Workspace.create!(name: "Library #{token}")
-    root = RecordingStudio.root_recording_for(workspace)
+    root = create_root_recording_for_test!(workspace)
     grant_admin_access_for_test!(recording: root, actor: user)
     atlas_folder = record_child!(Folder.create!(name: "Atlas Notes #{token}"), root, root, user)
     atlas_page = record_child!(Page.create!(title: "Atlas Brief #{token}"), root, atlas_folder, user)
@@ -326,7 +326,7 @@ class ScopedLibraryScreenTest < ActionDispatch::IntegrationTest
     buried_page = record_child!(Page.create!(title: "Buried Note #{token}"), root, trashed_folder, user)
     trashed_folder.update_columns(trashed_at: Time.current, updated_at: Time.current)
     foreign_root_recordable = Workspace.create!(name: "Foreign #{token}")
-    foreign_root = RecordingStudio.root_recording_for(foreign_root_recordable)
+    foreign_root = create_root_recording_for_test!(foreign_root_recordable)
     grant_admin_access_for_test!(recording: foreign_root, actor: user)
     foreign_title = "Foreign Page #{token}"
     foreign_page = record_child!(Page.create!(title: foreign_title), foreign_root, foreign_root, user)

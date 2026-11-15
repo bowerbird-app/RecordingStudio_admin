@@ -24,9 +24,11 @@ class AuthorizeWriteTest < ActiveSupport::TestCase
       record.password_confirmation = "Password123!"
     end
     workspace = Workspace.create!(name: "Write policy #{SecureRandom.hex(4)}")
-    root_recording = RecordingStudio.root_recording_for(workspace)
+    root_recording = create_root_recording_for_test!(workspace)
     folder = Folder.new(name: "Write policy folder")
 
+    refute authorizer.call(actor: nil, root_recording: nil, recordable: workspace)
+    assert authorizer.call(actor: actor, root_recording: nil, recordable: workspace, action: "created")
     refute authorizer.call(actor: nil, root_recording: root_recording, recordable: folder)
     refute authorizer.call(actor: actor, root_recording: root_recording, recordable: folder)
 
@@ -37,7 +39,7 @@ class AuthorizeWriteTest < ActiveSupport::TestCase
 
   test "child writes fail without an actor even when the authorizer is set" do
     workspace = Workspace.create!(name: "Missing actor #{SecureRandom.hex(4)}")
-    root_recording = RecordingStudio.root_recording_for(workspace)
+    root_recording = create_root_recording_for_test!(workspace)
     previous_actor = RecordingStudio.configuration.actor
     RecordingStudio.configuration.actor = -> {}
 

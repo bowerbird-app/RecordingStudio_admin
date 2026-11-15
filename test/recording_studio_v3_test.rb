@@ -19,16 +19,21 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
   test "root recordable creates a root recording" do
     workspace = Workspace.create!(name: unique_name("Root Workspace"))
 
-    root_recording = RecordingStudio.root_recording_for(workspace)
+    assert_nil RecordingStudio.root_recording_for(workspace)
+
+    root_recording = create_root_recording_for_test!(workspace)
+    again = create_root_recording_for_test!(workspace)
 
     assert_predicate root_recording, :persisted?
     assert_equal workspace, root_recording.recordable
     assert_nil root_recording.parent_recording_id
     assert_equal root_recording.id, root_recording.root_recording_id
+    assert_equal root_recording, again
+    assert_equal 1, root_recording.events.count
   end
 
   test "allowed child can be recorded under a workspace root" do
-    root_recording = RecordingStudio.root_recording_for(Workspace.create!(name: unique_name("Child Workspace")))
+    root_recording = create_root_recording_for_test!(Workspace.create!(name: unique_name("Child Workspace")))
     actor = write_actor_for(root_recording)
     folder = Folder.new(name: unique_name("Allowed Folder"))
 
@@ -45,7 +50,7 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
   end
 
   test "page can be recorded under allowed workspace and folder parents" do
-    root_recording = RecordingStudio.root_recording_for(Workspace.create!(name: unique_name("Page Workspace")))
+    root_recording = create_root_recording_for_test!(Workspace.create!(name: unique_name("Page Workspace")))
     actor = write_actor_for(root_recording)
     folder_recording = record_child(
       Folder.new(name: unique_name("Page Folder")),
@@ -80,7 +85,7 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
   end
 
   test "parentless child under an existing root is invalid" do
-    root_recording = RecordingStudio.root_recording_for(Workspace.create!(name: unique_name("Parentless Workspace")))
+    root_recording = create_root_recording_for_test!(Workspace.create!(name: unique_name("Parentless Workspace")))
     folder = Folder.create!(name: unique_name("Parentless Folder"))
     recording = RecordingStudio::Recording.new(root_recording: root_recording, recordable: folder)
 
@@ -89,7 +94,7 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
   end
 
   test "page cannot be recorded under another page" do
-    root_recording = RecordingStudio.root_recording_for(Workspace.create!(name: unique_name("Invalid Page Workspace")))
+    root_recording = create_root_recording_for_test!(Workspace.create!(name: unique_name("Invalid Page Workspace")))
     actor = write_actor_for(root_recording)
     page_recording = record_child(
       Page.new(title: unique_name("Parent Page")),
@@ -119,7 +124,7 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
       :@recording_studio_admin_sections_definition
     )
     parent_workspace = Workspace.find_or_create_by!(name: workspace_name)
-    parent_recording = RecordingStudio.root_recording_for(parent_workspace)
+    parent_recording = create_root_recording_for_test!(parent_workspace)
     actor = User.find_or_create_by!(email: "backed-section-#{SecureRandom.hex(4)}@example.com") do |record|
       record.password = "Password123!"
       record.password_confirmation = "Password123!"
@@ -159,6 +164,76 @@ class RecordingStudioV3Test < ActiveSupport::TestCase
     assert_equal parent_recording, first_result.recording.parent_recording
     assert_equal 1,
                  RecordingStudio::Recording.kept.where(recordable: first_result.recordable).count
+  ensure
+    Workspace.instance_variable_set(
+      :@recording_studio_admin_sections_definition,
+      original_workspace_sections_definition
+    )
+    RecordingStudioAdmin.configuration.access_recording_resolver = original_access_recording_resolver
+    RecordingStudioAdmin.instance_variable_set(:@registry, original_registry)
+  end
+
+  test "backed admin section creates a missing parent root" do
+    section_key = "backed_missing_#{SecureRandom.hex(4)}"
+    original_registry = RecordingStudioAdmin.instance_variable_get(:@registry)
+    original_access_recording_resolver = RecordingStudioAdmin.configuration.access_recording_resolver
+    original_workspace_sections_definition = Workspace.instance_variable_get(
+      :@recording_studio_admin_sections_definition
+    )
+    actor = User.find_or_create_by!(email: "backed-missing-root-#{SecureRandom.hex(4)}@example.com") do |record|
+      record.password = "Password123!"
+      record.password_confirmation = "Password123!"
+    end
+    access_recording = create_root_recording_for_test!(
+      Workspace.create!(name: unique_name("Access Workspace")),
+      actor: actor
+    )
+    grant_admin_access_for_test!(recording: access_recording, actor: actor)
+    missing_workspace = Workspace.create!(name: unique_name("Missing Root Workspace"))
+    folder_name = unique_name("Missing Root Folder")
+
+    assert_nil RecordingStudio.root_recording_for(missing_workspace)
+
+    Workspace.recording_studio_admin_sections do
+      section :stats
+      section section_key.to_sym
+    end
+
+    section_class = Class.new(RecordingStudioAdmin::Section) do
+      key section_key
+      title "Backed missing root"
+      recordable "Folder",
+                 find_or_create_by: -> { { name: folder_name } },
+                 parent: -> { missing_workspace }
+    end
+
+    RecordingStudioAdmin.instance_variable_set(:@registry, RecordingStudioAdmin::Registry.new)
+    RecordingStudioAdmin.configuration.access_recording_resolver = nil
+    RecordingStudioAdmin.register_section(section_class)
+
+    context = RecordingStudioAdmin::Context.new(
+      current_actor: actor,
+      controller: Class.new do
+        define_method(:recording_studio_admin_access_recording) { access_recording }
+      end.new
+    )
+
+    assert_raises(RecordingStudio::AuthorizationError) do
+      RecordingStudioAdmin.resolve_section(key: section_key, context: context)
+    end
+
+    created_root = RecordingStudio.root_recording_for(missing_workspace)
+    assert_predicate created_root, :persisted?
+    assert_equal 1, created_root.events.count
+
+    grant_admin_access_for_test!(recording: created_root, actor: actor)
+    first_result = RecordingStudioAdmin.resolve_section(key: section_key, context: context)
+    second_result = RecordingStudioAdmin.resolve_section(key: section_key, context: context)
+
+    assert_equal created_root, first_result.recording.root_recording
+    assert_equal created_root, first_result.recording.parent_recording
+    assert_equal first_result.recording, second_result.recording
+    assert_equal 1, created_root.events.count
   ensure
     Workspace.instance_variable_set(
       :@recording_studio_admin_sections_definition,

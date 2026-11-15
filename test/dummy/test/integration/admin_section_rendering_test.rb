@@ -31,7 +31,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
 
   def admin_root_recording_for_test
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    RecordingStudio.root_recording_for(admin_root)
+    create_root_recording_for_test!(admin_root)
   end
 
   test "admin root section renders without the old custom layout wrappers" do
@@ -52,7 +52,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     get "/admin", params: { anchor_url: root_url }
 
     admin_root = AdminRoot.find_by!(name: "Admin")
-    admin_root_recording = RecordingStudio.root_recording_for(admin_root)
+    admin_root_recording = create_root_recording_for_test!(admin_root)
     admin_section = AdminSection.find_by!(key: "root")
     admin_section_recording = RecordingStudio::Recording.find_by!(recordable: admin_section)
 

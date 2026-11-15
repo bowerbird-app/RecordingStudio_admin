@@ -7,6 +7,10 @@ module DummyAccessTestHelpers
     "admin" => 3
   }.freeze
 
+  def create_root_recording_for_test!(recordable, actor: nil)
+    RecordingStudio.create_root_recording!(recordable, actor: actor || root_creator_for_test)
+  end
+
   def grant_admin_access_for_test!(recording:, actor:, role: :admin)
     current_role = RecordingStudioAccessible.role_for(actor: actor, recording: recording)
     return if role_covers?(current_role, role)
@@ -41,6 +45,13 @@ module DummyAccessTestHelpers
   end
 
   private
+
+  def root_creator_for_test
+    User.find_or_create_by!(email: "recording-studio-admin-root-creator@example.com") do |record|
+      record.password = "Password123!"
+      record.password_confirmation = "Password123!"
+    end
+  end
 
   def existing_test_access_manager(recording, role)
     RecordingStudioAccessible.access_recordings_for(recording).each do |access_recording|

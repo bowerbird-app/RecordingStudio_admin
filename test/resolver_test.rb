@@ -1583,8 +1583,12 @@ class ResolverTest < Minitest::Test
     with_singleton_stub(RecordingStudio, :root_recording_for, lambda { |*|
       flunk "parent recording should not be resolved"
     }) do
-      assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
-        RecordingStudioAdmin.resolve_section(key: "backed_without_context", context: RecordingStudioAdmin::Context.new)
+      with_singleton_stub(RecordingStudio, :create_root_recording!, lambda { |*, **|
+        flunk "parent root should not be created"
+      }) do
+        assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
+          RecordingStudioAdmin.resolve_section(key: "backed_without_context", context: RecordingStudioAdmin::Context.new)
+        end
       end
     end
   end
@@ -1619,24 +1623,30 @@ class ResolverTest < Minitest::Test
     end
 
     with_singleton_stub(RecordingStudio, :root_recording_for, root_recording_for) do
-      with_singleton_stub(RecordingStudio, :root_recording_or_self, ->(recording) { recording }) do
-        with_singleton_stub(RecordingStudio, :record!, lambda { |**attributes|
-          recorded_events << attributes
-          stored_recording = child_recording
-          Struct.new(:recording).new(child_recording)
-        }) do
-          context = allowed_context(params: { name: "Section Area" })
+      with_singleton_stub(RecordingStudio, :create_root_recording!, lambda { |*, **|
+        flunk "parent root already exists"
+      }) do
+        with_singleton_stub(RecordingStudio, :root_recording_or_self, ->(recording) { recording }) do
+          with_singleton_stub(RecordingStudio, :record!, lambda { |**attributes|
+            recorded_events << attributes
+            stored_recording = child_recording
+            Struct.new(:recording).new(child_recording)
+          }) do
+            context = allowed_context(params: { name: "Section Area" })
 
-          first_result = with_access_allowed { RecordingStudioAdmin.resolve_section(key: "backed", context: context) }
-          second_result = with_access_allowed { RecordingStudioAdmin.resolve_section(key: "backed", context: context) }
+            first_result = with_access_allowed { RecordingStudioAdmin.resolve_section(key: "backed", context: context) }
+            second_result = with_access_allowed do
+              RecordingStudioAdmin.resolve_section(key: "backed", context: context)
+            end
 
-          assert_equal({ name: "Section Area" }, first_result.recordable.attributes)
-          assert_equal child_recording, first_result.recording
-          assert_equal child_recording, second_result.recording
-          assert_equal 1, recorded_events.size
-          assert_equal root_recording, recorded_events.first.fetch(:root_recording)
-          assert_equal root_recording, recorded_events.first.fetch(:parent_recording)
-          assert_equal :actor, recorded_events.first.fetch(:actor)
+            assert_equal({ name: "Section Area" }, first_result.recordable.attributes)
+            assert_equal child_recording, first_result.recording
+            assert_equal child_recording, second_result.recording
+            assert_equal 1, recorded_events.size
+            assert_equal root_recording, recorded_events.first.fetch(:root_recording)
+            assert_equal root_recording, recorded_events.first.fetch(:parent_recording)
+            assert_equal :actor, recorded_events.first.fetch(:actor)
+          end
         end
       end
     end
@@ -1695,6 +1705,122 @@ class ResolverTest < Minitest::Test
   ensure
     RecordingStudio.__send__(:remove_const, :Recording) if RecordingStudio.const_defined?(:Recording, false)
     RecordingStudio.const_set(:Recording, previous_recording_constant) if previous_recording_constant_defined
+  end
+
+  def test_backed_section_creates_a_missing_parent_root
+    parent_recordable = Object.new
+    root_recording = Object.new
+    child_recording = Object.new
+    created_roots = []
+    recorded_events = []
+    stored_recording = nil
+    previous_recording_constant_defined = RecordingStudio.const_defined?(:Recording, false)
+    previous_recording_constant = RecordingStudio.const_get(:Recording) if previous_recording_constant_defined
+    recording_class = Class.new do
+      define_singleton_method(:unscoped) { self }
+      define_singleton_method(:kept) { self }
+      define_singleton_method(:find_by) { |_attributes| stored_recording }
+    end
+
+    backed_section = Class.new(RecordingStudioAdmin::Section) do
+      key "backed_missing_root"
+      title "Backed missing root"
+      recordable FakeRecordable,
+                 find_or_create_by: -> { { name: "Section Area" } },
+                 parent: -> { parent_recordable }
+    end
+
+    RecordingStudioAdmin.register_section(backed_section)
+    RecordingStudio.const_set(:Recording, recording_class)
+
+    create_root = lambda do |recordable, actor:, **|
+      created_roots << [recordable, actor]
+      root_recording
+    end
+
+    with_singleton_stub(RecordingStudio, :root_recording_for, ->(*) {}) do
+      with_singleton_stub(RecordingStudio, :create_root_recording!, create_root) do
+        with_singleton_stub(RecordingStudio, :root_recording_or_self, ->(recording) { recording }) do
+          with_singleton_stub(RecordingStudio, :record!, lambda { |**attributes|
+            recorded_events << attributes
+            stored_recording = child_recording
+            Struct.new(:recording).new(child_recording)
+          }) do
+            result = with_access_allowed do
+              RecordingStudioAdmin.resolve_section(key: "backed_missing_root", context: allowed_context)
+            end
+
+            assert_equal [[parent_recordable, :actor]], created_roots
+            assert_equal root_recording, recorded_events.first.fetch(:root_recording)
+            assert_equal root_recording, recorded_events.first.fetch(:parent_recording)
+            assert_equal :actor, recorded_events.first.fetch(:actor)
+            assert_equal child_recording, result.recording
+          end
+        end
+      end
+    end
+  ensure
+    RecordingStudio.__send__(:remove_const, :Recording) if RecordingStudio.const_defined?(:Recording, false)
+    RecordingStudio.const_set(:Recording, previous_recording_constant) if previous_recording_constant_defined
+  end
+
+  def test_backed_section_fails_closed_when_the_parent_recording_is_missing
+    backed_section = Class.new(RecordingStudioAdmin::Section) do
+      key "backed_missing_parent_recording"
+      title "Backed missing parent recording"
+      recordable FakeRecordable,
+                 find_or_create_by: -> { { name: "Section Area" } },
+                 parent_recording: -> {}
+    end
+
+    RecordingStudioAdmin.register_section(backed_section)
+
+    with_singleton_stub(RecordingStudio, :root_recording_for, lambda { |*|
+      flunk "a missing parent recording is not a root lookup"
+    }) do
+      with_singleton_stub(RecordingStudio, :create_root_recording!, lambda { |*, **|
+        flunk "a missing parent recording does not create a root"
+      }) do
+        error = assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
+          with_access_allowed do
+            RecordingStudioAdmin.resolve_section(
+              key: "backed_missing_parent_recording",
+              context: allowed_context
+            )
+          end
+        end
+
+        assert_includes error.message, "parent recording is missing"
+      end
+    end
+  end
+
+  def test_backed_section_fails_closed_when_the_parent_recordable_is_missing
+    backed_section = Class.new(RecordingStudioAdmin::Section) do
+      key "backed_missing_parent"
+      title "Backed missing parent"
+      recordable FakeRecordable,
+                 find_or_create_by: -> { { name: "Section Area" } },
+                 parent: -> {}
+    end
+
+    RecordingStudioAdmin.register_section(backed_section)
+
+    with_singleton_stub(RecordingStudio, :root_recording_for, lambda { |*|
+      flunk "a missing parent is not a root lookup"
+    }) do
+      with_singleton_stub(RecordingStudio, :create_root_recording!, lambda { |*, **|
+        flunk "a missing parent does not create a root"
+      }) do
+        error = assert_raises(RecordingStudioAdmin::AuthorizationFailed) do
+          with_access_allowed do
+            RecordingStudioAdmin.resolve_section(key: "backed_missing_parent", context: allowed_context)
+          end
+        end
+
+        assert_includes error.message, "section parent is missing"
+      end
+    end
   end
 
   def test_screen_allow_export_sets_export_config_with_required_role

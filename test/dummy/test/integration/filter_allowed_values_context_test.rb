@@ -63,7 +63,7 @@ class FilterAllowedValuesContextTest < ActionDispatch::IntegrationTest
 
   def admin_root_recording_for_test
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    RecordingStudio.root_recording_for(admin_root)
+    create_root_recording_for_test!(admin_root)
   end
 
   def switch_to_root!(root_recording)
@@ -79,7 +79,7 @@ class FilterAllowedValuesContextTest < ActionDispatch::IntegrationTest
 
   def workspace_with_only_folders!(actor:)
     workspace = Workspace.create!(name: "Folders workspace #{SecureRandom.hex(4)}")
-    root_recording = RecordingStudio.root_recording_for(workspace)
+    root_recording = create_root_recording_for_test!(workspace)
     grant_admin_access_for_test!(recording: root_recording, actor: actor)
     record_child_for_test!(
       recordable: Folder.create!(name: "Folders only"),
@@ -92,7 +92,7 @@ class FilterAllowedValuesContextTest < ActionDispatch::IntegrationTest
 
   def workspace_with_only_pages!(actor:)
     workspace = Workspace.create!(name: "Pages workspace #{SecureRandom.hex(4)}")
-    root_recording = RecordingStudio.root_recording_for(workspace)
+    root_recording = create_root_recording_for_test!(workspace)
     grant_admin_access_for_test!(recording: root_recording, actor: actor)
     record_child_for_test!(
       recordable: Page.create!(title: "Pages only"),

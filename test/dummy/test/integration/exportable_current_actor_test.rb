@@ -91,7 +91,7 @@ class ExportableCurrentActorTest < ActionDispatch::IntegrationTest
       record.password_confirmation = "Password123!"
     end
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    grant_admin_access_for_test!(recording: RecordingStudio.root_recording_for(admin_root), actor: user)
+    grant_admin_access_for_test!(recording: create_root_recording_for_test!(admin_root), actor: user)
     sign_in user
   end
 

@@ -21,7 +21,7 @@ class AdminI18nRenderTest < ActionDispatch::IntegrationTest
 
   def admin_root_recording_for_test
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    RecordingStudio.root_recording_for(admin_root)
+    create_root_recording_for_test!(admin_root)
   end
 
   test "sections search groups render literal English Sections Screens and In headings" do

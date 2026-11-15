@@ -10,7 +10,7 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
     assert_match(/trashed_at IS NULL/, RecordingStudio.kept_sql("child_recordings"))
 
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    admin_root_recording = RecordingStudio.root_recording_for(admin_root)
+    admin_root_recording = create_root_recording_for_test!(admin_root)
 
     kept = RecordingStudio::Recording.kept.find_by(recordable: admin_root)
     legacy = RecordingStudio::Recording.find_by(recordable: admin_root, trashed_at: nil)
@@ -22,7 +22,7 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
 
   test "real admin-root resolver keeps a host default scope" do
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    admin_root_recording = RecordingStudio.root_recording_for(admin_root)
+    admin_root_recording = create_root_recording_for_test!(admin_root)
     recording_class = RecordingStudio::Recording
     previous_default_scopes = recording_class.default_scopes.dup
 
@@ -52,7 +52,7 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
     Current.actor = actor
 
     workspace = Workspace.create!(name: "Stats parity #{SecureRandom.hex(4)}")
-    root_recording = RecordingStudio.root_recording_for(workspace)
+    root_recording = create_root_recording_for_test!(workspace)
     grant_admin_access_for_test!(recording: root_recording, actor: actor)
     folder = Folder.create!(name: "Stats folder #{SecureRandom.hex(4)}")
     RecordingStudio.record!(
@@ -102,7 +102,7 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
     Current.actor = actor
 
     workspace = Workspace.create!(name: "Trashable parity workspace #{SecureRandom.hex(4)}")
-    root_recording = RecordingStudio.root_recording_for(workspace)
+    root_recording = create_root_recording_for_test!(workspace)
     grant_admin_access_for_test!(recording: root_recording, actor: actor)
     folder = Folder.create!(name: "Parity folder #{SecureRandom.hex(4)}")
 
@@ -154,7 +154,7 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
   # admin-root recording would still resolve.
   test "configured access resolver excludes a trashed admin-root recording" do
     admin_root = AdminRoot.find_or_create_by!(name: "Admin")
-    admin_root_recording = RecordingStudio.root_recording_for(admin_root)
+    admin_root_recording = create_root_recording_for_test!(admin_root)
     admin_root_recording.update_columns(trashed_at: Time.current, updated_at: Time.current)
 
     begin
@@ -181,7 +181,7 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
     Current.actor = actor
 
     workspace = Workspace.create!(name: "Stats filter #{SecureRandom.hex(4)}")
-    root_recording = RecordingStudio.root_recording_for(workspace)
+    root_recording = create_root_recording_for_test!(workspace)
     grant_admin_access_for_test!(recording: root_recording, actor: actor)
     folder = Folder.create!(name: "Trashed stats folder #{SecureRandom.hex(4)}")
     folder_recording = RecordingStudio.record!(
@@ -225,7 +225,7 @@ class TrashableActiveScopeParityTest < ActionDispatch::IntegrationTest
     Current.actor = actor
 
     workspace = Workspace.create!(name: "Seeds parity #{SecureRandom.hex(4)}")
-    root_recording = RecordingStudio.root_recording_for(workspace)
+    root_recording = create_root_recording_for_test!(workspace)
     grant_admin_access_for_test!(recording: root_recording, actor: actor)
     folder = Folder.create!(name: "Seeds folder #{SecureRandom.hex(4)}")
     RecordingStudio.record!(

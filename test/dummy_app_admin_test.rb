@@ -113,6 +113,6 @@ class DummyAppAdminTest < Minitest::Test
     assert_includes seeds, "ApiError"
     assert_includes seeds, "UserActivity"
     assert_includes seeds, "BackgroundJobRun"
-    assert_includes seeds, "RecordingStudio.root_recording_for(admin_root)"
+    assert_includes seeds, "RecordingStudio.create_root_recording!(admin_root, actor: user)"
   end
 end
