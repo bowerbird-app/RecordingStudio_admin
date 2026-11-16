@@ -21,6 +21,7 @@ class ConfigurationTest < Minitest::Test
     assert_equal 1, config.async_widgets.retry_count
     assert_equal :indefinite, config.logs_retention
     assert_equal "AdminAuditLog", config.audit_log_model
+    assert_empty config.audit_filtered_attributes
     assert_empty config.surfaces
   end
 
@@ -37,10 +38,16 @@ class ConfigurationTest < Minitest::Test
   def test_merge_updates_known_keys_only
     config = RecordingStudioAdmin::Configuration.new
 
-    config.merge!("default_mount_path" => "/backoffice", "layout" => "flat_pack_sidebar", "unknown" => true)
+    config.merge!(
+      "default_mount_path" => "/backoffice",
+      "layout" => "flat_pack_sidebar",
+      "audit_filtered_attributes" => [:badge_code],
+      "unknown" => true
+    )
 
     assert_equal "/backoffice", config.default_mount_path
     assert_equal "flat_pack_sidebar", config.layout
+    assert_equal [:badge_code], config.audit_filtered_attributes
   end
 
   def test_merge_updates_async_widget_configuration

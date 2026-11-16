@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## 2.17.0 - 2026-11-16
+
+### Fixed
+
+- Admin audit metadata masks attributes matched by `Rails.application.config.filter_parameters` and `config.audit_filtered_attributes`. A filtered change stays in `changes` with both values set to `[FILTERED]`. Caller-supplied metadata is filtered the same way. The notification, the auditor, and an optional Recording Studio event receive the masked values.
+- `UrlSafety.safe_href` rejects a relative or external href that contains a backslash, an ASCII control character, or whitespace. `ApplicationController#preserve_anchor_url` returns `#` when the URL cannot be parsed.
+
+### Changed
+
+- `RecordingStudioAdmin::ApplicationController` calls `protect_from_forgery with: :exception`.
+
+### Upgrade notes
+
+- Filtered audit values are stored as `[FILTERED]`. Add extra names with `config.audit_filtered_attributes`. A request that posts to the admin engine from outside a form needs the CSRF token. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2170).
+
 ## 2.16.0 - 2026-11-15
 
 ### Changed

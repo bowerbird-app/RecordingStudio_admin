@@ -300,6 +300,33 @@ class ApplicationControllerSecurityTest < Minitest::Test
     assert_equal "#", controller.send(:preserve_anchor_url, "https://example.test/reports")
   end
 
+  def test_preserve_anchor_url_returns_hash_for_an_invalid_uri
+    controller = build_controller
+    controller.define_singleton_method(:params) { ActionController::Parameters.new(anchor_url: "/origin") }
+
+    assert_equal "#", controller.send(:preserve_anchor_url, "/admin/%")
+    assert_equal "#", controller.send(:preserve_anchor_url, "/\\evil.com")
+    assert_equal "#", controller.send(:preserve_anchor_url, "/\t/evil.com")
+    assert_equal "#", controller.send(:preserve_anchor_url, "/\n/evil.com")
+  end
+
+  def test_tokenless_post_is_rejected_when_forgery_protection_is_on
+    previous = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    controller = build_controller
+    controller.request.session = ActionDispatch::Request::Session.new(nil, controller.request, enabled: true)
+
+    controller.send(:verify_authenticity_token)
+
+    controller.request.request_method = "POST"
+
+    assert_raises(ActionController::InvalidAuthenticityToken) do
+      controller.send(:verify_authenticity_token)
+    end
+  ensure
+    ActionController::Base.allow_forgery_protection = previous
+  end
+
   def test_widget_link_url_suppresses_same_page_links_when_only_anchor_url_differs
     controller = build_controller
     controller.set_request! ActionDispatch::TestRequest.create(

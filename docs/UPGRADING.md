@@ -1,5 +1,31 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.17.0
+
+Admin `2.17.0` masks sensitive values in admin audit metadata. The mask is `[FILTERED]`.
+
+The filter list is `Rails.application.config.filter_parameters` plus `config.audit_filtered_attributes`. The extra list defaults to an empty array. Each entry can be a string, a symbol, or a regular expression. Matching follows `ActiveSupport::ParameterFilter`, so `:passw` masks `password`.
+
+A filtered attribute stays in `changes`. Both the previous value and the next value are `[FILTERED]`. Other metadata keys that match the list are replaced with `[FILTERED]`. The `admin_action.recording_studio_admin` notification, the `admin_action_auditor` callback, and optional Recording Studio event metadata all receive the masked copy.
+
+```ruby
+RecordingStudioAdmin.configure do |config|
+  config.audit_filtered_attributes = [:badge_code, /employee_number/]
+end
+```
+
+Leave the list empty when `filter_parameters` already names every column you want masked. A Rails app that filters `:email` or `:token` now stores those audit values as `[FILTERED]`.
+
+`RecordingStudioAdmin::ApplicationController` calls `protect_from_forgery with: :exception`. A POST, PUT, PATCH, or DELETE without a valid authenticity token raises `ActionController::InvalidAuthenticityToken`. Forms the engine renders include the token. The Recording Studio default layout, the generated admin layout, and the dummy layouts already emit `csrf_meta_tags`. Turbo sends that token as `X-CSRF-Token`. A request that posts to the engine from outside those forms must send the same token.
+
+`UrlSafety.safe_href` rejects a relative or external href that contains a backslash, an ASCII control character, or whitespace. `ApplicationController#preserve_anchor_url` returns `#` when the URL cannot be parsed. A host controller that copied `preserve_anchor_url` should return `#` from that rescue.
+
+```ruby
+rescue URI::InvalidURIError
+  "#"
+end
+```
+
 ## Upgrading to 2.16.0
 
 Admin `2.16.0` requires Recording Studio `>= 7.0, < 8.0`, Accessible `>= 0.43.1, < 1.0`, and Trashable `>= 0.16.1, < 1.0`. Development and dummy Gemfiles pin core `v7.0.0`, Accessible `v0.43.1`, Trashable `v0.16.1`, and Logs `v0.7.5`. The dummy also pins Root Switchable `v0.15.1`, Cache `v0.6.3`, and Exportable `v0.6.1`.
