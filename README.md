@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.18.0` keeps the same Recording Studio floors and lets 0.x and 1.x addons resolve through the next major below 2.0. Core stays `>= 7.0.0, < 8.0`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2180).
+
 Admin `2.17.0` masks filtered attributes in audit metadata, rejects hrefs that contain a backslash, a control character, or whitespace, and enforces CSRF on the engine controller. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2170).
 
 Admin `2.16.0` requires Recording Studio `>= 7.0, < 8.0`. `root_recording_for` only finds a root. Create one with `RecordingStudio.create_root_recording!(recordable, actor:)`. `authorize_write` must allow that create when `root_recording` is nil. A backed section creates a missing `parent:` root and fails closed when the parent is missing. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2160).
