@@ -269,16 +269,26 @@ Runtime (gemspec):
 - FlatPack `>= 0.1.341`
 - view_component `>= 4.14, < 5`
 
-Development and dummy Gemfile pins:
+Development Gemfile pins:
 
 - RecordingStudio `v7.0.0`
 - Accessible `v0.43.1`
-- Dummy Exportable `v0.6.1`
 - Logs `v0.7.5`
-- Trashable `v0.16.1` (`require: false` in the root Gemfile)
-- Metrics `v0.8.0` (`require: false` in the root Gemfile)
+- Trashable `v0.16.1` (`require: false`)
+- Metrics `v0.8.0` (`require: false`)
 - Flatpack tag `v0.1.356`
-- Dummy Root Switchable `v0.15.1` with Cache `v0.6.3`
+- `view_component` `4.20.0`
+
+Dummy Gemfile pins:
+
+- RecordingStudio `v7.3.0`
+- Accessible `v0.45.1`
+- Exportable `v0.7.0`
+- Logs `v0.8.0`
+- Trashable `v1.0.1` (`require: false`)
+- Metrics `v0.9.0`
+- Flatpack tag `v0.1.377`
+- Root Switchable `v0.16.0` with Cache `v0.7.0`
 - `view_component` `4.20.0`
 
 `RecordingStudioAccessible` is required. Enable Accessible on the admin root (and any other recordable that should hold grants) with `RecordingStudio.enable_capability(:accessible, on: self)`. Keep the admin root owned (`shared: false`).
@@ -864,7 +874,7 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
-The dummy pins RecordingStudio `v7.0.0`, Flatpack `v0.1.356`, Accessible `v0.43.1`, Logs `v0.7.5`, Metrics `v0.8.0`, Trashable `v0.16.1`, and Exportable `v0.6.1`. Root switchable is `v0.15.1` with Cache `v0.6.3`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+The dummy pins RecordingStudio `v7.3.0`, Flatpack `v0.1.377`, Accessible `v0.45.1`, Logs `v0.8.0`, Metrics `v0.9.0`, Trashable `v1.0.1`, and Exportable `v0.7.0`. Root switchable is `v0.16.0` with Cache `v0.7.0`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
 
 ## Cloud Agent boot
 

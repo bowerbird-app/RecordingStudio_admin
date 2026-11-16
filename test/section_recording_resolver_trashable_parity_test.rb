@@ -118,9 +118,9 @@ class SectionRecordingResolverTrashableParityTest < Minitest::Test
     assert_includes gemfile, 'tag: "v0.16.1"'
     assert_includes gemfile, 'tag: "v0.43.1"'
     assert_includes gemfile, "require: false"
-    assert_includes dummy_gemfile, 'tag: "v7.0.0"'
-    assert_includes dummy_gemfile, 'tag: "v0.16.1"'
-    assert_includes dummy_gemfile, 'tag: "v0.43.1"'
+    assert_includes dummy_gemfile, 'tag: "v7.3.0"'
+    assert_includes dummy_gemfile, 'tag: "v1.0.1"'
+    assert_includes dummy_gemfile, 'tag: "v0.45.1"'
     assert_includes dummy_gemfile, "require: false"
   end
 

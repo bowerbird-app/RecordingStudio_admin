@@ -17,11 +17,13 @@ class RecordingStudioAdminTest < Minitest::Test
     gemspec = File.read(File.join(root, "recording_studio_admin.gemspec"))
 
     assert_includes gemspec, '"recording_studio_logs", ">= 0.4.1", "< 2.0"'
-    %w[Gemfile test/dummy/Gemfile].each do |path|
-      contents = File.read(File.join(root, path))
-      assert_includes contents, 'RecordingStudio_logs", tag: "v0.7.5"', path
-      assert_includes contents, 'RecordingStudio_metrics", tag: "v0.8.0"', path
-    end
+    gemfile = File.read(File.join(root, "Gemfile"))
+    dummy_gemfile = File.read(File.join(root, "test/dummy/Gemfile"))
+
+    assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.7.5"'
+    assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.8.0"'
+    assert_includes dummy_gemfile, 'RecordingStudio_logs", tag: "v0.8.0"'
+    assert_includes dummy_gemfile, 'RecordingStudio_metrics", tag: "v0.9.0"'
   end
 
   def test_lockfiles_match_the_current_release
