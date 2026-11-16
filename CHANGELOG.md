@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2.18.0 - 2026-11-16
+
+### Changed
+
+- Runtime Recording Studio dependency caps allow the next major. Core is `>= 7.0.0, < 8.0`. Accessible is `>= 0.43.1, < 2.0`. Logs is `>= 0.4.1, < 2.0`. Trashable is `>= 0.16.1, < 2.0`.
+
+### Upgrade notes
+
+- Hosts can resolve Recording Studio 0.x and 1.x addons up to the next major below 2.0. Core still stops before 8.0. Floors are unchanged. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2180).
+
 ## 2.17.0 - 2026-11-16
 
 ### Fixed

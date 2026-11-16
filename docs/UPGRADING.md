@@ -1,5 +1,18 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.18.0
+
+Admin `2.18.0` widens runtime Recording Studio caps so a new major is not blocked before it is tested.
+
+| Gem | Requirement |
+| --- | --- |
+| `recording_studio` | `>= 7.0.0, < 8.0` |
+| `recording_studio_accessible` | `>= 0.43.1, < 2.0` |
+| `recording_studio_logs` | `>= 0.4.1, < 2.0` |
+| `recording_studio_trashable` | `>= 0.16.1, < 2.0` |
+
+Floors are the last versions this gem already required. Development and dummy Gemfiles stay on the same git tags. There is no compatibility shim.
+
 ## Upgrading to 2.17.0
 
 Admin `2.17.0` masks sensitive values in admin audit metadata. The mask is `[FILTERED]`.

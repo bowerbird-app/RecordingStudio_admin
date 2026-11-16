@@ -9,14 +9,14 @@ class RecordingStudioAdminTest < Minitest::Test
     load File.expand_path("../lib/recording_studio_admin/version.rb", __dir__)
     $VERBOSE = verbose
 
-    assert_equal "2.17.0", ::RecordingStudioAdmin::VERSION
+    assert_equal "2.18.0", ::RecordingStudioAdmin::VERSION
   end
 
   def test_gemspec_pins_recording_studio_logs
     root = File.expand_path("..", __dir__)
     gemspec = File.read(File.join(root, "recording_studio_admin.gemspec"))
 
-    assert_includes gemspec, '"recording_studio_logs", ">= 0.4.1", "< 1.0"'
+    assert_includes gemspec, '"recording_studio_logs", ">= 0.4.1", "< 2.0"'
     %w[Gemfile test/dummy/Gemfile].each do |path|
       contents = File.read(File.join(root, path))
       assert_includes contents, 'RecordingStudio_logs", tag: "v0.7.5"', path
