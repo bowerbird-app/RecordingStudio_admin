@@ -59,7 +59,7 @@ module RecordingStudioAdmin
         request&.request_id,
         request&.remote_ip,
         request&.user_agent,
-        metadata.compact,
+        AuditMetadataFilter.call(metadata).compact,
         error&.class&.name,
         error&.message,
         recording_studio_event
@@ -90,7 +90,7 @@ module RecordingStudioAdmin
       def recording_studio_event(recordable:, action:, metadata: {}, **attributes)
         raise RecordingStudioAdmin::Error, "RecordingStudio is not available" unless defined?(::RecordingStudio)
 
-        event_metadata = metadata.merge(admin_audit_event_id: id)
+        event_metadata = AuditMetadataFilter.call(metadata).merge(admin_audit_event_id: id)
         root_recording = default_root_recording
         parent_recording = default_parent_recording
         attributes[:root_recording] ||= root_recording if root_recording

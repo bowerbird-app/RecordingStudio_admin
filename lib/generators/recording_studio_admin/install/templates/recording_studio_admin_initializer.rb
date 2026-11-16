@@ -27,6 +27,9 @@ RecordingStudioAdmin.configure do |config|
   # config.async_widgets.max_concurrent_requests = 4
   # config.async_widgets.retry_count = 1
 
+  # Mask these attributes in admin audit metadata, in addition to filter_parameters.
+  # config.audit_filtered_attributes = %w[badge_code]
+
   config.access_recording_resolver = lambda do |context|
     # Must return the RecordingStudio::Recording that owns the current admin screen context.
     # The mounted admin usually uses the admin root:

@@ -7,6 +7,8 @@ require_relative "../../helpers/recording_studio_admin/page_nav_helper"
 module RecordingStudioAdmin
   # rubocop:disable Metrics/ClassLength
   class ApplicationController < ActionController::Base
+    protect_from_forgery with: :exception
+
     if defined?(RecordingStudio::RootSwitchable::ControllerSupport)
       include RecordingStudio::RootSwitchable::ControllerSupport
     end
@@ -98,7 +100,7 @@ module RecordingStudioAdmin
       uri.query = Rack::Utils.parse_nested_query(uri.query).reverse_merge("anchor_url" => anchor_url).to_query.presence
       uri.to_s
     rescue URI::InvalidURIError
-      safe_url
+      "#"
     end
 
     def widget_link_url(url)

@@ -79,6 +79,6 @@ class Admin::BaseController < ApplicationController
     uri.query = Rack::Utils.parse_nested_query(uri.query).reverse_merge("anchor_url" => anchor_url).to_query.presence
     uri.to_s
   rescue URI::InvalidURIError
-    safe_url
+    "#"
   end
 end

@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.17.0` masks filtered attributes in audit metadata, rejects hrefs that contain a backslash, a control character, or whitespace, and enforces CSRF on the engine controller. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2170).
+
 Admin `2.16.0` requires Recording Studio `>= 7.0, < 8.0`. `root_recording_for` only finds a root. Create one with `RecordingStudio.create_root_recording!(recordable, actor:)`. `authorize_write` must allow that create when `root_recording` is nil. A backed section creates a missing `parent:` root and fails closed when the parent is missing. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2160).
 
 Admin `2.15.0` requires Accessible `>= 0.43.0`. `config.site_admin_recording_resolver` is gone. Set `RecordingStudioAccessible.configuration.admin_root_resolver` to the kept admin root recording. Site-wide screens resolve only when the current access recording is that root and `RecordingStudioAccessible.admin?` allows the actor. A missing root fails closed. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2150).
@@ -231,6 +233,8 @@ end
 Host controllers call `RecordingStudioAdmin.authorize_resource!(key: "users", action: :edit, context: recording_studio_admin_context, record: @user, audit: true, audit_action: :update)` before changing records. That check authorizes against the resource's owning admin section/access recording and the action's `required_role`, not the edited record.
 
 Mutating host controllers should wrap the change with `perform_recording_studio_admin_action!`. The wrapper emits one admin audit event with a final outcome such as `performed`, `validation_failed`, `failed`, or `denied`; configure `RecordingStudioAdmin.configuration.admin_action_auditor` to write those events to a dedicated audit/log database. Recording Studio events are optional and can be added inside the block when the changed recordable should receive domain history or revert support.
+
+Audit metadata is passed through `ActiveSupport::ParameterFilter`. The list is `Rails.application.config.filter_parameters` plus `config.audit_filtered_attributes`, which defaults to `[]`. Strings, symbols, and regular expressions are allowed. A matching `changes` entry keeps both sides, and each side is `[FILTERED]`. The same filter runs on metadata passed into the audit and into `recording_studio_event`.
 
 The generated host-app admin root page can also list and search the currently available admin destinations:
 
