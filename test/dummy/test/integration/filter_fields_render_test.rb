@@ -31,13 +31,34 @@ class FilterFieldsRenderTest < ActionDispatch::IntegrationTest
     assert_equal "Pick a type", disabled_placeholder_text(placeholder_html)
   end
 
+  test "select filter renders the default selected when the param is absent" do
+    definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(
+      :status,
+      :select,
+      options: %w[open closed],
+      default: :open
+    )
+    value = definition.normalize({})
+    html = render_filter_fields(filter: filter_definition(values: %w[open closed], value: value))
+    blank_html = render_filter_fields(
+      filter: filter_definition(values: %w[open closed], value: definition.normalize(status: ""))
+    )
+    selected = selected_option(html)
+
+    assert_equal "open", value
+    assert_equal "open", selected["value"]
+    assert_equal "Open", selected.text
+    assert_nil selected_option(blank_html)
+    assert_equal "All", disabled_placeholder_text(blank_html)
+  end
+
   private
 
-  def filter_definition(values:, **options)
+  def filter_definition(values:, value: nil, **options)
     RecordingStudioAdmin::Results::ResolvedFilter.new(
       :root_type,
       :select,
-      nil,
+      value,
       options.merge(values: values),
       :root_type,
       nil,
@@ -64,5 +85,9 @@ class FilterFieldsRenderTest < ActionDispatch::IntegrationTest
 
   def disabled_placeholder_text(html)
     Nokogiri::HTML5.fragment(html).at_css("option[disabled]")&.text
+  end
+
+  def selected_option(html)
+    Nokogiri::HTML5.fragment(html).at_css("option[selected]:not([disabled])")
   end
 end

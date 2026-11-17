@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.19.0` adds `default:` on select filters. A missing param selects that value when it is allowed. All still submits a blank param and means every row. This is an additive feat, not feat!. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2190).
+
 Admin `2.18.0` keeps the same Recording Studio floors and lets 0.x and 1.x addons resolve through the next major below 2.0. Core stays `>= 7.0.0, < 8.0`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2180).
 
 Admin `2.17.0` masks filtered attributes in audit metadata, rejects hrefs that contain a backslash, a control character, or whitespace, and enforces CSRF on the engine controller. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2170).
@@ -754,6 +756,14 @@ filter :root_type,
        options: -> { [""] + Root.distinct.order(:type).pluck(:type) },
        blank_label: "All roots",
        humanize_options: false
+```
+
+Pass `default:` to preselect a value when the param is missing. The default is used as a string when it is one of the options, or when the filter has no allow list. All still submits a blank param and lists every row. An unknown default is ignored. Omit `default:` and a missing param still means all.
+
+```ruby
+filter :status,
+       options: %w[open closed],
+       default: "open"
 ```
 
 Widget-oriented helper methods on `RecordingStudioAdmin::Context` let sections reference standalone widgets while preserving date semantics:

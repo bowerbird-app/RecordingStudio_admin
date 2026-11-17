@@ -1,5 +1,19 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.19.0
+
+Admin `2.19.0` lets a select filter name a `default:`. This is an additive feat, not feat!. Screens that omit `default:` behave as they did in `2.18.0`.
+
+```ruby
+filter :status,
+       options: %w[open closed],
+       default: "open"
+```
+
+A missing param uses that default as a string when it is one of the allowed values, or when the filter has no allow list. The select shows that option. Submitting All sends a blank param and means every row. An unknown default is ignored. A blank default is ignored.
+
+A host that prepended `SelectFilter#normalize` to supply `default:` can delete that prepend. A prepend that treated a blank param as missing made All impossible to pick.
+
 ## Upgrading to 2.18.0
 
 Admin `2.18.0` widens runtime Recording Studio caps so a new major is not blocked before it is tested.
