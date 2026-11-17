@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 2.19.0 - 2026-11-17
+
+### Added
+
+- Select filters accept `default:`. A missing param uses that default as a string when it is an allowed value, or when the filter has no allow list. A blank param, including All, still means all. An unknown or blank default is ignored. Filters that omit `default:` are unchanged.
+
+### Upgrade notes
+
+- Pass `default:` on a select filter to preselect a value. A copied `_filter_fields` partial is not required. A host prepend on `SelectFilter#normalize` that applied a default can be deleted. This is an additive feat, not feat!. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2190).
+
 ## 2.18.0 - 2026-11-16
 
 ### Changed

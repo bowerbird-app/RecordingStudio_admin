@@ -84,6 +84,62 @@ class FilterTest < Minitest::Test
     assert_nil definition.normalize(status: "deleted")
   end
 
+  def test_select_filter_uses_default_when_param_is_absent
+    definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(
+      :status,
+      :select,
+      options: %w[open closed],
+      default: :open
+    )
+    open_ended = RecordingStudioAdmin::Definitions::FilterDefinition.new(:query, :select, default: "recent")
+    value = definition.normalize({})
+
+    assert_instance_of String, value
+    assert_equal "open", value
+    assert_equal "open", definition.normalize(ActiveSupport::HashWithIndifferentAccess.new)
+    assert_equal "closed", definition.normalize("status" => "closed")
+    assert_equal "recent", open_ended.normalize({})
+  end
+
+  def test_select_filter_blank_param_means_all
+    definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(
+      :status,
+      :select,
+      options: %w[open closed],
+      default: "open"
+    )
+
+    assert_nil definition.normalize(status: "")
+    assert_nil definition.normalize("status" => "")
+    assert_nil definition.normalize(ActiveSupport::HashWithIndifferentAccess.new(status: ""))
+    assert_nil definition.normalize(status: "archived")
+  end
+
+  def test_select_filter_ignores_an_invalid_default
+    definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(
+      :status,
+      :select,
+      options: %w[open closed],
+      default: "archived"
+    )
+    blank_default = RecordingStudioAdmin::Definitions::FilterDefinition.new(:status, :select, default: "")
+
+    assert_nil definition.normalize({})
+    assert_equal "open", definition.normalize(status: "open")
+    assert_nil blank_default.normalize({})
+  end
+
+  def test_select_filter_without_default_is_unchanged
+    definition = RecordingStudioAdmin::Definitions::FilterDefinition.new(:status, :select, options: %w[open closed])
+
+    assert_nil definition.normalize({})
+    assert_nil definition.normalize(status: "")
+    assert_nil definition.normalize("status" => "")
+    assert_equal "open", definition.normalize(status: "open")
+    assert_equal "open", definition.normalize("status" => "open")
+    assert_nil definition.normalize(status: "deleted")
+  end
+
   def test_select_filter_apply_uses_custom_callback_and_default_where_fallback
     custom_relation = Object.new
     custom_result = [:scoped]
