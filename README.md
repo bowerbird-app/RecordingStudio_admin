@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.19.1` bumps development and dummy git tags to Recording Studio `v7.7.2`, Flatpack `v0.1.379`, Accessible `v0.54.1`, Logs `v0.8.2`, Metrics `v0.9.2`, and Trashable `v1.2.3`. The dummy also pins Exportable `v0.7.1`, Root Switchable `v0.16.1`, and Cache `v0.7.1`. Gemspec floors stay the same. Host apps MUST run the Recording Studio 7.4, 7.5, and 7.7 migrations. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2191).
+
 Admin `2.19.0` adds `default:` on select filters. A missing param selects that value when it is allowed. All still submits a blank param and means every row. This is an additive feat, not feat!. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2190).
 
 Admin `2.18.0` keeps the same Recording Studio floors and lets 0.x and 1.x addons resolve through the next major below 2.0. Core stays `>= 7.0.0, < 8.0`. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2180).
@@ -265,33 +267,34 @@ Runtime (gemspec):
 - Ruby `>= 3.3.0`
 - Rails `~> 8.1.0`
 - RecordingStudio `>= 7.0, < 8.0`
-- RecordingStudioAccessible `>= 0.43.1, < 1.0`
-- RecordingStudioLogs `>= 0.4.1, < 1.0`
-- RecordingStudioTrashable `>= 0.16.1, < 1.0`
+- RecordingStudioAccessible `>= 0.43.1, < 2.0`
+- RecordingStudioLogs `>= 0.4.1, < 2.0`
+- RecordingStudioTrashable `>= 0.16.1, < 2.0`
 - FlatPack `>= 0.1.341`
 - view_component `>= 4.14, < 5`
 
 Development Gemfile pins:
 
-- RecordingStudio `v7.0.0`
-- Accessible `v0.43.1`
-- Logs `v0.7.5`
-- Trashable `v0.16.1` (`require: false`)
-- Metrics `v0.8.0` (`require: false`)
-- Flatpack tag `v0.1.356`
-- `view_component` `4.20.0`
+- RecordingStudio `v7.7.2`
+- Accessible `v0.54.1`
+- Logs `v0.8.2`
+- Trashable `v1.2.3` (`require: false`)
+- Metrics `v0.9.2` (`require: false`)
+- Flatpack tag `v0.1.379`
+- `view_component` `~> 4.20`
 
 Dummy Gemfile pins:
 
-- RecordingStudio `v7.3.0`
-- Accessible `v0.45.1`
-- Exportable `v0.7.0`
-- Logs `v0.8.0`
-- Trashable `v1.0.1` (`require: false`)
-- Metrics `v0.9.0`
-- Flatpack tag `v0.1.377`
-- Root Switchable `v0.16.0` with Cache `v0.7.0`
-- `view_component` `4.20.0`
+- RecordingStudio `v7.7.2`
+- Accessible `v0.54.1`
+- Exportable `v0.7.1`
+- Logs `v0.8.2`
+- Trashable `v1.2.3` (`require: false`)
+- Metrics `v0.9.2`
+- Flatpack tag `v0.1.379`
+- Root Switchable `v0.16.1` with Cache `v0.7.1`
+- `view_component` `~> 4.20`
+- `simplecov` `~> 1.1`
 
 `RecordingStudioAccessible` is required. Enable Accessible on the admin root (and any other recordable that should hold grants) with `RecordingStudio.enable_capability(:accessible, on: self)`. Keep the admin root owned (`shared: false`).
 
@@ -884,7 +887,7 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
-The dummy pins RecordingStudio `v7.3.0`, Flatpack `v0.1.377`, Accessible `v0.45.1`, Logs `v0.8.0`, Metrics `v0.9.0`, Trashable `v1.0.1`, and Exportable `v0.7.0`. Root switchable is `v0.16.0` with Cache `v0.7.0`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+The dummy pins RecordingStudio `v7.7.2`, Flatpack `v0.1.379`, Accessible `v0.54.1`, Logs `v0.8.2`, Metrics `v0.9.2`, Trashable `v1.2.3`, and Exportable `v0.7.1`. Root switchable is `v0.16.1` with Cache `v0.7.1`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
 
 ## Cloud Agent boot
 

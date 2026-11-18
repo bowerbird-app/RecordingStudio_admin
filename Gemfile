@@ -5,16 +5,16 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in recording_studio_admin.gemspec
 gemspec
 
-gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.356"
-gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v7.0.0"
-gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.43.1"
-gem "recording_studio_logs", github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.5"
+gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.379"
+gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v7.7.2"
+gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.54.1"
+gem "recording_studio_logs", github: "bowerbird-app/RecordingStudio_logs", tag: "v0.8.2"
 # Trashable's gemspec still lists metrics; pin the git source for Bundler resolution.
-gem "recording_studio_metrics", github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.8.0",
+gem "recording_studio_metrics", github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.9.2",
                                 require: false
-gem "recording_studio_trashable", github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.16.1",
+gem "recording_studio_trashable", github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.2.3",
                                   require: false
-gem "view_component", "4.20.0"
+gem "view_component", "~> 4.20"
 
 gem "devise"
 gem "puma"
