@@ -114,13 +114,13 @@ class SectionRecordingResolverTrashableParityTest < Minitest::Test
     assert_includes gemspec, 'recording_studio", ">= 7.0.0", "< 8.0"'
     assert_includes gemspec, 'recording_studio_trashable", ">= 0.16.1", "< 2.0"'
     assert_includes gemspec, 'recording_studio_accessible", ">= 0.43.1", "< 2.0"'
-    assert_includes gemfile, 'tag: "v7.0.0"'
-    assert_includes gemfile, 'tag: "v0.16.1"'
-    assert_includes gemfile, 'tag: "v0.43.1"'
+    assert_includes gemfile, 'tag: "v7.7.2"'
+    assert_includes gemfile, 'tag: "v1.2.3"'
+    assert_includes gemfile, 'tag: "v0.54.1"'
     assert_includes gemfile, "require: false"
-    assert_includes dummy_gemfile, 'tag: "v7.3.0"'
-    assert_includes dummy_gemfile, 'tag: "v1.0.1"'
-    assert_includes dummy_gemfile, 'tag: "v0.45.1"'
+    assert_includes dummy_gemfile, 'tag: "v7.7.2"'
+    assert_includes dummy_gemfile, 'tag: "v1.2.3"'
+    assert_includes dummy_gemfile, 'tag: "v0.54.1"'
     assert_includes dummy_gemfile, "require: false"
   end
 

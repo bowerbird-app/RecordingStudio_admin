@@ -1,5 +1,33 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.19.1
+
+Admin `2.19.1` bumps development and dummy git tags. Gemspec floors and ceilings are unchanged. There is no engine change.
+
+| Gem | Development tag | Dummy tag |
+| --- | --- | --- |
+| `recording_studio` | `v7.7.2` | `v7.7.2` |
+| `flat_pack` | `v0.1.379` | `v0.1.379` |
+| `recording_studio_accessible` | `v0.54.1` | `v0.54.1` |
+| `recording_studio_logs` | `v0.8.2` | `v0.8.2` |
+| `recording_studio_metrics` | `v0.9.2` | `v0.9.2` |
+| `recording_studio_trashable` | `v1.2.3` | `v1.2.3` |
+| `recording_studio_exportable` |  | `v0.7.1` |
+| `recording_studio_root_switchable` |  | `v0.16.1` |
+| `recording_studio_cache` |  | `v0.7.1` |
+
+`view_component` is `~> 4.20` in both Gemfiles. Dummy `simplecov` is `~> 1.1`. Neither Gemfile pins an exact version of those two.
+
+Accessible `v0.54.1` requires Recording Studio `>= 7.7.0, < 8.0`. A host that takes that tag is on 7.7.
+
+Host apps MUST run the Recording Studio 7.4, 7.5, and 7.7 migrations. Copy them from Recording Studio `db/install_migrate` (or `bin/rails generate recording_studio:migrations`) and migrate:
+
+- 7.4 `20261116230000_add_recording_studio_recordings_root_type_creation_index` adds `index_rs_recordings_on_root_type_created_at_id`.
+- 7.5 `20261117120000_enforce_recording_studio_recording_root_invariant` repairs `root_recording_id`, then enforces it.
+- 7.7 `20261117200000_replace_recording_studio_recordings_root_index` replaces `index_rs_recordings_on_root_recording` with `index_rs_recordings_on_root_created_at_id`.
+
+Hosts still on 7.0 or 7.3 also run 7.2 `20261116120000_add_recording_studio_events_timeline_index` if that index is missing. The dummy app does not include the 7.4, 7.5, or 7.7 migrations. Trashable `v1.2.3` adds no migration of its own.
+
 ## Upgrading to 2.19.0
 
 Admin `2.19.0` lets a select filter name a `default:`. This is an additive feat, not feat!. Screens that omit `default:` behave as they did in `2.18.0`.

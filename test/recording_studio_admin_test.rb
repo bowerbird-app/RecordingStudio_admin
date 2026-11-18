@@ -9,7 +9,7 @@ class RecordingStudioAdminTest < Minitest::Test
     load File.expand_path("../lib/recording_studio_admin/version.rb", __dir__)
     $VERBOSE = verbose
 
-    assert_equal "2.19.0", ::RecordingStudioAdmin::VERSION
+    assert_equal "2.19.1", ::RecordingStudioAdmin::VERSION
   end
 
   def test_gemspec_pins_recording_studio_logs
@@ -20,10 +20,10 @@ class RecordingStudioAdminTest < Minitest::Test
     gemfile = File.read(File.join(root, "Gemfile"))
     dummy_gemfile = File.read(File.join(root, "test/dummy/Gemfile"))
 
-    assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.7.5"'
-    assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.8.0"'
-    assert_includes dummy_gemfile, 'RecordingStudio_logs", tag: "v0.8.0"'
-    assert_includes dummy_gemfile, 'RecordingStudio_metrics", tag: "v0.9.0"'
+    assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.8.2"'
+    assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.9.2"'
+    assert_includes dummy_gemfile, 'RecordingStudio_logs", tag: "v0.8.2"'
+    assert_includes dummy_gemfile, 'RecordingStudio_metrics", tag: "v0.9.2"'
   end
 
   def test_lockfiles_match_the_current_release
