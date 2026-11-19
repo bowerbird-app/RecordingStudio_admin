@@ -6,7 +6,7 @@
 
 ### Changed
 
-- Development and dummy Gemfiles pin Recording Studio `v7.8.0` (`~> 7.8`), Flatpack `v0.2.0` (`~> 0.2`), Accessible `v0.57.0` (`~> 0.57`), Logs `v0.9.0` (`~> 0.9`), Metrics `v0.10.0` (`~> 0.10`), and Trashable `v1.3.0` (`~> 1.3`). The dummy also pins Exportable `v0.7.1` (`~> 0.7`), Root Switchable `v0.17.0` (`~> 0.17`), and Cache `v0.8.0` (`~> 0.8`). `view_component` stays `~> 4.20`. Gemspec ranges are unchanged.
+- Development and dummy Gemfiles pin Recording Studio `v7.8.0` (`~> 7.8`), Flatpack `v0.2.0` (`~> 0.2`), Accessible `v0.58.0` (`~> 0.58`), Logs `v0.9.0` (`~> 0.9`), Metrics `v0.10.0` (`~> 0.10`), and Trashable `v1.3.0` (`~> 1.3`). The dummy also pins Exportable `v0.8.0` (`~> 0.8`), Root Switchable `v0.17.0` (`~> 0.17`), and Cache `v0.8.0` (`~> 0.8`). `view_component` stays `~> 4.20`. Gemspec ranges are unchanged.
 
 ### Upgrade notes
 

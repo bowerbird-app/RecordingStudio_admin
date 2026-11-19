@@ -19,7 +19,8 @@ class UpgradeNotesTest < Minitest::Test
     refute_includes gemspec, 'flat_pack", "~> 0.2"'
     assert_includes section, "v7.8.0"
     assert_includes section, "v0.2.0"
-    assert_includes section, "v0.57.0"
+    assert_includes section, "v0.58.0"
+    assert_includes section, "v0.8.0"
     assert_includes section, "does not include the 7.4, 7.5, or 7.7 migrations"
     assert_includes section, "Host apps MUST run the Recording Studio 7.4, 7.5 and 7.7 migrations if they have not"
     flat_pack_note = "flat_pack 0.2.0 is supported; hosts moving to 0.2 must remove the manual " \
@@ -58,8 +59,8 @@ class UpgradeNotesTest < Minitest::Test
     refute_includes gemspec, 'recording_studio", "7.7.2"'
     assert_includes gemfile, 'gem "recording_studio", "~> 7.8", github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
     assert_includes gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
-    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.57", ' \
-                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.57.0"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     assert_includes gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
                              'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
     assert_includes gemfile, 'gem "recording_studio_metrics", "~> 0.10", ' \
@@ -71,16 +72,16 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes dummy_gemfile, 'gem "recording_studio", "~> 7.8", ' \
                                    'github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
     assert_includes dummy_gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
-    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.57", ' \
-                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.57.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     assert_includes dummy_gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
                                    'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
     assert_includes dummy_gemfile, 'gem "recording_studio_metrics", "~> 0.10", ' \
                                    'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.10.0"'
     assert_includes dummy_gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
                                    'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
-    assert_includes dummy_gemfile, 'gem "recording_studio_exportable", "~> 0.7", ' \
-                                   'github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.7.1"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_exportable", "~> 0.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.8.0"'
     assert_includes dummy_gemfile, 'gem "recording_studio_root_switchable", "~> 0.17", ' \
                                    'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.17.0"'
     assert_includes dummy_gemfile, 'gem "recording_studio_cache", "~> 0.8", ' \
@@ -203,22 +204,22 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes gemspec, 'recording_studio_accessible", ">= 0.43.1", "< 2.0"'
     assert_includes gemspec, 'recording_studio_trashable", ">= 0.16.1", "< 2.0"'
     assert_includes gemfile, 'gem "recording_studio", "~> 7.8", github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
-    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.57", ' \
-                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.57.0"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     assert_includes gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
                              'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
     assert_includes gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
                              'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
     assert_includes dummy_gemfile, 'gem "recording_studio", "~> 7.8", ' \
                                    'github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
-    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.57", ' \
-                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.57.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     assert_includes dummy_gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
                                    'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
     assert_includes dummy_gemfile, 'gem "recording_studio_root_switchable", "~> 0.17", ' \
                                    'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.17.0"'
-    assert_includes dummy_gemfile, 'gem "recording_studio_exportable", "~> 0.7", ' \
-                                   'github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.7.1"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_exportable", "~> 0.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.8.0"'
     assert_includes dummy_gemfile, 'gem "recording_studio_cache", "~> 0.8", ' \
                                    'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.8.0"'
     assert_includes resolver, "create_root_recording!"
@@ -255,10 +256,10 @@ class UpgradeNotesTest < Minitest::Test
 
     assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'recording_studio_accessible", ">= 0.43.1", "< 2.0"'
-    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.57", ' \
-                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.57.0"'
-    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.57", ' \
-                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.57.0"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     assert_includes blast_radius, "RecordingStudioAccessible.admin_root(context: context)"
     assert_includes blast_radius, "RecordingStudioAccessible.admin?"
     refute_includes configuration, "site_admin_recording_resolver"
@@ -299,14 +300,14 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes gemfile, 'gem "recording_studio", "~> 7.8", github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
     assert_includes gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
                              'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
-    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.57", ' \
-                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.57.0"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     assert_includes dummy_gemfile, 'gem "recording_studio", "~> 7.8", ' \
                                    'github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
     assert_includes dummy_gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
                                    'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
-    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.57", ' \
-                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.57.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     refute File.exist?(File.join(ROOT, "test/dummy/config/initializers/recording_studio_trashable_kept_sql.rb"))
     assert_includes resolver, "unscoped.kept"
     refute_includes resolver, "column_names"
@@ -721,12 +722,12 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes gemspec, 'view_component", ">= 4.14", "< 5"'
     assert_includes gemfile, 'gem "recording_studio", "~> 7.8", github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
     assert_includes gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
-    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.57", ' \
-                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.57.0"'
-    assert_includes dummy_gemfile, 'gem "recording_studio_exportable", "~> 0.7", ' \
-                                   'github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.7.1"'
-    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.57", ' \
-                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.57.0"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_exportable", "~> 0.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.8.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     assert_includes controller, "recording_studio_layout"
     assert_includes controller, "RecordingStudioAdmin.configuration.layout_for(recording_studio_admin_surface)"
     refute_match(/\blayout ["']/, controller)
@@ -865,8 +866,8 @@ class UpgradeNotesTest < Minitest::Test
     refute_includes gemspec, 'recording_studio", "~> 6.3'
     assert_includes gemfile, 'gem "recording_studio", "~> 7.8", github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
     assert_includes gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
-    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.57", ' \
-                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.57.0"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     assert_includes gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
                              'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
     assert_includes gemfile, 'gem "recording_studio_metrics", "~> 0.10", ' \

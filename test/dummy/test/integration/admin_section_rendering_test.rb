@@ -1265,7 +1265,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Counting rows..."
     assert_includes response.body, 'id="screen-table-count" src="/admin/screens/user_activity/table_count?anchor_url='
     assert_includes response.body, "Actions"
-    assert_includes response.body, "ellipsis-vertical"
+    assert_includes response.body, "M12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75"
     assert_includes response.body, "View sign-ins"
     assert_includes response.body, "Review queue"
     assert_includes response.body, "Delete activity"

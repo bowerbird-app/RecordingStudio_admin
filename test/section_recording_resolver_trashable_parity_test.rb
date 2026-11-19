@@ -117,15 +117,15 @@ class SectionRecordingResolverTrashableParityTest < Minitest::Test
     assert_includes gemfile, 'gem "recording_studio", "~> 7.8", github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
     assert_includes gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
                              'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
-    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.57", ' \
-                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.57.0"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     assert_includes gemfile, "require: false"
     assert_includes dummy_gemfile, 'gem "recording_studio", "~> 7.8", ' \
                                    'github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
     assert_includes dummy_gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
                                    'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
-    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.57", ' \
-                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.57.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     assert_includes dummy_gemfile, "require: false"
   end
 
