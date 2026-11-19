@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 2.20.0 - 2026-11-19
+
+### Changed
+
+- Development and dummy Gemfiles pin Recording Studio `v7.8.0` (`~> 7.8`), Flatpack `v0.2.0` (`~> 0.2`), Accessible `v0.57.0` (`~> 0.57`), Logs `v0.9.0` (`~> 0.9`), Metrics `v0.10.0` (`~> 0.10`), and Trashable `v1.3.0` (`~> 1.3`). The dummy also pins Exportable `v0.7.1` (`~> 0.7`), Root Switchable `v0.17.0` (`~> 0.17`), and Cache `v0.8.0` (`~> 0.8`). `view_component` stays `~> 4.20`. Gemspec ranges are unchanged.
+
+### Upgrade notes
+
+- Host apps MUST run the Recording Studio 7.4, 7.5 and 7.7 migrations if they have not. Gemspec floors stay the same. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2200).
+- flat_pack 0.2.0 is supported; hosts moving to 0.2 must remove the manual `flat_pack/heroicons` importmap pin and any `flat-pack--icon` controller registration.
+
 ## 2.19.1 - 2026-11-18
 
 ### Changed
@@ -673,7 +684,8 @@ See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-200). Summary:
 
 - **Template-era infrastructure**: `ApplicationController`, `HomeController`, legacy initializer, rename script, private-gem migration notes, RecordingStudio v3 update summary docs, template services (`BaseService`, `ExampleService`), and template hooks.
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.10.0...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.20.0...HEAD
+[2.20.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.19.1...v2.20.0
 [2.19.1]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.19.0...v2.19.1
 [2.10.0]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.3...v2.10.0
 [2.9.3]: https://github.com/bowerbird-app/RecordingStudio_admin/compare/v2.9.2...v2.9.3

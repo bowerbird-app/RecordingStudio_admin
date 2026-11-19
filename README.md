@@ -11,6 +11,8 @@ The old admin gem is not an implementation guide for this replacement.
 
 ## Upgrading
 
+Admin `2.20.0` bumps development and dummy git tags to Recording Studio `v7.8.0` (`~> 7.8`), Flatpack `v0.2.0` (`~> 0.2`), Accessible `v0.57.0` (`~> 0.57`), Logs `v0.9.0` (`~> 0.9`), Metrics `v0.10.0` (`~> 0.10`), and Trashable `v1.3.0` (`~> 1.3`). The dummy also pins Exportable `v0.7.1` (`~> 0.7`), Root Switchable `v0.17.0` (`~> 0.17`), and Cache `v0.8.0` (`~> 0.8`). Gemspec floors stay the same. Host apps MUST run the Recording Studio 7.4, 7.5 and 7.7 migrations if they have not. flat_pack 0.2.0 is supported; hosts moving to 0.2 must remove the manual `flat_pack/heroicons` importmap pin and any `flat-pack--icon` controller registration. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2200).
+
 Admin `2.19.1` bumps development and dummy git tags to Recording Studio `v7.7.2`, Flatpack `v0.1.379`, Accessible `v0.54.1`, Logs `v0.8.2`, Metrics `v0.9.2`, and Trashable `v1.2.3`. The dummy also pins Exportable `v0.7.1`, Root Switchable `v0.16.1`, and Cache `v0.7.1`. Gemspec floors stay the same. Host apps MUST run the Recording Studio 7.4, 7.5, and 7.7 migrations. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2191).
 
 Admin `2.19.0` adds `default:` on select filters. A missing param selects that value when it is allowed. All still submits a blank param and means every row. This is an additive feat, not feat!. See [docs/UPGRADING.md](docs/UPGRADING.md#upgrading-to-2190).
@@ -275,24 +277,24 @@ Runtime (gemspec):
 
 Development Gemfile pins:
 
-- RecordingStudio `v7.7.2`
-- Accessible `v0.54.1`
-- Logs `v0.8.2`
-- Trashable `v1.2.3` (`require: false`)
-- Metrics `v0.9.2` (`require: false`)
-- Flatpack tag `v0.1.379`
+- RecordingStudio `v7.8.0` (`~> 7.8`)
+- Accessible `v0.57.0` (`~> 0.57`)
+- Logs `v0.9.0` (`~> 0.9`)
+- Trashable `v1.3.0` (`~> 1.3`, `require: false`)
+- Metrics `v0.10.0` (`~> 0.10`, `require: false`)
+- Flatpack tag `v0.2.0` (`~> 0.2`)
 - `view_component` `~> 4.20`
 
 Dummy Gemfile pins:
 
-- RecordingStudio `v7.7.2`
-- Accessible `v0.54.1`
-- Exportable `v0.7.1`
-- Logs `v0.8.2`
-- Trashable `v1.2.3` (`require: false`)
-- Metrics `v0.9.2`
-- Flatpack tag `v0.1.379`
-- Root Switchable `v0.16.1` with Cache `v0.7.1`
+- RecordingStudio `v7.8.0` (`~> 7.8`)
+- Accessible `v0.57.0` (`~> 0.57`)
+- Exportable `v0.7.1` (`~> 0.7`)
+- Logs `v0.9.0` (`~> 0.9`)
+- Trashable `v1.3.0` (`~> 1.3`, `require: false`)
+- Metrics `v0.10.0` (`~> 0.10`)
+- Flatpack tag `v0.2.0` (`~> 0.2`)
+- Root Switchable `v0.17.0` (`~> 0.17`) with Cache `v0.8.0` (`~> 0.8`)
 - `view_component` `~> 4.20`
 - `simplecov` `~> 1.1`
 
@@ -887,7 +889,7 @@ The dummy app mounts `RecordingStudioAdmin::Engine` at `/admin`, registers a roo
 
 Seed data supports date filters, group-by charts, sorting, pagination, and summary widgets.
 
-The dummy pins RecordingStudio `v7.7.2`, Flatpack `v0.1.379`, Accessible `v0.54.1`, Logs `v0.8.2`, Metrics `v0.9.2`, Trashable `v1.2.3`, and Exportable `v0.7.1`. Root switchable is `v0.16.1` with Cache `v0.7.1`. Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
+The dummy pins RecordingStudio `v7.8.0` (`~> 7.8`), Flatpack `v0.2.0` (`~> 0.2`), Accessible `v0.57.0` (`~> 0.57`), Logs `v0.9.0` (`~> 0.9`), Metrics `v0.10.0` (`~> 0.10`), Trashable `v1.3.0` (`~> 1.3`), and Exportable `v0.7.1` (`~> 0.7`). Root switchable is `v0.17.0` (`~> 0.17`) with Cache `v0.8.0` (`~> 0.8`). Access `role` is a string (`view`, `edit`, `admin`). Seeds and tests grant through `RecordingStudioAccessible.bootstrap_owner_access!` and `grant_access`; they do not write `RecordingStudio::Access` rows directly.
 
 ## Cloud Agent boot
 

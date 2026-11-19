@@ -1,5 +1,33 @@
 # Upgrading RecordingStudioAdmin
 
+## Upgrading to 2.20.0
+
+Admin `2.20.0` bumps development and dummy git tags. Gemspec floors and ceilings are unchanged. There is no engine change.
+
+| Gem | Development tag | Dummy tag |
+| --- | --- | --- |
+| `recording_studio` | `v7.8.0` (`~> 7.8`) | `v7.8.0` (`~> 7.8`) |
+| `flat_pack` | `v0.2.0` (`~> 0.2`) | `v0.2.0` (`~> 0.2`) |
+| `recording_studio_accessible` | `v0.57.0` (`~> 0.57`) | `v0.57.0` (`~> 0.57`) |
+| `recording_studio_logs` | `v0.9.0` (`~> 0.9`) | `v0.9.0` (`~> 0.9`) |
+| `recording_studio_metrics` | `v0.10.0` (`~> 0.10`) | `v0.10.0` (`~> 0.10`) |
+| `recording_studio_trashable` | `v1.3.0` (`~> 1.3`) | `v1.3.0` (`~> 1.3`) |
+| `recording_studio_exportable` |  | `v0.7.1` (`~> 0.7`) |
+| `recording_studio_root_switchable` |  | `v0.17.0` (`~> 0.17`) |
+| `recording_studio_cache` |  | `v0.8.0` (`~> 0.8`) |
+
+`view_component` stays `~> 4.20` in both Gemfiles. Dummy `simplecov` stays `~> 1.1`.
+
+Host apps MUST run the Recording Studio 7.4, 7.5 and 7.7 migrations if they have not. Copy them from Recording Studio `db/install_migrate` (or `bin/rails generate recording_studio:migrations`) and migrate:
+
+- 7.4 `20261116230000_add_recording_studio_recordings_root_type_creation_index` adds `index_rs_recordings_on_root_type_created_at_id`.
+- 7.5 `20261117120000_enforce_recording_studio_recording_root_invariant` repairs `root_recording_id`, then enforces it.
+- 7.7 `20261117200000_replace_recording_studio_recordings_root_index` replaces `index_rs_recordings_on_root_recording` with `index_rs_recordings_on_root_created_at_id`.
+
+The dummy app does not include the 7.4, 7.5, or 7.7 migrations. Trashable `v1.3.0` adds no migration of its own. Accessible `v0.57.0`, Logs `v0.9.0`, Cache `v0.8.0`, and Root Switchable `v0.17.0` add none either.
+
+flat_pack 0.2.0 is supported; hosts moving to 0.2 must remove the manual `flat_pack/heroicons` importmap pin and any `flat-pack--icon` controller registration. Icons render on the server. `data-flat-pack--icon-name-value` is no longer emitted. The dummy drops the `flat_pack/heroicons` pin. The captured install page drops that pin and the `flat-pack--icon` controller. The dummy Tailwind `@source` stays on `./gem_sources/flatpack`, which already points at the installed revision.
+
 ## Upgrading to 2.19.1
 
 Admin `2.19.1` bumps development and dummy git tags. Gemspec floors and ceilings are unchanged. There is no engine change.
