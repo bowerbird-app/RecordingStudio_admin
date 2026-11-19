@@ -58,7 +58,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Admin section"
-    refute_includes response.body, 'data-flat-pack--icon-name-value="folder"'
+    refute_includes response.body, "M2.25 12.75V12A2.25"
     assert_includes response.body, 'href="http://www.example.com/"'
     assert_includes response.body, "View API"
     assert_includes response.body, 'href="/admin/sections/api?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
@@ -85,7 +85,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "recent-user-1@example.com"
     assert_includes response.body, "recent-user-2@example.com"
     assert_includes response.body, "recent-user-3@example.com"
-    assert_includes response.body, 'data-flat-pack--icon-name-value="user-circle"'
+    assert_includes response.body, 'M17.982 18.725A7.488'
     assert_includes response.body, 'href="/users/recent-user-1-example-com"'
     assert_includes response.body, 'href="/users/recent-user-2-example-com"'
     assert_includes response.body, 'href="/users/recent-user-3-example-com"'
@@ -182,7 +182,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     end
     assert_equal 2, info_tooltips.size
     info_tooltips.each do |tooltip|
-      assert tooltip.at_css('[data-flat-pack--icon-name-value="information-circle"]')
+      assert tooltip.at_css('path[d*="m11.25 11.25.041-.02a.75.75"]')
       assert_equal "More information about API activity", tooltip.at_css("button")["aria-label"]
     end
 
@@ -197,7 +197,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     recent_failures_card = recent_failures_heading.ancestors.find do |ancestor|
       ancestor["class"].to_s.include?("min-h-28")
     end
-    refute recent_failures_card.at_css('[data-flat-pack--icon-name-value="information-circle"]')
+    refute recent_failures_card.at_css('path[d*="m11.25 11.25.041-.02a.75.75"]')
   ensure
     RecordingStudioAdmin.configuration.async_widgets.enabled = original_async_enabled
   end
@@ -213,10 +213,10 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Search screens and sections"
     assert_includes response.body, "Admin section"
     assert_includes response.body, "Monitor API traffic, users, jobs, and failures"
-    assert_includes response.body, 'data-flat-pack--icon-name-value="folder"'
+    assert_includes response.body, "M2.25 12.75V12A2.25"
     assert_includes response.body, "Users"
     assert_includes response.body, "Manage users and review access activity"
-    assert_includes response.body, 'data-flat-pack--icon-name-value="user-group"'
+    assert_includes response.body, "M18 18.72a9.094"
     assert_includes response.body, "Admin activity logs"
     assert_includes response.body, "Audit admin CRUD changes and resource actions"
     assert_includes response.body, 'href="/admin/sections/admin_activity_logs?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
@@ -477,10 +477,10 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Manage and monitor your application"
     assert_includes response.body, "Admin section"
     assert_includes response.body, "Monitor API traffic, users, jobs, and failures"
-    assert_includes response.body, 'data-flat-pack--icon-name-value="folder"'
+    assert_includes response.body, "M2.25 12.75V12A2.25"
     assert_includes response.body, "Users"
     assert_includes response.body, "Manage users and review access activity"
-    assert_includes response.body, 'data-flat-pack--icon-name-value="user-group"'
+    assert_includes response.body, "M18 18.72a9.094"
     assert_includes response.body, 'href="/admin/sections/root?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     assert_includes response.body, 'href="/admin/sections/users?anchor_url=http%3A%2F%2Fwww.example.com%2F"'
     refute_includes response.body, "Open admin screens"
@@ -624,7 +624,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "max-h-28"
     assert_includes response.body, ">3<"
     assert_includes response.body, "flex -space-x-2"
-    assert_includes response.body, 'data-flat-pack--icon-name-value="user-circle"'
+    assert_includes response.body, 'M17.982 18.725A7.488'
     refute_includes response.body, "compact-user-1@example.com, compact-user-2@example.com"
 
     get "/admin/sections/users/widgets/widgets.api_requests.api_activity_column", params: {
@@ -1265,7 +1265,7 @@ class AdminSectionRenderingTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Counting rows..."
     assert_includes response.body, 'id="screen-table-count" src="/admin/screens/user_activity/table_count?anchor_url='
     assert_includes response.body, "Actions"
-    assert_includes response.body, "ellipsis-vertical"
+    assert_includes response.body, "M12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75"
     assert_includes response.body, "View sign-ins"
     assert_includes response.body, "Review queue"
     assert_includes response.body, "Delete activity"

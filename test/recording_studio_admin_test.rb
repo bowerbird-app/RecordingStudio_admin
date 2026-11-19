@@ -9,7 +9,7 @@ class RecordingStudioAdminTest < Minitest::Test
     load File.expand_path("../lib/recording_studio_admin/version.rb", __dir__)
     $VERBOSE = verbose
 
-    assert_equal "2.19.1", ::RecordingStudioAdmin::VERSION
+    assert_equal "2.20.0", ::RecordingStudioAdmin::VERSION
   end
 
   def test_gemspec_pins_recording_studio_logs
@@ -20,10 +20,14 @@ class RecordingStudioAdminTest < Minitest::Test
     gemfile = File.read(File.join(root, "Gemfile"))
     dummy_gemfile = File.read(File.join(root, "test/dummy/Gemfile"))
 
-    assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.8.2"'
-    assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.9.2"'
-    assert_includes dummy_gemfile, 'RecordingStudio_logs", tag: "v0.8.2"'
-    assert_includes dummy_gemfile, 'RecordingStudio_metrics", tag: "v0.9.2"'
+    assert_includes gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
+                             'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
+    assert_includes gemfile, 'gem "recording_studio_metrics", "~> 0.10", ' \
+                             'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.10.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
+                                   'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_metrics", "~> 0.10", ' \
+                                   'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.10.0"'
   end
 
   def test_lockfiles_match_the_current_release

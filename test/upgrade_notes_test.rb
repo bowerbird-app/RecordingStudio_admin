@@ -5,6 +5,39 @@ require "test_helper"
 class UpgradeNotesTest < Minitest::Test
   ROOT = File.expand_path("..", __dir__)
 
+  def test_docs_cover_the_2_20_0_dependency_bump
+    upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
+    changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
+    readme = File.read(File.join(ROOT, "README.md"))
+    version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
+    gemspec = File.read(File.join(ROOT, "recording_studio_admin.gemspec"))
+    section = upgrading.split("## Upgrading to 2.20.0", 2).last.split("## Upgrading to 2.19.1", 2).first
+    release_notes = changelog.split("## 2.19.1", 2).first
+
+    assert_includes version, 'VERSION = "2.20.0"'
+    assert_includes gemspec, 'flat_pack", ">= 0.1.341"'
+    refute_includes gemspec, 'flat_pack", "~> 0.2"'
+    assert_includes section, "v7.8.0"
+    assert_includes section, "v0.2.0"
+    assert_includes section, "v0.58.0"
+    assert_includes section, "v0.8.0"
+    assert_includes section, "does not include the 7.4, 7.5, or 7.7 migrations"
+    assert_includes section, "Host apps MUST run the Recording Studio 7.4, 7.5 and 7.7 migrations if they have not"
+    flat_pack_note = "flat_pack 0.2.0 is supported; hosts moving to 0.2 must remove the manual " \
+                     "`flat_pack/heroicons` importmap pin and any `flat-pack--icon` controller registration"
+    assert_includes section, flat_pack_note
+    assert_includes release_notes, "## 2.20.0"
+    assert_includes release_notes, "### Upgrade notes"
+    assert_includes release_notes, "docs/UPGRADING.md#upgrading-to-2200"
+    assert_includes release_notes,
+                    "Host apps MUST run the Recording Studio 7.4, 7.5 and 7.7 migrations if they have not"
+    assert_includes release_notes, flat_pack_note
+    assert_includes readme, "docs/UPGRADING.md#upgrading-to-2200"
+    assert_includes changelog, "compare/v2.19.1...v2.20.0"
+    assert_includes changelog, "compare/v2.20.0...HEAD"
+    assert changelog.index("## 2.20.0") < changelog.index("## 2.19.1")
+  end
+
   def test_docs_cover_the_2_19_1_dependency_bump
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     changelog = File.read(File.join(ROOT, "CHANGELOG.md"))
@@ -17,30 +50,42 @@ class UpgradeNotesTest < Minitest::Test
     release_notes = changelog.split("## 2.19.0").first
     migrations = Dir[File.join(ROOT, "test/dummy/db/migrate/*")].join("\n")
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'recording_studio", ">= 7.0.0", "< 8.0"'
     assert_includes gemspec, 'recording_studio_accessible", ">= 0.43.1", "< 2.0"'
     assert_includes gemspec, 'recording_studio_logs", ">= 0.4.1", "< 2.0"'
     assert_includes gemspec, 'recording_studio_trashable", ">= 0.16.1", "< 2.0"'
     assert_includes gemspec, 'flat_pack", ">= 0.1.341"'
     refute_includes gemspec, 'recording_studio", "7.7.2"'
-    assert_includes gemfile, 'RecordingStudio", tag: "v7.7.2"'
-    assert_includes gemfile, 'flatpack", tag: "v0.1.379"'
-    assert_includes gemfile, 'RecordingStudio_accessible", tag: "v0.54.1"'
-    assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.8.2"'
-    assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.9.2"'
-    assert_includes gemfile, 'RecordingStudio_trashable", tag: "v1.2.3"'
+    assert_includes gemfile, 'gem "recording_studio", "~> 7.8", github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
+    assert_includes gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
+    assert_includes gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
+                             'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
+    assert_includes gemfile, 'gem "recording_studio_metrics", "~> 0.10", ' \
+                             'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.10.0"'
+    assert_includes gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
+                             'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
     assert_includes gemfile, 'view_component", "~> 4.20"'
     refute_includes gemfile, 'view_component", "4.20.0"'
-    assert_includes dummy_gemfile, 'RecordingStudio", tag: "v7.7.2"'
-    assert_includes dummy_gemfile, 'flatpack", tag: "v0.1.379"'
-    assert_includes dummy_gemfile, 'RecordingStudio_accessible", tag: "v0.54.1"'
-    assert_includes dummy_gemfile, 'RecordingStudio_logs", tag: "v0.8.2"'
-    assert_includes dummy_gemfile, 'RecordingStudio_metrics", tag: "v0.9.2"'
-    assert_includes dummy_gemfile, 'RecordingStudio_trashable", tag: "v1.2.3"'
-    assert_includes dummy_gemfile, 'RecordingStudio_exportable", tag: "v0.7.1"'
-    assert_includes dummy_gemfile, 'tag: "v0.16.1"'
-    assert_includes dummy_gemfile, 'RecordingStudio_cache", tag: "v0.7.1"'
+    assert_includes dummy_gemfile, 'gem "recording_studio", "~> 7.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
+    assert_includes dummy_gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
+                                   'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_metrics", "~> 0.10", ' \
+                                   'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.10.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
+                                   'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_exportable", "~> 0.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.8.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_root_switchable", "~> 0.17", ' \
+                                   'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.17.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_cache", "~> 0.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.8.0"'
     assert_includes dummy_gemfile, 'view_component", "~> 4.20"'
     assert_includes dummy_gemfile, 'simplecov", "~> 1.1"'
     refute_includes dummy_gemfile, 'simplecov", "1.1.1"'
@@ -72,7 +117,7 @@ class UpgradeNotesTest < Minitest::Test
     section = upgrading.split("## Upgrading to 2.19.0", 2).last.split("## Upgrading to 2.18.0", 2).first
     release_notes = changelog.split("## 2.18.0").first
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes select_filter, "options[:default]"
     assert_includes select_filter, "param_absent?"
     assert_includes section, "default: \"open\""
@@ -95,7 +140,7 @@ class UpgradeNotesTest < Minitest::Test
     section = upgrading.split("## Upgrading to 2.18.0", 2).last.split("## Upgrading to 2.17.0", 2).first
     release_notes = changelog.split("## 2.17.0").first
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'recording_studio", ">= 7.0.0", "< 8.0"'
     assert_includes gemspec, 'recording_studio_accessible", ">= 0.43.1", "< 2.0"'
     assert_includes gemspec, 'recording_studio_logs", ">= 0.4.1", "< 2.0"'
@@ -124,7 +169,7 @@ class UpgradeNotesTest < Minitest::Test
     section = upgrading.split("## Upgrading to 2.17.0", 2).last.split("## Upgrading to 2.16.0", 2).first
     release_notes = changelog.split("## 2.16.0").first
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes configuration, "audit_filtered_attributes"
     assert_includes initializer, "config.audit_filtered_attributes"
     assert_includes controller, "protect_from_forgery with: :exception"
@@ -154,20 +199,29 @@ class UpgradeNotesTest < Minitest::Test
     section = upgrading.split("## Upgrading to 2.16.0", 2).last.split("## Upgrading to 2.15.0", 2).first
     release_notes = changelog.split("## 2.15.0").first
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'recording_studio", ">= 7.0.0", "< 8.0"'
     assert_includes gemspec, 'recording_studio_accessible", ">= 0.43.1", "< 2.0"'
     assert_includes gemspec, 'recording_studio_trashable", ">= 0.16.1", "< 2.0"'
-    assert_includes gemfile, 'RecordingStudio", tag: "v7.7.2"'
-    assert_includes gemfile, 'RecordingStudio_accessible", tag: "v0.54.1"'
-    assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.8.2"'
-    assert_includes gemfile, 'RecordingStudio_trashable", tag: "v1.2.3"'
-    assert_includes dummy_gemfile, 'tag: "v7.7.2"'
-    assert_includes dummy_gemfile, 'tag: "v0.54.1"'
-    assert_includes dummy_gemfile, 'tag: "v1.2.3"'
-    assert_includes dummy_gemfile, 'tag: "v0.16.1"'
-    assert_includes dummy_gemfile, 'RecordingStudio_exportable", tag: "v0.7.1"'
-    assert_includes dummy_gemfile, 'RecordingStudio_cache", tag: "v0.7.1"'
+    assert_includes gemfile, 'gem "recording_studio", "~> 7.8", github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
+    assert_includes gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
+                             'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
+    assert_includes gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
+                             'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio", "~> 7.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
+                                   'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_root_switchable", "~> 0.17", ' \
+                                   'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.17.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_exportable", "~> 0.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.8.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_cache", "~> 0.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.8.0"'
     assert_includes resolver, "create_root_recording!"
     assert_includes resolver, "section parent recording is missing"
     assert_includes template, "RecordingStudio.root_recording_for(admin_root)"
@@ -176,7 +230,7 @@ class UpgradeNotesTest < Minitest::Test
     assert_includes section, "root_recording: nil"
     assert_includes section, "AuthorizationFailed"
     assert_includes readme, "docs/UPGRADING.md#upgrading-to-2160"
-    assert_includes readme, "RecordingStudio `v7.7.2`"
+    assert_includes readme, "RecordingStudio `v7.8.0` (`~> 7.8`)"
     assert_includes release_notes, "## 2.16.0"
     assert_includes release_notes, "### Upgrade notes"
     assert_includes release_notes, "docs/UPGRADING.md#upgrading-to-2160"
@@ -200,10 +254,12 @@ class UpgradeNotesTest < Minitest::Test
     section = upgrading.split("## Upgrading to 2.15.0", 2).last.split("## Upgrading to 2.14.0", 2).first
     release_notes = changelog.split("## 2.14.0").first
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'recording_studio_accessible", ">= 0.43.1", "< 2.0"'
-    assert_includes gemfile, 'RecordingStudio_accessible", tag: "v0.54.1"'
-    assert_includes dummy_gemfile, 'RecordingStudio_accessible", tag: "v0.54.1"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     assert_includes blast_radius, "RecordingStudioAccessible.admin_root(context: context)"
     assert_includes blast_radius, "RecordingStudioAccessible.admin?"
     refute_includes configuration, "site_admin_recording_resolver"
@@ -237,16 +293,21 @@ class UpgradeNotesTest < Minitest::Test
     release_notes = changelog.split("## 2.13.1").first
     section = upgrading.split("## Upgrading to 2.14.0", 2).last.split("## Upgrading to 2.13.1", 2).first
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'recording_studio", ">= 7.0.0", "< 8.0"'
     assert_includes gemspec, 'recording_studio_trashable", ">= 0.16.1", "< 2.0"'
     assert_includes gemspec, 'recording_studio_accessible", ">= 0.43.1", "< 2.0"'
-    assert_includes gemfile, 'RecordingStudio", tag: "v7.7.2"'
-    assert_includes gemfile, 'RecordingStudio_trashable", tag: "v1.2.3"'
-    assert_includes gemfile, 'RecordingStudio_accessible", tag: "v0.54.1"'
-    assert_includes dummy_gemfile, 'RecordingStudio", tag: "v7.7.2"'
-    assert_includes dummy_gemfile, 'RecordingStudio_trashable", tag: "v1.2.3"'
-    assert_includes dummy_gemfile, 'RecordingStudio_accessible", tag: "v0.54.1"'
+    assert_includes gemfile, 'gem "recording_studio", "~> 7.8", github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
+    assert_includes gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
+                             'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio", "~> 7.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
+                                   'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     refute File.exist?(File.join(ROOT, "test/dummy/config/initializers/recording_studio_trashable_kept_sql.rb"))
     assert_includes resolver, "unscoped.kept"
     refute_includes resolver, "column_names"
@@ -271,7 +332,7 @@ class UpgradeNotesTest < Minitest::Test
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     release_notes = changelog.split("## 2.13.0").first
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes upgrading, "## Upgrading to 2.13.1"
     assert_includes upgrading, "Are you sure?"
     section = upgrading.split("## Upgrading to 2.13.1", 2).last.split("## Upgrading to 2.13.0", 2).first
@@ -293,7 +354,7 @@ class UpgradeNotesTest < Minitest::Test
     filter_fields = File.read(File.join(ROOT, "app/views/recording_studio_admin/screens/_filter_fields.html.erb"))
     release_notes = changelog.split("## 2.12.1").first
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes upgrading, "## Upgrading to 2.13.0"
     assert_includes upgrading, "blank_label:"
     assert_includes upgrading, "humanize_options: false"
@@ -318,7 +379,7 @@ class UpgradeNotesTest < Minitest::Test
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     release_notes = changelog.split("## 2.12.0").first
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes upgrading, "## Upgrading to 2.12.1"
     assert_includes upgrading, "chart_options: { grid: { show: true } }"
     assert_includes upgrading, "grid.show"
@@ -341,7 +402,7 @@ class UpgradeNotesTest < Minitest::Test
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     release_notes = changelog.split("## 2.11.0").first
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes upgrading, "## Upgrading to 2.12.0"
     assert_includes upgrading, "scopeable recordable_types:"
     assert_includes upgrading, "scoped_recordings"
@@ -372,7 +433,7 @@ class UpgradeNotesTest < Minitest::Test
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     release_notes = changelog.split("## 2.10.0").first
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes upgrading, "## Upgrading to 2.11.0"
     assert_includes upgrading, "DateAxisLabels.call"
     assert_includes upgrading, "Exact label strings"
@@ -397,7 +458,7 @@ class UpgradeNotesTest < Minitest::Test
     readme = File.read(File.join(ROOT, "README.md"))
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
 
     assert_includes upgrading, "## Upgrading to 2.10.0"
     assert_includes upgrading, "allowed_values"
@@ -464,9 +525,10 @@ class UpgradeNotesTest < Minitest::Test
     gemspec = File.read(File.join(ROOT, "recording_studio_admin.gemspec"))
     gemfile = File.read(File.join(ROOT, "Gemfile"))
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'view_component", ">= 4.14", "< 5"'
-    assert_includes gemfile, 'tag: "v1.2.3"'
+    assert_includes gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
+                             'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
 
     assert_includes upgrading, "## Upgrading to 2.7.0"
     assert_includes upgrading, "config.layout"
@@ -491,7 +553,7 @@ class UpgradeNotesTest < Minitest::Test
       File.join(ROOT, "app/controllers/recording_studio_admin/application_controller.rb")
     )
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes period, "LAST_4_WEEKS_LOOKBACK_DAYS = 27"
     assert_includes controller, "def current_root_recording"
 
@@ -528,10 +590,10 @@ class UpgradeNotesTest < Minitest::Test
       File.join(ROOT, "app/javascript/recording_studio_admin/controllers/screen_filters_controller.js")
     )
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'flat_pack", ">= 0.1.341"'
-    assert_includes gemfile, 'tag: "v0.1.379"'
-    assert_includes dummy_gemfile, 'tag: "v0.1.379"'
+    assert_includes gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
+    assert_includes dummy_gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
     assert_includes filter_fields, "preset_name: filter.preset_param.to_s"
     assert_includes filter_fields, "recording_studio.admin.screens.filters.date_presets.\#{key}"
     refute_includes filter_fields, "hidden_field_tag filter.preset_param"
@@ -566,7 +628,7 @@ class UpgradeNotesTest < Minitest::Test
     initializer = File.read(File.join(ROOT, "test/dummy/config/initializers/recording_studio.rb"))
     seeds = File.read(File.join(ROOT, "test/dummy/db/seeds.rb"))
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes resolver, "actor: @context.current_actor"
     assert_includes audit, "attributes[:actor] = @context.current_actor unless attributes.key?(:actor)"
     assert_includes initializer, "config.authorize_write"
@@ -601,10 +663,10 @@ class UpgradeNotesTest < Minitest::Test
       Dir[File.join(ROOT, "lib/generators/**/*.{rb,erb}")]
     ).map { |path| File.read(path) }.join
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'flat_pack", ">= 0.1.341"'
-    assert_includes gemfile, 'tag: "v0.1.379"'
-    assert_includes dummy_gemfile, 'tag: "v0.1.379"'
+    assert_includes gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
+    assert_includes dummy_gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
     assert_includes helper, "flat_pack_page_nav"
     assert_includes helper, "with_back"
     assert_includes helper, "with_close"
@@ -654,15 +716,18 @@ class UpgradeNotesTest < Minitest::Test
       Dir[File.join(ROOT, "lib/generators/**/*.{rb,erb}")]
     ).map { |path| File.read(path) }.join
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'recording_studio", ">= 7.0.0", "< 8.0"'
     assert_includes gemspec, 'flat_pack", ">= 0.1.341"'
     assert_includes gemspec, 'view_component", ">= 4.14", "< 5"'
-    assert_includes gemfile, 'tag: "v7.7.2"'
-    assert_includes gemfile, 'tag: "v0.1.379"'
-    assert_includes gemfile, 'tag: "v0.54.1"'
-    assert_includes dummy_gemfile, 'RecordingStudio_exportable", tag: "v0.7.1"'
-    assert_includes dummy_gemfile, 'tag: "v0.54.1"'
+    assert_includes gemfile, 'gem "recording_studio", "~> 7.8", github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
+    assert_includes gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_exportable", "~> 0.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio_exportable", tag: "v0.8.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                                   'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
     assert_includes controller, "recording_studio_layout"
     assert_includes controller, "RecordingStudioAdmin.configuration.layout_for(recording_studio_admin_surface)"
     refute_match(/\blayout ["']/, controller)
@@ -712,12 +777,17 @@ class UpgradeNotesTest < Minitest::Test
       File.join(ROOT, "app/views/recording_studio_admin/sections/index.html.erb")
     )
 
-    assert_includes version, 'VERSION = "2.19.1"'
-    assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.8.2"'
-    assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.9.2"'
-    assert_includes gemfile, 'RecordingStudio_trashable", tag: "v1.2.3"'
-    assert_includes dummy_gemfile, 'tag: "v0.16.1"'
-    assert_includes dummy_gemfile, 'RecordingStudio_cache", tag: "v0.7.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
+    assert_includes gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
+                             'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
+    assert_includes gemfile, 'gem "recording_studio_metrics", "~> 0.10", ' \
+                             'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.10.0"'
+    assert_includes gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
+                             'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_root_switchable", "~> 0.17", ' \
+                                   'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.17.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_cache", "~> 0.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.8.0"'
     refute_includes controller, "trusted_export_sources"
     assert_includes controller, 'source: "recording_studio_admin"'
     refute_includes initializer, 'config.layout = "application"'
@@ -747,10 +817,10 @@ class UpgradeNotesTest < Minitest::Test
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     readme = File.read(File.join(ROOT, "README.md"))
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'flat_pack", ">= 0.1.341"'
-    assert_includes gemfile, 'tag: "v0.1.379"'
-    assert_includes dummy_gemfile, 'tag: "v0.1.379"'
+    assert_includes gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
+    assert_includes dummy_gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
     assert_includes changelog, "## 2.8.0"
     assert_includes changelog, "docs/UPGRADING.md#upgrading-to-280"
     assert_includes changelog, ":last_30_days"
@@ -773,7 +843,7 @@ class UpgradeNotesTest < Minitest::Test
     upgrading = File.read(File.join(ROOT, "docs/UPGRADING.md"))
     readme = File.read(File.join(ROOT, "README.md"))
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes changelog, "## 2.7.3"
     assert_includes changelog, "docs/UPGRADING.md#upgrading-to-273"
     assert_includes upgrading, "## Upgrading to 2.7.3"
@@ -791,18 +861,24 @@ class UpgradeNotesTest < Minitest::Test
     gemfile = File.read(File.join(ROOT, "Gemfile"))
     dummy_gemfile = File.read(File.join(ROOT, "test/dummy/Gemfile"))
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'recording_studio", ">= 7.0.0", "< 8.0"'
     refute_includes gemspec, 'recording_studio", "~> 6.3'
-    assert_includes gemfile, 'tag: "v7.7.2"'
-    assert_includes gemfile, 'tag: "v0.1.379"'
-    assert_includes gemfile, 'tag: "v0.54.1"'
-    assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.8.2"'
-    assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.9.2"'
+    assert_includes gemfile, 'gem "recording_studio", "~> 7.8", github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
+    assert_includes gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", "~> 0.58", ' \
+                             'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.58.0"'
+    assert_includes gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
+                             'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
+    assert_includes gemfile, 'gem "recording_studio_metrics", "~> 0.10", ' \
+                             'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.10.0"'
     assert_includes gemfile, 'view_component", "~> 4.20"'
-    assert_includes dummy_gemfile, 'tag: "v7.7.2"'
-    assert_includes dummy_gemfile, 'tag: "v0.16.1"'
-    assert_includes dummy_gemfile, 'RecordingStudio_cache", tag: "v0.7.1"'
+    assert_includes dummy_gemfile, 'gem "recording_studio", "~> 7.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio", tag: "v7.8.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_root_switchable", "~> 0.17", ' \
+                                   'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.17.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_cache", "~> 0.8", ' \
+                                   'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.8.0"'
     assert_includes dummy_gemfile, 'view_component", "~> 4.20"'
     initializer = File.read(File.join(ROOT, "test/dummy/config/initializers/recording_studio_root_switchable.rb"))
     assert_includes initializer, 'config.layout = "flat_pack_sidebar"'
@@ -835,7 +911,7 @@ class UpgradeNotesTest < Minitest::Test
     readme = File.read(File.join(ROOT, "README.md"))
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes upgrading, "## Upgrading to 2.7.1"
     assert_includes upgrading, "min-h-28"
     assert_includes upgrading, "plotOptions.radialBar.dataLabels.value.show"
@@ -857,11 +933,15 @@ class UpgradeNotesTest < Minitest::Test
     gemfile = File.read(File.join(ROOT, "Gemfile"))
     dummy_gemfile = File.read(File.join(ROOT, "test/dummy/Gemfile"))
 
-    assert_includes version, 'VERSION = "2.19.1"'
-    assert_includes gemfile, 'RecordingStudio_logs", tag: "v0.8.2"'
-    assert_includes gemfile, 'RecordingStudio_metrics", tag: "v0.9.2"'
-    assert_includes dummy_gemfile, 'RecordingStudio_logs", tag: "v0.8.2"'
-    assert_includes dummy_gemfile, 'RecordingStudio_metrics", tag: "v0.9.2"'
+    assert_includes version, 'VERSION = "2.20.0"'
+    assert_includes gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
+                             'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
+    assert_includes gemfile, 'gem "recording_studio_metrics", "~> 0.10", ' \
+                             'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.10.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
+                                   'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_metrics", "~> 0.10", ' \
+                                   'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.10.0"'
 
     assert_includes upgrading, "## Upgrading to 2.6.2"
     assert_includes upgrading, "v0.7.0"
@@ -899,10 +979,12 @@ class UpgradeNotesTest < Minitest::Test
     dummy_gemfile = File.read(File.join(ROOT, "test/dummy/Gemfile"))
     registration = File.read(File.join(ROOT, "lib/recording_studio_admin/logs_registration.rb"))
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, '"recording_studio_logs", ">= 0.4.1", "< 2.0"'
-    assert_includes gemfile, 'tag: "v0.8.2"'
-    assert_includes dummy_gemfile, 'RecordingStudio_logs", tag: "v0.8.2"'
+    assert_includes gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
+                             'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
+    assert_includes dummy_gemfile, 'gem "recording_studio_logs", "~> 0.9", ' \
+                                   'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.9.0"'
     assert_includes registration, "partition_interval: nil"
     assert_includes registration, "retention: resolved_retention"
     assert_includes registration, "root_column: :root_recording_id"
@@ -943,7 +1025,7 @@ class UpgradeNotesTest < Minitest::Test
     screen = File.read(File.join(ROOT, "lib/recording_studio_admin/admin_activity_logs_screen.rb"))
     section = File.read(File.join(ROOT, "lib/recording_studio_admin/admin_activity_logs_section.rb"))
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     refute_includes screen, 'widget "widgets.admin_activity_logs.activity_overview"'
     assert_includes screen, "filter_presentation :modal, inline_count: 2"
     assert_includes section, 'widget "widgets.admin_activity_logs.activity_overview"'
@@ -969,7 +1051,7 @@ class UpgradeNotesTest < Minitest::Test
     version = File.read(File.join(ROOT, "lib/recording_studio_admin/version.rb"))
     support = File.read(File.join(ROOT, "lib/recording_studio_admin/admin_activity_logs_support.rb"))
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes support, "def date_series(relation, field: :created_at, bucket: :day)"
     assert_includes support, "MAX_DATE_SERIES_BUCKETS = 1_000"
 
@@ -997,10 +1079,10 @@ class UpgradeNotesTest < Minitest::Test
     dummy_gemfile = File.read(File.join(ROOT, "test/dummy/Gemfile"))
     views = Dir[File.join(ROOT, "app/views/**/*.erb")].map { |path| File.read(path) }.join
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'flat_pack", ">= 0.1.341"'
-    assert_includes gemfile, 'tag: "v0.1.379"'
-    assert_includes dummy_gemfile, 'tag: "v0.1.379"'
+    assert_includes gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
+    assert_includes dummy_gemfile, 'gem "flat_pack", "~> 0.2", github: "bowerbird-app/flatpack", tag: "v0.2.0"'
     refute_includes views, "style: :outlined"
 
     assert_includes upgrading, "## Upgrading to 2.4.0"
@@ -1029,9 +1111,10 @@ class UpgradeNotesTest < Minitest::Test
     gemfile = File.read(File.join(ROOT, "Gemfile"))
     resolver = File.read(File.join(ROOT, "lib/recording_studio_admin/section_recording_resolver.rb"))
 
-    assert_includes version, 'VERSION = "2.19.1"'
+    assert_includes version, 'VERSION = "2.20.0"'
     assert_includes gemspec, 'recording_studio_trashable", ">= 0.16.1", "< 2.0"'
-    assert_includes gemfile, 'tag: "v1.2.3"'
+    assert_includes gemfile, 'gem "recording_studio_trashable", "~> 1.3", ' \
+                             'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.3.0"'
     assert_includes gemfile, "require: false"
     assert_includes gemfile, "recording_studio_trashable"
     refute_includes resolver, "recording_studio_trashable_kept_sql"
@@ -1091,16 +1174,16 @@ class UpgradeNotesTest < Minitest::Test
 
     assert_includes readme, "## Upgrading"
     assert_includes readme, "docs/UPGRADING.md"
-    assert_includes readme, "RecordingStudio `v7.7.2`"
+    assert_includes readme, "RecordingStudio `v7.8.0` (`~> 7.8`)"
     assert_includes readme, "Accessible `v0.54.1`"
-    assert_includes readme, "RecordingStudio `v7.7.2`"
+    assert_includes readme, "RecordingStudio `v7.8.0` (`~> 7.8`)"
     assert_includes readme, "Accessible `v0.54.1`"
     assert_includes readme, "Exportable `v0.7.1`"
     assert_includes readme, "Logs `v0.8.2`"
     assert_includes readme, "Trashable `v1.2.3`"
     assert_includes readme, "Metrics `v0.9.2`"
-    assert_includes readme, "Flatpack tag `v0.1.379`"
-    assert_includes readme, "Root Switchable `v0.16.1` with Cache `v0.7.1`"
+    assert_includes readme, "Flatpack tag `v0.2.0` (`~> 0.2`)"
+    assert_includes readme, "Root Switchable `v0.17.0` (`~> 0.17`) with Cache `v0.8.0` (`~> 0.8`)"
     assert_includes readme, "bootstrap_owner_access!"
   end
 
